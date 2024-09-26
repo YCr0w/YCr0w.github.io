@@ -1,0 +1,177 @@
+<!DOCTYPE html><html lang="zh-CN"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="theme-color" content="#0078E7"><meta name="author" content="YCr0w"><meta name="copyright" content="YCr0w"><meta name="generator" content="Hexo 7.3.0"><meta name="theme" content="hexo-theme-yun"><title>pikabot | YCr0w'blog</title><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@900&amp;display=swap" media="print" onload="this.media='all'"><link rel="stylesheet" href="https://fastly.jsdelivr.net/npm/star-markdown-css@0.4.1/dist/yun/yun-markdown.min.css"><link rel="stylesheet" href="https://fastly.jsdelivr.net/npm/prism-theme-vars/base.css"><script src="https://fastly.jsdelivr.net/npm/scrollreveal/dist/scrollreveal.min.js" defer></script><script>function initScrollReveal() {
+  [".post-card",".markdown-body img"].forEach((target)=> {
+    ScrollReveal().reveal(target);
+  })
+}
+document.addEventListener("DOMContentLoaded", initScrollReveal);
+document.addEventListener("pjax:success", initScrollReveal);
+</script><link rel="icon" type="image/png" href="/favicon.ico"><link rel="mask-icon" href="/favicon.ico" color="#0078E7"><link rel="preload" href="/css/hexo-theme-yun.css" as="style"><link rel="prefetch" href="/js/sidebar.js" as="script"><link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin><link rel="preconnect" href="https://fastly.jsdelivr.net/npm/" crossorigin><script id="yun-config">
+    window.Yun = {}
+    window.CONFIG = {"hostname":"example.com","root":"/","title":"要么庸俗，要么孤独","version":"1.10.11","mode":"auto","copycode":true,"page":{"isPost":true},"i18n":{"placeholder":"搜索...","empty":"找不到您查询的内容: ${query}","hits":"找到 ${hits} 条结果","hits_time":"找到 ${hits} 条结果（用时 ${time} 毫秒）"},"anonymous_image":"https://cdn.yunyoujun.cn/img/avatar/none.jpg","say":{"api":"https://el-bot-api.vercel.app/api/words/young"},"fireworks":{"colors":null},"vendors":{"host":"https://fastly.jsdelivr.net/npm/","darken":"https://fastly.jsdelivr.net/npm/darken@1.5.0"}};
+  </script><link rel="stylesheet" href="/css/hexo-theme-yun.css"><script src="/js/hexo-theme-yun.js" type="module"></script><meta name="description" content="pikabot背景Pikabot 是一种于 2023 年初首次出现的新恶意软件。它有两个组件：Loader 和 core module。它仍处于起步阶段，预计未来将有更多的活动。 一些研究人员认为它与 TA570 有关，因为它与 trojan 之间的递送方法相似。以及活动期间没有活动。 Loader 的用途是执行大量的 Anti-debug、Anti-VM 和 Anti-emulation 检查，">
+<meta property="og:type" content="article">
+<meta property="og:title" content="pikabot">
+<meta property="og:url" content="http://example.com/2024/08/08/pikabot/index.html">
+<meta property="og:site_name" content="YCr0w&#39;blog">
+<meta property="og:description" content="pikabot背景Pikabot 是一种于 2023 年初首次出现的新恶意软件。它有两个组件：Loader 和 core module。它仍处于起步阶段，预计未来将有更多的活动。 一些研究人员认为它与 TA570 有关，因为它与 trojan 之间的递送方法相似。以及活动期间没有活动。 Loader 的用途是执行大量的 Anti-debug、Anti-VM 和 Anti-emulation 检查，">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="http://example.com/imge/pikabot/assets/image-20240908162739-v7zavov.png">
+<meta property="og:image" content="http://example.com/imge/pikabot/assets/image-20240908163225-joh65fo.png">
+<meta property="og:image" content="http://example.com/imge/pikabot/assets/image-20240909160800-vvpaak4.png">
+<meta property="og:image" content="http://example.com/imge/pikabot/assets/image-20240909161828-ccbn39f.png">
+<meta property="og:image" content="http://example.com/imge/pikabot/assets/image-20240909162147-ysau2wn.png">
+<meta property="og:image" content="http://example.com/imge/pikabot/assets/image-20240909174314-z5v6v4o.png">
+<meta property="og:image" content="http://example.com/imge/pikabot/assets/image-20240909194703-4csv9sa.png">
+<meta property="og:image" content="http://example.com/imge/pikabot/assets/image-20240909195914-oc698lz.png">
+<meta property="og:image" content="http://example.com/imge/pikabot/assets/image-20240909202612-sddbfn9.png">
+<meta property="og:image" content="http://example.com/imge/pikabot/assets/image-20240909204714-xpfayx6.png">
+<meta property="og:image" content="http://example.com/imge/pikabot/assets/image-20240909204726-grmgxo9.png">
+<meta property="og:image" content="http://example.com/imge/pikabot/assets/image-20240909212235-rm3mqs5.png">
+<meta property="og:image" content="http://example.com/imge/pikabot/assets/image-20240911165723-zazh0p8.png">
+<meta property="og:image" content="http://example.com/imge/pikabot/assets/image-20240911170602-ta2ne7l.png">
+<meta property="og:image" content="http://example.com/imge/pikabot/assets/image-20240911171311-u15tidj.png">
+<meta property="og:image" content="http://example.com/imge/pikabot/assets/image-20240911172624-ihhnu2i.png">
+<meta property="og:image" content="http://example.com/imge/pikabot/assets/image-20240911182120-siolp3w.png">
+<meta property="og:image" content="http://example.com/imge/pikabot/assets/image-20240912162647-s5r8ee6.png">
+<meta property="og:image" content="http://example.com/imge/pikabot/assets/image-20240912162949-a85pico.png">
+<meta property="og:image" content="http://example.com/imge/pikabot/assets/image-20240912163457-6hr8cvz.png">
+<meta property="og:image" content="http://example.com/imge/pikabot/assets/image-20240912165217-peihxxf.png">
+<meta property="og:image" content="http://example.com/imge/pikabot/assets/image-20240912170035-1h062yg.png">
+<meta property="og:image" content="http://example.com/imge/pikabot/assets/image-20240912174231-sijx5i6.png">
+<meta property="og:image" content="http://example.com/imge/pikabot/assets/image-20240912174425-5rhz5ru.png">
+<meta property="og:image" content="http://example.com/imge/pikabot/assets/image-20240912174649-fonokpq.png">
+<meta property="og:image" content="http://example.com/imge/pikabot/assets/image-20240912175227-szcltti.png">
+<meta property="og:image" content="http://example.com/imge/pikabot/assets/image-20240912180700-k72jgpt.png">
+<meta property="og:image" content="http://example.com/imge/pikabot/assets/image-20240912192020-ex8zz4m.png">
+<meta property="og:image" content="http://example.com/imge/pikabot/assets/image-20240912192713-ncrssmg.png">
+<meta property="og:image" content="http://example.com/imge/pikabot/assets/image-20240912194117-wv6z9ej.png">
+<meta property="og:image" content="http://example.com/imge/pikabot/assets/image-20240912194548-9kabb7s.png">
+<meta property="og:image" content="http://example.com/imge/pikabot/assets/image-20240914200052-t14o3xj.png">
+<meta property="og:image" content="http://example.com/imge/pikabot/assets/image-20240914200554-uoul5bu.png">
+<meta property="og:image" content="http://example.com/imge/pikabot/assets/image-20240914200605-qt9rns5.png">
+<meta property="og:image" content="http://example.com/imge/pikabot/assets/image-20240914200650-45snom4.png">
+<meta property="og:image" content="http://example.com/imge/pikabot/assets/image-20240914201513-8621tr4.png">
+<meta property="article:published_time" content="2024-08-08T04:40:41.000Z">
+<meta property="article:modified_time" content="2024-09-26T13:23:52.363Z">
+<meta property="article:author" content="YCr0w">
+<meta property="article:tag" content="学习">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://example.com/imge/pikabot/assets/image-20240908162739-v7zavov.png"><script>(function() {
+  if (CONFIG.mode !== 'auto') return
+  const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches
+  const setting = localStorage.getItem('darken-mode') || 'auto'
+  if (setting === 'dark' || (prefersDark && setting !== 'light'))
+    document.documentElement.classList.toggle('dark', true)
+})()</script></head><body><script src="https://code.iconify.design/2/2.1.1/iconify.min.js"></script><script>// Define global variable
+IconifyProviders = {
+  // Empty prefix: overwrite default API provider configuration
+  '': {
+    // Use custom API first, use Iconify public API as backup
+    resources: [
+        'https://api.iconify.design',
+    ],
+    // Wait for 1 second before switching API hosts
+    rotate: 1000,
+  },
+};</script><script defer src="https://fastly.jsdelivr.net/npm/animejs@latest"></script><script defer src="/js/ui/fireworks.js" type="module"></script><canvas class="fireworks"></canvas><div class="container"><a class="sidebar-toggle hty-icon-button" id="menu-btn"><div class="hamburger hamburger--spin" type="button"><span class="hamburger-box"><span class="hamburger-inner"></span></span></div></a><div class="sidebar-toggle sidebar-overlay"></div><aside class="sidebar"><script src="/js/sidebar.js" type="module"></script><ul class="sidebar-nav"><li class="sidebar-nav-item sidebar-nav-toc hty-icon-button sidebar-nav-active" data-target="post-toc-wrap" title="文章目录"><span class="icon iconify" data-icon="ri:list-ordered"></span></li><li class="sidebar-nav-item sidebar-nav-overview hty-icon-button" data-target="site-overview-wrap" title="站点概览"><span class="icon iconify" data-icon="ri:passport-line"></span></li></ul><div class="sidebar-panel" id="site-overview-wrap"><div class="site-info fix-top"><a class="site-author-avatar" href="/about/" title="YCr0w"><img width="96" loading="lazy" src="/yun.png" alt="YCr0w"><span class="site-author-status">^_^</span></a><div class="site-author-name"><a href="/about/">YCr0w</a></div><a class="site-name" href="/about/site.html">YCr0w'blog</a><sub class="site-subtitle">逆风而行</sub><div class="site-description">找到美的真正所在：不断前行，不要舍弃梦想。</div></div><nav class="site-state"><a class="site-state-item hty-icon-button icon-home" href="/" title="首页"><span class="site-state-item-icon"><span class="icon iconify" data-icon="ri:home-4-line"></span></span></a><div class="site-state-item"><a href="/archives/" title="归档"><span class="site-state-item-icon"><span class="icon iconify" data-icon="ri:archive-line"></span></span><span class="site-state-item-count">6</span></a></div><div class="site-state-item"><a href="/categories/" title="分类"><span class="site-state-item-icon"><span class="icon iconify" data-icon="ri:folder-2-line"></span></span><span class="site-state-item-count">0</span></a></div><a class="site-state-item hty-icon-button" href="/"><span class="site-state-item-icon"><span class="icon iconify" data-icon="ri:quill-pen-line"></span></span></a></nav><hr style="margin-bottom:0.5rem"><div class="links-of-author"><a class="links-of-author-item hty-icon-button" rel="noopener" href="https://github.com/YCr0w" title="GitHub" target="_blank" style="color:#181717"><span class="icon iconify" data-icon="ri:github-line"></span></a><a class="links-of-author-item hty-icon-button" rel="noopener" href="mailto:3083981460@qq.com" title="E-Mail" target="_blank" style="color:#8E71C1"><span class="icon iconify" data-icon="ri:mail-line"></span></a></div><br><a class="links-item hty-icon-button" id="toggle-mode-btn" href="javascript:;" title="Mode" style="color: #f1cb64"><span class="icon iconify" data-icon="ri:contrast-2-line"></span></a></div><div class="sidebar-panel sidebar-panel-active" id="post-toc-wrap"><div class="post-toc"><div class="post-toc-content"><ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#pikabot"><span class="toc-number">1.</span> <span class="toc-text">pikabot</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E8%83%8C%E6%99%AF"><span class="toc-number">1.1.</span> <span class="toc-text">背景</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#pikabot%E5%88%86%E6%9E%90"><span class="toc-number">1.2.</span> <span class="toc-text">pikabot分析</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#SysCallTableBuild%E5%88%86%E6%9E%90"><span class="toc-number">1.2.1.</span> <span class="toc-text">SysCallTableBuild分析</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E8%A1%A5%E5%85%85%EF%BC%9A"><span class="toc-number">1.3.</span> <span class="toc-text">补充：</span></a></li></ol></li></ol></div></div></div></aside><main class="sidebar-translate" id="content"><div id="post"><article class="hty-card post-block" itemscope itemtype="https://schema.org/Article" style="--smc-primary:#0078E7;"><link itemprop="mainEntityOfPage" href="http://example.com/2024/08/08/pikabot/"><span hidden itemprop="author" itemscope itemtype="https://schema.org/Person"><meta itemprop="name" content="YCr0w"><meta itemprop="description"></span><span hidden itemprop="publisher" itemscope itemtype="https://schema.org/Organization"><meta itemprop="name" content="YCr0w'blog"></span><header class="post-header"><h1 class="post-title" itemprop="name headline">pikabot</h1><div class="post-meta"><div class="post-time"><span class="post-meta-item-icon"><span class="icon iconify" data-icon="ri:calendar-line"></span></span> <time title="创建时间：2024-08-08 12:40:41" itemprop="dateCreated datePublished" datetime="2024-08-08T12:40:41+08:00">2024-08-08</time><span class="post-meta-divider">-</span><span class="post-meta-item-icon"><span class="icon iconify" data-icon="ri:calendar-2-line"></span></span> <time title="修改时间：2024-09-26 21:23:52" itemprop="dateModified" datetime="2024-09-26T21:23:52+08:00">2024-09-26</time></div><div class="post-classify"></div></div></header><section class="post-body" itemprop="articleBody"><div class="post-content markdown-body"><h1 id="pikabot"><a href="#pikabot" class="headerlink" title="pikabot"></a>pikabot</h1><h2 id="背景"><a href="#背景" class="headerlink" title="背景"></a>背景</h2><p>Pikabot 是一种于 2023 年初首次出现的新恶意软件。它有两个组件：Loader 和 core module。它仍处于起步阶段，预计未来将有更多的活动。 一些研究人员认为它与 TA570 有关，因为它与 trojan 之间的递送方法相似。以及活动期间没有活动。 Loader 的用途是执行大量的 Anti-debug、Anti-VM 和 Anti-emulation 检查，使自动化分析和注入核心模块变得更加困难。 使用 stack 和简单的 Bitwise 操作对字符串进行混淆处理。常量整数使用结构和循环进行混淆，以获得正确的偏移量。 核心模块具有许多功能，使攻击者能够完全控制受害者计算机。<a target="_blank" rel="noopener" href="https://d01a.github.io/pikabot/#dynamic-api-resolving">参考</a></p>
+<p>‍</p>
+<h2 id="pikabot分析"><a href="#pikabot分析" class="headerlink" title="pikabot分析"></a>pikabot分析</h2><p>​<img src="/../imge/pikabot/assets/image-20240908162739-v7zavov.png" alt="image" loading="lazy">​</p>
+<p>两个x86程序，选择32位ida打开，打开之后找起始函数start，</p>
+<p>​<img src="/../imge/pikabot/assets/image-20240908163225-joh65fo.png" alt="image" loading="lazy">​</p>
+<p>前面进行了一些空间开辟的操作，不重要，直接进入UsefulFunc_0函数分析</p>
+<p>​<img src="/../imge/pikabot/assets/image-20240909160800-vvpaak4.png" alt="image" loading="lazy">​</p>
+<p>其中有一个sub_4145CC函数，跟进发现，没有什么重要信息，进入73行的InitialAndCheckDebug函数，</p>
+<p>​<img src="/../imge/pikabot/assets/image-20240909161828-ccbn39f.png" alt="image" loading="lazy">​</p>
+<p>前面是一堆字符串进行操作，sub_410450函数，是计算了当前窗口是否处于最小化状态；跟进debugDetect3函数，</p>
+<p>​<img src="/../imge/pikabot/assets/image-20240909162147-ysau2wn.png" alt="image" loading="lazy">​</p>
+<p>前面进行了一堆变量类型的修改，NtQuerySystemInformation跟进，</p>
+<p>​<img src="/../imge/pikabot/assets/image-20240909174314-z5v6v4o.png" alt="image" loading="lazy">​</p>
+<p>SysCall函数系统调用是操作系统提供的接口，允许用户程序请求内核执行特权操作；Syscall这一绕过edr hook</p>
+<p>进入SysCall继续分析</p>
+<p>​<img src="/../imge/pikabot/assets/image-20240909194703-4csv9sa.png" alt="image" loading="lazy">​</p>
+<p>​<img src="/../imge/pikabot/assets/image-20240909195914-oc698lz.png" alt="image" loading="lazy">​</p>
+<h3 id="SysCallTableBuild分析"><a href="#SysCallTableBuild分析" class="headerlink" title="SysCallTableBuild分析"></a>SysCallTableBuild分析</h3><p>进入SysCallIndexFindByHash函数之后</p>
+<p>​<img src="/../imge/pikabot/assets/image-20240909202612-sddbfn9.png" alt="image" loading="lazy">​</p>
+<p>除了一个对页面操作的函数之外，全是对变量的操作，静态不好分析，先看SysCallTableBuild函数</p>
+<p>​<img src="/../imge/pikabot/assets/image-20240909204714-xpfayx6.png" alt="image" loading="lazy">​</p>
+<p>​<img src="/../imge/pikabot/assets/image-20240909204726-grmgxo9.png" alt="image" loading="lazy">​</p>
+<p>从149行开始到209行都在进行peb遍历进程加载dll文件，找到后面进行后续操作的dll文件基址与导出表位置</p>
+<p>​<img src="/../imge/pikabot/assets/image-20240909212235-rm3mqs5.png" alt="image" loading="lazy">​</p>
+<p>获取导出表地址，判断读取的dll存在导出表没有，205行对字符串进行哈希校验，满足跳出</p>
+<p>静态分析到这里之后具体实现不知道，打开x32动调调试，</p>
+<p>先在x32中找到0040101Dh处的SysCallIndexFindByHash函数</p>
+<p>​<img src="/../imge/pikabot/assets/image-20240911165723-zazh0p8.png" alt="image" loading="lazy">​</p>
+<p>打上断点f9运行到这里</p>
+<p>​<img src="/../imge/pikabot/assets/image-20240911170602-ta2ne7l.png" alt="image" loading="lazy">​</p>
+<p>通过堆栈可以看到前面的syscall参数是3A6A3CFF这里SysCallIndexFindByHash的参数v1就是syscall的参数</p>
+<p>继续往后调试，观察循环peb调用dll的地方</p>
+<p>​<img src="/../imge/pikabot/assets/image-20240911171311-u15tidj.png" alt="image" loading="lazy">​</p>
+<p>在ida观察到地址是0040D8B4h，进入x32的相同地址打上断点</p>
+<p>​<img src="/../imge/pikabot/assets/image-20240911172624-ihhnu2i.png" alt="image" loading="lazy">​</p>
+<p>跳出循环判断后就能知道寻找的就是ntdll</p>
+<p>​<img src="/../imge/pikabot/assets/image-20240911182120-siolp3w.png" alt="image" loading="lazy">​</p>
+<p>获取导出函数的地址列表，判断导出函数名称是否为ZW开头</p>
+<p>​<img src="/../imge/pikabot/assets/image-20240912162647-s5r8ee6.png" alt="image" loading="lazy">​</p>
+<p>讲导出函数的地址偏移量和名称偏移量hash值存入sysCallHashTable，导出550个之后跳出</p>
+<p>进入HashTableBuild函数</p>
+<p>​<img src="/../imge/pikabot/assets/image-20240912162949-a85pico.png" alt="image" loading="lazy">​</p>
+<p>计算哈希值</p>
+<p>​<img src="/../imge/pikabot/assets/image-20240912163457-6hr8cvz.png" alt="image" loading="lazy">​</p>
+<p>哈希值计算结束之后，退出这个函数，之后sysCallTableStruc结构体就构造完成了</p>
+<p>动调观察结构体的构造，427DC0h处就是sysCallHashTable</p>
+<p>​<img src="/../imge/pikabot/assets/image-20240912165217-peihxxf.png" alt="image" loading="lazy">​</p>
+<p>​<img src="/../imge/pikabot/assets/image-20240912170035-1h062yg.png" alt="image" loading="lazy">​</p>
+<p>从这里开始到413行貌似是一个二重循环的冒泡排序，将sysCallHashTable函数按照地址重新排序（二重循环冒泡见补充</p>
+<p>到这里SysCallTableBuild这个函数就结束了，返回调用这个函数的地方</p>
+<p>​<img src="/../imge/pikabot/assets/image-20240912174231-sijx5i6.png" alt="image" loading="lazy">​</p>
+<p>这里对刚才构造的的结构体进行了遍历，根据传入的hash获取函数在结构体中的下标</p>
+<p>再次跳出这个函数</p>
+<p>​<img src="/../imge/pikabot/assets/image-20240912174425-5rhz5ru.png" alt="image" loading="lazy">​</p>
+<p>直接看汇编代码</p>
+<p>​<img src="/../imge/pikabot/assets/image-20240912174649-fonokpq.png" alt="image" loading="lazy">​</p>
+<p>接下来调用了sub_40D0C4函数，跟进</p>
+<p>​<img src="/../imge/pikabot/assets/image-20240912175227-szcltti.png" alt="image" loading="lazy">​</p>
+<p>这个函数前面进行了一些字符的混淆，</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">result = DllBaseAddress</span><br><span class="line">          + v9</span><br><span class="line">          + sysCallHashTable.sysCallTable[sub_40A19C() % (sysCallHashTable.functionNum + <span class="number">1</span>)].functionAddress;</span><br></pre></td></tr></table></figure>
+
+<p>函数地址的绝对偏移量&#x3D;DllBaseAddress+functionadress;在上面可以看到v9&#x3D;5</p>
+<p>在这里加上了一个sub_40A19C取余，跟进sub_40A19C函数</p>
+<p>​<img src="/../imge/pikabot/assets/image-20240912180700-k72jgpt.png" alt="image" loading="lazy">​</p>
+<p>随机调用？</p>
+<p>返回上一级，根据刚才的分析，这个函数实现了一个ntdll中随机化函数的绝对地址+5，返回到查看地址进行动调分析<img src="/../imge/pikabot/assets/image-20240912192020-ex8zz4m.png" alt="image" loading="lazy">​</p>
+<p>在00401052h处打断点</p>
+<p>​<img src="/../imge/pikabot/assets/image-20240912192713-ncrssmg.png" alt="image" loading="lazy">​</p>
+<p>跳转到ntdll的模块进行运行，并且运行的函数是ZwSetLdtEntries</p>
+<p>​<code>ZwSetLdtEntries</code>​ 是 Windows 内核的一个系统调用，用于设置局部描述符表（LDT）中的条目，这里的起始位置应该是77244400h，加5之后就是现在的地址；跳转到了函数起始位置+5的地方执行</p>
+<p>观察这一区域的所有函数调用会发现，他们的函数头都是进行一个mov eax,index的操作来进行对eax的赋值，之后的两行代码完全相同，只是会ret不同的值，这意味这如果在mov edx,…这行之前将eax设置为[x]，就可以实现相当于调用起始为mov eax,[x]的函数的效果，此时再观察右上角eax，显示为036</p>
+<p>​<img src="/../imge/pikabot/assets/image-20240912194117-wv6z9ej.png" alt="image" loading="lazy">​</p>
+<p>一直找到eax 36，然后知道调用的是<code>NtQuerySystemInformation</code>​</p>
+<p>​<code>NtQuerySystemInformation</code>​ 是一个 Windows 内核的系统调用，用于获取系统信息。</p>
+<p>这就是indirectSyscall的效果，它通过调用随机ntdll.dll中Zw起始的函数头+5的位置，只需在此之前将eax的值设置为不同的数字，就可以实现调用另一个函数的效果</p>
+<p>‍</p>
+<p>往前翻，一直找到eax 0的地方</p>
+<p>​<img src="/../imge/pikabot/assets/image-20240912194548-9kabb7s.png" alt="image" loading="lazy">​</p>
+<p>ntdll中的mov eax,[x]，是按x的顺序由小到大排列的；hash+functionaddress中的第一个functionaddress就是772429B0，之后的地址是	772429C0、772429D0……</p>
+<p>这也就是之前通过hash遍历获取下标顺序的原因，下标的顺序和mov eax,[x]中的[x]是对应的，也就实现了通过hash调用一个ntdll中native函数的效果，甚至都不需要进入这个函数在应用层的调用地址中，从而躲避edr对所调用函数的hook。</p>
+<p>‍</p>
+<h2 id="补充："><a href="#补充：" class="headerlink" title="补充："></a>补充：</h2><p>二重循环冒泡排序调试（自己写一个冒泡丢到ida里面分析</p>
+<p>源码：（这个程序写得比较简单</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="keyword">include</span><span class="string">&lt;stdio.h&gt;</span></span></span><br><span class="line"></span><br><span class="line"><span class="type">void</span> <span class="title function_">BubbleStor</span><span class="params">(<span class="type">int</span> arr[], <span class="type">int</span> n)</span> &#123;</span><br><span class="line">	<span class="type">int</span> i, j, swapped;</span><br><span class="line">	<span class="type">int</span> temp;</span><br><span class="line">	<span class="keyword">for</span> (<span class="type">int</span> i = <span class="number">0</span>; i &lt; n<span class="number">-1</span>; i++)</span><br><span class="line">	&#123;</span><br><span class="line">		<span class="keyword">for</span> ( j = <span class="number">0</span>; j &lt; n<span class="number">-1</span>-j; j++)</span><br><span class="line">		&#123;</span><br><span class="line">			<span class="keyword">if</span> (arr[j]&gt;arr[j+<span class="number">1</span>])</span><br><span class="line">			&#123;</span><br><span class="line">				temp = arr[j];</span><br><span class="line">				arr[j] = arr[j + <span class="number">1</span>];</span><br><span class="line">				arr[j + <span class="number">1</span>] = temp;</span><br><span class="line"></span><br><span class="line">			&#125;</span><br><span class="line">		&#125;</span><br><span class="line"></span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="type">void</span> <span class="title function_">Printfarr</span><span class="params">(<span class="type">int</span> arr[], <span class="type">int</span> size)</span> &#123;</span><br><span class="line">	<span class="type">int</span> i;</span><br><span class="line">	<span class="keyword">for</span> ( i = <span class="number">0</span>; i &lt; size; i++)</span><br><span class="line">	&#123;</span><br><span class="line">		<span class="built_in">printf</span>(<span class="string">&quot;%d &quot;</span>, arr[i]);</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="built_in">printf</span>(<span class="string">&quot;\n&quot;</span>);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="type">int</span> <span class="title function_">main</span><span class="params">()</span> &#123;</span><br><span class="line">	<span class="type">int</span> arr[] = &#123; <span class="number">56</span>,<span class="number">43</span>,<span class="number">23</span>,<span class="number">54</span>,<span class="number">56</span>,<span class="number">34</span>,<span class="number">54</span>,<span class="number">56</span>,<span class="number">76</span> &#125;;</span><br><span class="line">	<span class="type">int</span> n = <span class="keyword">sizeof</span>(arr) / <span class="keyword">sizeof</span>(arr[<span class="number">0</span>]);</span><br><span class="line">	<span class="built_in">printf</span>(<span class="string">&quot;原数组:\n&quot;</span>);</span><br><span class="line">	Printfarr(arr, n);</span><br><span class="line">	BubbleStor(arr, n);</span><br><span class="line">	<span class="built_in">printf</span>(<span class="string">&quot;排序后数组：\n&quot;</span>);</span><br><span class="line">	Printfarr(arr, n);</span><br><span class="line"></span><br><span class="line">	<span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>ida里面的伪代码（因为没有加混淆看着和源码差不多</p>
+<p>​<img src="/../imge/pikabot/assets/image-20240914200052-t14o3xj.png" alt="image" loading="lazy">​</p>
+<p>输出数组的函数</p>
+<p>​<img src="/../imge/pikabot/assets/image-20240914200554-uoul5bu.png" alt="image" loading="lazy">​</p>
+<p>​<img src="/../imge/pikabot/assets/image-20240914200605-qt9rns5.png" alt="image" loading="lazy">​</p>
+<p>实现冒泡排序的函数</p>
+<p>​<img src="/../imge/pikabot/assets/image-20240914200650-45snom4.png" alt="image" loading="lazy">​</p>
+<p>这里其实和源码就一模一样的，没加垃圾数据混淆，长得和源码相差无几；和前面pikabot的二重循环进行对比（pikabot的二重循环是排序一个结构体中的数据，而上面是对简单数组实现的过程</p>
+<p>​<img src="/../imge/pikabot/assets/image-20240914201513-8621tr4.png" alt="image" loading="lazy">​</p>
+<p>相差挺大的，但是关键的几个地方是差不多的；都涉及了for的循环遍历要排序的东西，以及交换数据的实现</p>
+<p>‍</p>
+<p>‍</p>
+<p>‍</p>
+</div></section><div id="reward-container"><span class="hty-icon-button button-glow" id="reward-button" title="打赏" onclick="var qr = document.getElementById(&quot;qr&quot;); qr.style.display = (qr.style.display === &quot;none&quot;) ? &quot;block&quot; : &quot;none&quot;;"><span class="icon iconify" data-icon="ri:hand-coin-line"></span></span><div id="reward-comment">I'm so cute. Please give me money.</div></div><ul class="post-copyright"><li class="post-copyright-author"><strong>本文作者：</strong>YCr0w</li><li class="post-copyright-link"><strong>本文链接：</strong><a href="http://example.com/2024/08/08/pikabot/" title="pikabot">http://example.com/2024/08/08/pikabot/</a></li><li class="post-copyright-license"><strong>版权声明：</strong>本博客所有文章除特别声明外，均默认采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/deed.zh" target="_blank" rel="noopener" title="CC BY-NC-SA 4.0 "><span class="icon iconify" data-icon="ri:creative-commons-line"></span><span class="icon iconify" data-icon="ri:creative-commons-by-line"></span><span class="icon iconify" data-icon="ri:creative-commons-nc-line"></span><span class="icon iconify" data-icon="ri:creative-commons-sa-line"></span></a> 许可协议。</li></ul></article><div class="post-nav"><div class="post-nav-item"></div><div class="post-nav-item"><a class="post-nav-next" href="/2024/08/08/vs2022%20c++%E5%AE%9E%E7%8E%B0dll%E5%88%9B%E5%BB%BA%E5%92%8C%E8%B0%83%E7%94%A8/" rel="next" title="vs2022 c++实现dll创建和调用"><span class="post-nav-text">vs2022 c++实现dll创建和调用</span><span class="icon iconify" data-icon="ri:arrow-right-s-line"></span></a></div></div></div><div class="hty-card" id="comment"></div></main><footer class="sidebar-translate" id="footer"><div class="copyright"><span>&copy; 2019 – 2024 </span><span class="with-love" id="animate"><span class="icon iconify" data-icon="ri:cloud-line"></span></span><span class="author"> YCr0w</span></div><div class="powered"><span>由 <a href="https://hexo.io" target="_blank" rel="noopener">Hexo</a> 驱动 v7.3.0</span><span class="footer-separator">|</span><span>主题 - <a rel="noopener" href="https://github.com/YunYouJun/hexo-theme-yun" target="_blank"><span>Yun</span></a> v1.10.11</span></div></footer></div><a class="hty-icon-button" id="back-to-top" aria-label="back-to-top" href="#"><span class="icon iconify" data-icon="ri:arrow-up-s-line"></span><svg class="progress-circle-container" viewBox="0 0 100 100"><circle class="progress-circle" id="progressCircle" cx="50" cy="50" r="48" fill="none" stroke="#0078E7" stroke-width="2" stroke-linecap="round"></circle></svg></a><script src="https://fastly.jsdelivr.net/npm/medium-zoom@1.0.6/dist/medium-zoom.min.js"></script><script>const images = [...document.querySelectorAll('.markdown-body img')]
+mediumZoom(images)</script><style>.medium-zoom-image {
+  z-index: 99;
+}</style></body></html>
