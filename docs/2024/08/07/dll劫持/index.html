@@ -1,0 +1,130 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#15171a">
+  <meta name="description" content="DLL 搜索顺序、劫持条件与验证过程的学习记录。">
+  <meta name="author" content="YCr0w">
+  <title>DLL 劫持原理与实践 | YCr0w&#39;blog</title>
+  <link rel="icon" type="image/x-icon" href="/assets/site/favicon.ico">
+  <link rel="stylesheet" href="/assets/css/site.css">
+  <script src="/assets/vendor/lucide.js" defer></script>
+  <script src="/assets/js/site.js" defer></script>
+</head>
+<body class="article-page">
+  <header class="site-header">
+    <a class="brand" href="/" aria-label="YCr0w'blog 首页"><span class="brand-mark">YC</span><span>YCr0w'blog</span></a>
+    <button class="nav-toggle icon-button" type="button" aria-label="打开导航"><i data-lucide="menu" aria-hidden="true"></i></button>
+    <nav class="main-nav" aria-label="主导航">
+      <a href="/"><i data-lucide="house" aria-hidden="true"></i><span>首页</span></a><a href="/categories/"><i data-lucide="folder-tree" aria-hidden="true"></i><span>分类</span></a><a href="/archives/"><i data-lucide="archive" aria-hidden="true"></i><span>归档</span></a><a href="/about/"><i data-lucide="user-round" aria-hidden="true"></i><span>关于</span></a>
+    </nav>
+    <div class="header-actions">
+      <button class="icon-button" id="search-button" type="button" aria-label="搜索"><i data-lucide="search" aria-hidden="true"></i></button>
+      <button class="icon-button" id="theme-button" type="button" aria-label="切换主题"><i data-lucide="sun-moon" aria-hidden="true"></i></button>
+    </div>
+  </header>
+  <main class="article-shell">
+    <article class="article"><header class="article-header"><a class="article-category" href="/categories/windows-security/" style="--category-color:#d59b28"><span class="category-dot"></span>Windows 安全</a><h1>DLL 劫持原理与实践</h1><p>DLL 搜索顺序、劫持条件与验证过程的学习记录。</p><div class="article-meta"><span><i data-lucide="calendar-days" aria-hidden="true"></i>2024年8月7日</span><span><i data-lucide="clock-3" aria-hidden="true"></i>5 分钟阅读</span></div><div class="tag-list"><a href="/tags/dll-%E5%8A%AB%E6%8C%81/">#DLL 劫持</a><a href="/tags/windows/">#Windows</a><a href="/tags/%E5%AE%89%E5%85%A8%E7%A0%94%E7%A9%B6/">#安全研究</a></div></header><div class="article-body markdown-body"><h1 id="dll劫持">dll劫持</h1><h2 id="dll介绍即作用"><a target="_blank" rel="noopener noreferrer" href="https://zh.wikipedia.org/wiki/%E5%8A%A8%E6%80%81%E9%93%BE%E6%8E%A5%E5%BA%93">dll介绍即作用</a></h2><p><strong>动态链接库</strong>（英语：Dynamic-link library，缩写为<strong>DLL</strong>）是<a target="_blank" rel="noopener noreferrer" href="https://zh.wikipedia.org/wiki/%E5%BE%AE%E8%BD%AF%E5%85%AC%E5%8F%B8" title="微软公司">微软公司</a>在 <a target="_blank" rel="noopener noreferrer" href="https://zh.wikipedia.org/wiki/Microsoft_Windows" title="Microsoft Windows">Windows</a> <a target="_blank" rel="noopener noreferrer" href="https://zh.wikipedia.org/wiki/%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F" title="操作系统">操作系统</a>中实现共享<a target="_blank" rel="noopener noreferrer" href="https://zh.wikipedia.org/wiki/%E5%87%BD%E6%95%B0%E5%BA%93" title="函数库">函数库</a>概念的一种实现方式。这些库函数的<a target="_blank" rel="noopener noreferrer" href="https://zh.wikipedia.org/wiki/%E6%89%A9%E5%B1%95%E5%90%8D" title="扩展名">扩展名</a>是<code>.DLL</code>​、<code>.OCX</code>​（包含<a target="_blank" rel="noopener noreferrer" href="https://zh.wikipedia.org/wiki/ActiveX" title="ActiveX">ActiveX</a>控制的库）或者<code>.DRV</code>​（旧式的系统<a target="_blank" rel="noopener noreferrer" href="https://zh.wikipedia.org/wiki/%E9%A9%B1%E5%8A%A8%E7%A8%8B%E5%BA%8F" title="驱动程序">驱动程序</a>）。</p>
+<p>所谓动态链接，就是把一些经常会共享的代码（静态链接的<a target="_blank" rel="noopener noreferrer" href="https://zh.wikipedia.org/w/index.php?title=OBJ&amp;action=edit&amp;redlink=1">OBJ</a>程序库）制作成DLL档，当可执行文件调用到DLL档内的函数时，Windows操作系统才会把DLL档加载存储器内，DLL档本身的结构就是可执行档，当程序有需求时函数才进行链接。通过动态链接方式，存储器浪费的情形将可大幅降低。<a target="_blank" rel="noopener noreferrer" href="https://zh.wikipedia.org/wiki/%E9%9D%99%E6%80%81%E9%93%BE%E6%8E%A5%E5%BA%93" title="静态链接库">静态链接库</a>则是直接<a target="_blank" rel="noopener noreferrer" href="https://zh.wikipedia.org/wiki/%E9%93%BE%E6%8E%A5%E5%99%A8" title="链接器">链接</a>到可执行文件。</p>
+<p>DLL的文件格式与视窗<a target="_blank" rel="noopener noreferrer" href="https://zh.wikipedia.org/wiki/EXE" title="EXE">EXE</a>文件一样——也就是说，等同于<a target="_blank" rel="noopener noreferrer" href="https://zh.wikipedia.org/wiki/32%E4%BD%8D" title="32位">32位</a>视窗的<a target="_blank" rel="noopener noreferrer" href="https://zh.wikipedia.org/wiki/Portable_Executable" title="Portable Executable">可移植执行文件</a>（PE）和<a target="_blank" rel="noopener noreferrer" href="https://zh.wikipedia.org/wiki/16%E4%BD%8D" title="16位">16位</a>视窗的<a target="_blank" rel="noopener noreferrer" href="https://zh.wikipedia.org/w/index.php?title=New_Executable&amp;action=edit&amp;redlink=1">New Executable</a>（NE）。作为EXE格式，DLL可以包括<a target="_blank" rel="noopener noreferrer" href="https://zh.wikipedia.org/wiki/%E5%8E%9F%E5%A7%8B%E7%A2%BC" title="源代码">源代码</a>、<a target="_blank" rel="noopener noreferrer" href="https://zh.wikipedia.org/wiki/%E6%95%B0%E6%8D%AE_(%E8%AE%A1%E7%AE%97%E6%9C%BA)">数据</a> “数据 (计算机)”)和<a target="_blank" rel="noopener noreferrer" href="https://zh.wikipedia.org/wiki/%E8%B5%84%E6%BA%90_(Windows)">资源</a> “资源 (Windows)”)的多种组合。</p>
+<p>在更广泛的意义上说，任何同样<a target="_blank" rel="noopener noreferrer" href="https://zh.wikipedia.org/wiki/%E6%AA%94%E6%A1%88%E6%A0%BC%E5%BC%8F" title="文件格式">文件格式</a>的<a target="_blank" rel="noopener noreferrer" href="https://zh.wikipedia.org/wiki/%E9%9B%BB%E8%85%A6%E6%AA%94%E6%A1%88" title="电脑文件">电脑文件</a>都可以称作<strong>资源DLL</strong>。这样的DLL的例子有扩展名为<code>ICL</code>​的<a target="_blank" rel="noopener noreferrer" href="https://zh.wikipedia.org/wiki/%E5%9B%BE%E6%A0%87" title="图标">图标</a>库、扩展名为<code>FON</code>​和<code>FOT</code>​的<a target="_blank" rel="noopener noreferrer" href="https://zh.wikipedia.org/wiki/%E5%AD%97%E5%9E%8B" title="字体">字体</a>文件。</p>
+<p><strong>作用</strong></p>
+<p>DLL动态链接库，是程序进行动态链接时加载的库函数。</p>
+<p>故动态链接最直接的好处是磁盘和内存的消耗减少，这也是dll最初的目的。</p>
+<p>不过，dll也有缺点，就是容易造成版本冲突,比如不同的应用程序共享同一个dll,而它们需求的是不同的版本，这就会出现矛盾,解决办法是把不同版本的dll放在不同的文件夹中。</p>
+<p>‍</p>
+<h2 id="dll劫持原理">dll劫持原理</h2><p>劫持DLL（又称为DLL劫持、DLL搜索顺序劫持或二进制植入）是一种攻击技术，如果在进程尝试加载一个DLL时没有并没有<strong>指定DLL的绝对路径</strong>，那么Windows会尝试去按照顺序搜索这些特定目录来查找这个DLL，,如果攻击者能够将恶意的DLL放在优先于正常DLL所在的目录，那么就能够欺骗系统去加载恶意的DLL（利用Windows操作系统在加载DLL（动态链接库）时的搜索顺序漏洞，使得恶意DLL被误加载到受害进程中。）这种攻击方法可以让攻击者在受害进程的上下文中执行任意代码。</p>
+<p>当一个应用程序需要加载DLL时，Windows系统会按照特定的顺序搜索DLL。搜索顺序通常如下：</p>
+<ol>
+<li>应用程序的目录。</li>
+<li>系统目录（如System32）。</li>
+<li>16位系统目录。</li>
+<li>Windows目录。</li>
+<li>当前工作目录。</li>
+<li>环境变量<code>PATH</code>​中列出的目录。</li>
+</ol>
+<p>‍</p>
+<p>劫持目的：</p>
+<ul>
+<li>常见的白加黑，利用可信任的（最好被微软签名过）可执行程序加载恶意 DLL</li>
+<li>劫持目标操作系统中已预先安装并且会定期运行的软件所需加载的 DLL</li>
+<li>如果目标应用程序正以高权限运行，劫持后的恶意代码也会以相应的权限执行</li>
+</ul>
+<p>‍</p>
+<h2 id="dl劫持方法">dl劫持方法</h2><ul>
+<li>用恶意的DLL替换掉合法的DLL，可以将其与dll代理（ <a target="_blank" rel="noopener noreferrer" href="https://kevinalmansa.github.io/application%20security/DLL-Proxying/">DLL Proxying</a> ）结合使用，以确保原DLL的所有功能均保持不变。</li>
+<li>当应用程序加载DLL的时候，如果没有带指定DLL的路径，那么程序将会以特定的顺序依次在指定的路径下<a target="_blank" rel="noopener noreferrer" href="https://docs.microsoft.com/en-us/windows/win32/dlls/dynamic-link-library-search-order">搜索</a>待加载的DLL。通过将恶意DLL放在真实DLL之前的搜索位置，就可以劫持搜索顺序，劫持的目录有时候包括目标应用程序的工作目录。</li>
+<li>释放一个恶意 DLL 来代替丢失的或者不存在的 要被合法应用程序加载的DLL。</li>
+<li>更改DLL搜索的路径，比如通过编辑 %PATH% 环境变量或 <a target="_blank" rel="noopener noreferrer" href="https://docs.microsoft.com/en-gb/windows/win32/sbscs/application-manifests">.exe.manifest</a>/<a target="_blank" rel="noopener noreferrer" href="https://docs.microsoft.com/en-gb/windows/win32/dlls/dynamic-link-library-redirection">.exe.local</a>文件以将搜索路径定位到包含恶意DLL的地方。</li>
+<li>将目标DLL相关的WinSxS文件夹中的合法的DLL替换为恶意DLL。</li>
+<li>将合法的应用程序复制（并有选择地重命名）与恶意的DLL一起放入到用户可写的文件夹中。在使用方法上，它与（带签名的）<a target="_blank" rel="noopener noreferrer" href="https://attack.mitre.org/techniques/T1218/">二进制代理执行</a> 有相似之处。它的一个变体是（有点矛盾地称为）“<a target="_blank" rel="noopener noreferrer" href="https://www.microsoft.com/security/blog/2019/09/26/bring-your-own-lolbin-multi-stage-fileless-nodersok-campaign-delivers-rare-node-js-based-malware/">bring your own LOLbin</a>”，其中合法的应用程序带有恶意的DLL（而不是从受害者机器上的合法位置复制）。</li>
+</ul>
+<p>‍</p>
+<h2 id="dll劫持测试">dll劫持测试</h2><p>环境：Windows11、vs2022、ChkDllHijack ，AheadLib+、<a target="_blank" rel="noopener noreferrer" href="https://docs.microsoft.com/zh-cn/sysinternals/downloads/procmon">Process Monitor</a> 或者ProcessExplorer、qq音乐</p>
+<p>ChkDllHijack是一款自动化验证dll劫持注入漏洞工具，相同可替换工具也有很多，可以在github中找到</p>
+<p>AheadLib是一款自动化dll劫持代码生成工具，由于原版仅支持x86，这里使用看雪大神的AheadLib+改版，更新了x64支持类/命名空间。</p>
+<p><a target="_blank" rel="noopener noreferrer" href="https://docs.microsoft.com/zh-cn/sysinternals/downloads/procmon">Process Monitor</a>：负责监控可执行程序运行时系统调用加载的dll链接库</p>
+<p>‍</p>
+<p>‍</p>
+<h2 id="防御方法">防御方法</h2><h3 id="1-使用完整路径加载-DLL">1.使用完整路径加载 DLL</h3><ul>
+<li><strong>明确指定路径</strong>: 在代码中使用 DLL 的完整路径，避免使用不明确的相对路径或环境变量。</li>
+</ul>
+<h3 id="2-使用安全的-DLL-加载函数">2. 使用安全的 DLL 加载函数</h3><ul>
+<li>​<strong>​<code>LoadLibraryEx</code>​</strong>​ <strong>函数</strong>: 使用 <code>LoadLibraryEx</code>​ 的 <code>LOAD_LIBRARY_AS_DATAFILE</code>​ 选项，可以防止加载同名 DLL。</li>
+</ul>
+<h3 id="3-控制-DLL-的搜索路径">3. 控制 DLL 的搜索路径</h3><ul>
+<li><strong>设置 DLL 搜索路径</strong>: 调用 <code>SetDllDirectory</code>​ 来指定有效的 DLL 搜索路径，限制可加载的 DLL 来源。</li>
+</ul>
+<h3 id="4-使用-Windows-保护机制">4. 使用 Windows 保护机制</h3><ul>
+<li><strong>启用 Windows Defender</strong>: 确保 Windows Defender 或其他安全软件在运行，以监控和拦截可疑活动。</li>
+<li><strong>使用数字签名</strong>: 对 DLL 和可执行文件进行数字签名，确保文件的来源可信。</li>
+</ul>
+<h3 id="5-应用程序清单">5. 应用程序清单</h3><ul>
+<li><strong>使用应用程序清单</strong>: 通过清单文件配置安全特性，指定使用哪些库，确保优先加载特定版本的 DLL。</li>
+</ul>
+<h3 id="6-代码审计和监控">6. 代码审计和监控</h3><ul>
+<li><strong>定期代码审计</strong>: 检查代码中潜在的 DLL 加载风险并进行必要的修复。</li>
+<li><strong>监控 DLL 加载活动</strong>: 使用监控工具检测和记录 DLL 加载，快速响应可疑行为。</li>
+</ul>
+<h3 id="7-最小化用户权限">7. 最小化用户权限</h3><ul>
+<li><strong>限制应用程序权限</strong>:以最小权限原则运行应用程序，减少脚本和应用程序能访问的资源。</li>
+</ul>
+<h3 id="8-采取安全编程实践">8. 采取安全编程实践</h3><ul>
+<li><strong>输入验证与输出编码</strong>: 确保程序安全，防止注入和其他攻击，减少被劫持的机会。</li>
+</ul>
+<p>‍</p>
+<p>‍</p>
+<h2 id="白加黑介绍和原理">白加黑介绍和原理</h2><p>白加黑是一种利用 DLL 劫持技术来绕过安全软件的主动防御，以达到加载恶意程序的目的。通过劫持合法程序的DLL文件，将恶意代码嵌入其中，使得恶意程序能够在不被安全软件检测到的情况下运行。</p>
+<p>白名单程序一般是指有正规签名的程序只要有正规签名的程序一般都或多或少都有一定的白名单权限，权限有大有小，具体看该程序相对于杀软来说的重要程度，该程序越重要白名单权限越高。部分程序即便有正规签名也会被杀软重点监控如有微软签名的 Procdump。</p>
+<ol>
+<li>Exe(白) —load—&gt; dll（黑）</li>
+<li>Exe(白) —load—&gt; dll（黑）—load—&gt; 恶意代码</li>
+</ol>
+<p>‍</p>
+<h3 id="补充：">补充：</h3><p>dll劫持产生条件：</p>
+<ol>
+<li>不再’HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\Session Manager\KnownDLLs’注册表中</li>
+<li>其dll是EXE程序首先加载的DLL，而不是依赖其他DLL加载的。</li>
+<li>DLL确实被加载进内存中</li>
+</ol>
+<p>‍</p>
+<p>判断dll是否可以劫持：</p>
+<p>手动方法：</p>
+<p>利用进程查看软件，查看dll是否存KnownDlls注册表中。</p>
+<p>自动审计方法：即上面测试所采用的工具和方法</p>
+<p>‍</p>
+</div><footer class="article-footer"><div><span>本文链接</span><a href="https://ycr0w.github.io/2024/08/07/dll%E5%8A%AB%E6%8C%81/">https://ycr0w.github.io/2024/08/07/dll%E5%8A%AB%E6%8C%81/</a></div></footer></article>
+    <aside class="article-aside"><div class="toc"><span>目录</span><a class="toc-level-2" href="#dll%E4%BB%8B%E7%BB%8D%E5%8D%B3%E4%BD%9C%E7%94%A8">dll介绍即作用</a><a class="toc-level-2" href="#dll%E5%8A%AB%E6%8C%81%E5%8E%9F%E7%90%86">dll劫持原理</a><a class="toc-level-2" href="#dl%E5%8A%AB%E6%8C%81%E6%96%B9%E6%B3%95">dl劫持方法</a><a class="toc-level-2" href="#dll%E5%8A%AB%E6%8C%81%E6%B5%8B%E8%AF%95">dll劫持测试</a><a class="toc-level-2" href="#%E9%98%B2%E5%BE%A1%E6%96%B9%E6%B3%95">防御方法</a><a class="toc-level-3" href="#1-%E4%BD%BF%E7%94%A8%E5%AE%8C%E6%95%B4%E8%B7%AF%E5%BE%84%E5%8A%A0%E8%BD%BD-DLL">1.使用完整路径加载 DLL</a><a class="toc-level-3" href="#2-%E4%BD%BF%E7%94%A8%E5%AE%89%E5%85%A8%E7%9A%84-DLL-%E5%8A%A0%E8%BD%BD%E5%87%BD%E6%95%B0">2. 使用安全的 DLL 加载函数</a><a class="toc-level-3" href="#3-%E6%8E%A7%E5%88%B6-DLL-%E7%9A%84%E6%90%9C%E7%B4%A2%E8%B7%AF%E5%BE%84">3. 控制 DLL 的搜索路径</a><a class="toc-level-3" href="#4-%E4%BD%BF%E7%94%A8-Windows-%E4%BF%9D%E6%8A%A4%E6%9C%BA%E5%88%B6">4. 使用 Windows 保护机制</a><a class="toc-level-3" href="#5-%E5%BA%94%E7%94%A8%E7%A8%8B%E5%BA%8F%E6%B8%85%E5%8D%95">5. 应用程序清单</a><a class="toc-level-3" href="#6-%E4%BB%A3%E7%A0%81%E5%AE%A1%E8%AE%A1%E5%92%8C%E7%9B%91%E6%8E%A7">6. 代码审计和监控</a><a class="toc-level-3" href="#7-%E6%9C%80%E5%B0%8F%E5%8C%96%E7%94%A8%E6%88%B7%E6%9D%83%E9%99%90">7. 最小化用户权限</a><a class="toc-level-3" href="#8-%E9%87%87%E5%8F%96%E5%AE%89%E5%85%A8%E7%BC%96%E7%A8%8B%E5%AE%9E%E8%B7%B5">8. 采取安全编程实践</a><a class="toc-level-2" href="#%E7%99%BD%E5%8A%A0%E9%BB%91%E4%BB%8B%E7%BB%8D%E5%92%8C%E5%8E%9F%E7%90%86">白加黑介绍和原理</a><a class="toc-level-3" href="#%E8%A1%A5%E5%85%85%EF%BC%9A">补充：</a></div></aside>
+    <nav class="post-navigation"><span></span><a href="/2024/08/07/CobaltStrike%E5%8A%A8%E8%B0%83/"><span><small>下一篇</small>CobaltStrike 动态调试</span><i data-lucide="arrow-right" aria-hidden="true"></i></a></nav>
+  </main>
+  <footer class="site-footer"><span>© 2026 YCr0w</span><span>由 Blog Desk 整理并生成</span></footer>
+  <dialog class="search-dialog" id="search-dialog">
+    <form method="dialog" class="search-head">
+      <label class="search-field"><i data-lucide="search" aria-hidden="true"></i><input id="search-input" type="search" placeholder="搜索文章、标签或分类" autocomplete="off"></label>
+      <button class="icon-button" value="close" aria-label="关闭搜索"><i data-lucide="x" aria-hidden="true"></i></button>
+    </form>
+    <div class="search-results" id="search-results"></div>
+  </dialog>
+</body>
+</html>

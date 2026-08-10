@@ -1,14 +1,11 @@
 /**
- * Orphan-branch deploy: pushes the contents of public/ to origin/gh-pages
- * using a disposable temp git repo.  The working tree and source branch are
- * never touched, making this safe and idempotent.
+ * Direct-branch publish: builds to docs/, commits, and pushes to origin.
+ * Designed for a single-branch workflow (main) where GitHub Pages serves
+ * from the /docs directory.
  */
-import fs from "node:fs/promises";
-import os from "node:os";
-import path from "node:path";
 import { execFile } from "node:child_process";
 import { promisify } from "node:util";
-import { publicDir, rootDir } from "./paths.mjs";
+import { rootDir } from "./paths.mjs";
 
 const execFileAsync = promisify(execFile);
 
@@ -19,32 +16,22 @@ const execFileAsync = promisify(execFile);
  */
 export async function runPublish({ message = "Deploy blog updates" } = {}) {
   const msg = String(message).trim();
+  const git = (args, opts) => execFileAsync("git", ["-C", rootDir, ...args], opts);
 
-  if (!(await fs.access(publicDir).then(() => true).catch(() => false))) {
-    throw new Error("public/ does not exist. Run a build first.");
+  const branch = (await git(["branch", "--show-current"])).stdout.trim();
+  if (branch !== "main") {
+    throw new Error(`Publish must run from the 'main' branch; current branch is '${branch}'.`);
   }
 
-  const { stdout: remoteOut } = await execFileAsync("git", ["-C", rootDir, "remote", "get-url", "origin"]);
-  const remote = remoteOut.trim();
+  await git(["remote", "get-url", "origin"]);
 
-  const tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), "gh-pages-deploy-"));
-
-  try {
-    await fs.cp(publicDir, tmpDir, { recursive: true });
-
-    const git = (args) => execFileAsync("git", ["-C", tmpDir, ...args], { maxBuffer: 10 * 1024 * 1024 });
-    await git(["init", "--quiet"]);
-    await git(["config", "user.email", "blog-desk@deploy"]);
-    await git(["config", "user.name", "Blog Desk"]);
-    await git(["add", "--all"]);
-    const { stdout: status } = await git(["status", "--short"]);
-    if (!status.trim()) {
-      return { committed: false, output: "Nothing to publish (public/ is empty)." };
-    }
-    await git(["commit", "--quiet", "-m", msg]);
-    await git(["push", "--force", "--quiet", remote, "HEAD:gh-pages"]);
-    return { committed: true, output: `Published to ${remote} (gh-pages).` };
-  } finally {
-    await fs.rm(tmpDir, { recursive: true, force: true });
+  const status = (await git(["status", "--short"])).stdout.trim();
+  if (!status) {
+    return { committed: false, output: "Nothing to publish." };
   }
+
+  await git(["add", "--all"]);
+  await git(["commit", "-m", msg]);
+  const { stdout, stderr } = await git(["push", "origin", "main"], { maxBuffer: 10 * 1024 * 1024 });
+  return { committed: true, output: `${stdout}\n${stderr}`.trim() };
 }

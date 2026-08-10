@@ -20,13 +20,18 @@ tools/blog-manager/              构建系统（Blog Desk）
   public/                        Blog Desk 管理界面
   theme/                         博客主题（site.css, site.js）
 
+docs/                            ⚙ 生成产物（GitHub Pages 从此目录提供服务）
+
 deploy.bat                       入口脚本：预览 / 检查 / 发布 / 导入
 package.json                     依赖和脚本
-
-public/                          ⚙ 生成产物（gitignored，勿手动编辑）
 ```
 
-根目录只保留源码和配置，所有生成内容输出到 `public/`。
+单分支 `main` 工作流。根目录只有源码和配置，生成内容输出到 `docs/`，
+GitHub Pages 从 `main` 分支的 `/docs` 目录提供服务。
+
+## GitHub Pages 配置
+
+仓库 Settings → Pages → Source → Deploy from a branch → `main` → `/docs`
 
 ## 日常使用
 
@@ -52,15 +57,13 @@ slug: url-slug
 ---
 ```
 
-图片链接会自动重写为 `/assets/posts/<文章id>/` 下的稳定路径。
-
 ### 预览
 
 ```bat
 deploy.bat
 ```
 
-自动构建 + 验证 + 启动本地服务器，浏览器打开：
+自动构建 + 验证 + 启动本地服务器：
 
 - 博客：<http://127.0.0.1:4173/>
 - 管理界面：<http://127.0.0.1:4173/__manager__/>
@@ -73,7 +76,7 @@ deploy.bat
 deploy.bat publish "发布新文章"
 ```
 
-构建 + 验证 + 将 `public/` 内容推送到 `origin/gh-pages` 分支。
+构建 + 验证 + 提交 `docs/` + 推送到 `origin/main`。
 
 ## 命令一览
 
@@ -82,20 +85,9 @@ deploy.bat publish "发布新文章"
 | `deploy.bat` | 预览（构建 + 验证 + 启动服务） |
 | `deploy.bat preview [port]` | 指定端口预览 |
 | `deploy.bat check` | 仅构建 + 验证 |
-| `deploy.bat publish "msg"` | 提交并推送到 gh-pages |
+| `deploy.bat publish "msg"` | 提交并推送到 main |
 | `deploy.bat stop [port]` | 停止预览服务器 |
 | `deploy.bat import <path>` | 导入文章 |
-
-CLI 等价命令（用于脚本化）：
-
-```bat
-node tools\blog-manager\cli.mjs build
-node tools\blog-manager\cli.mjs validate
-node tools\blog-manager\cli.mjs import <path> [options]
-node tools\blog-manager\cli.mjs preview [--port N] [--no-browser]
-node tools\blog-manager\cli.mjs stop    [--port N]
-node tools\blog-manager\cli.mjs publish [--message "msg"]
-```
 
 ## 上传接口（未来一键上传工具）
 

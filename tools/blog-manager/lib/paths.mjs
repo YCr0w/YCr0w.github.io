@@ -10,7 +10,7 @@ export const inboxDir = path.join(contentDir, "inbox");
 export const siteAssetsDir = path.join(contentDir, "site-assets");
 export const manifestPath = path.join(contentDir, "site.json");
 export const buildDir = path.join(rootDir, ".site-build");
-export const publicDir = path.join(rootDir, "public");
+export const publicDir = path.join(rootDir, "docs");
 export const managerPublicDir = path.join(rootDir, "tools", "blog-manager", "public");
 
 export function fromRoot(...segments) {

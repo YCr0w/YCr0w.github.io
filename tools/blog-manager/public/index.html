@@ -1,0 +1,95 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Blog Desk</title>
+  <link rel="stylesheet" href="/__manager__/styles.css">
+  <script src="/__manager__/lucide.js" defer></script>
+  <script src="/__manager__/app.js" type="module"></script>
+</head>
+<body>
+  <aside class="workspace-sidebar">
+    <div class="workspace-brand"><span>BD</span><strong>Blog Desk</strong></div>
+    <nav class="workspace-nav" aria-label="工作区">
+      <button class="nav-item active" data-filter="all" type="button"><i data-lucide="files"></i><span>全部文章</span><b id="all-count">0</b></button>
+      <button class="nav-item" data-filter="inbox" type="button"><i data-lucide="inbox"></i><span>待整理</span><b id="inbox-count">0</b></button>
+      <button class="nav-item" data-filter="draft" type="button"><i data-lucide="file-pen-line"></i><span>草稿</span><b id="draft-count">0</b></button>
+    </nav>
+    <div class="sidebar-label"><span>分类</span><button class="mini-button" id="new-category-button" type="button" title="新建分类"><i data-lucide="plus"></i></button></div>
+    <nav class="category-nav" id="category-nav" aria-label="分类"></nav>
+    <div class="sidebar-bottom"><a href="/" target="_blank"><i data-lucide="external-link"></i>站点预览</a><a href="https://github.com/YCr0w/YCr0w.github.io" target="_blank" rel="noopener"><i data-lucide="github"></i>GitHub</a></div>
+  </aside>
+
+  <main class="workspace-main">
+    <header class="workspace-header">
+      <div><p>CONTENT WORKSPACE</p><h1 id="view-title">文章工作台</h1></div>
+      <div class="header-tools">
+        <label class="manager-search"><i data-lucide="search"></i><input id="post-search" type="search" placeholder="搜索标题、标签"></label>
+        <button class="button secondary" id="build-button" type="button"><i data-lucide="hammer"></i>生成站点</button>
+        <button class="button primary" id="import-button" type="button"><i data-lucide="file-up"></i>导入文章</button>
+      </div>
+    </header>
+
+    <section class="stats-band" aria-label="站点状态">
+      <div><span>已发布</span><strong id="published-stat">0</strong></div>
+      <div><span>分类</span><strong id="category-stat">0</strong></div>
+      <div><span>待整理</span><strong id="inbox-stat">0</strong></div>
+      <div><span>工作区改动</span><strong id="changes-stat">0</strong></div>
+    </section>
+
+    <section class="content-panel">
+      <div class="table-toolbar"><span id="result-count">0 篇文章</span><div><button class="icon-control active" data-density="comfortable" type="button" title="舒适密度"><i data-lucide="rows-3"></i></button><button class="icon-control" data-density="compact" type="button" title="紧凑密度"><i data-lucide="list"></i></button></div></div>
+      <div class="inbox-list" id="inbox-list" hidden></div>
+      <div class="post-table-wrap" id="post-table-wrap">
+        <table class="post-table">
+          <thead><tr><th>文章</th><th>分类</th><th>标签</th><th>日期</th><th>状态</th><th><span class="sr-only">操作</span></th></tr></thead>
+          <tbody id="post-table-body"></tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+
+  <button class="publish-button" id="publish-button" type="button"><i data-lucide="rocket"></i><span>发布到 GitHub</span></button>
+
+  <dialog class="manager-dialog import-dialog" id="import-dialog">
+    <form id="import-form">
+      <header><div><p>IMPORT</p><h2>整理新文章</h2></div><button class="icon-control" type="button" data-close="import-dialog" aria-label="关闭"><i data-lucide="x"></i></button></header>
+      <div class="dialog-body two-column-form">
+        <section class="file-source">
+          <label class="drop-zone" for="article-files"><i data-lucide="files"></i><strong>选择导出文件</strong><span id="file-selection">Markdown / HTML / 图片资源</span><input id="article-files" type="file" multiple accept=".md,.markdown,.html,.htm,image/*"></label>
+          <label class="folder-picker" for="article-folder"><i data-lucide="folder-up"></i><span>选择整个导出目录</span><input id="article-folder" type="file" webkitdirectory multiple></label>
+          <div class="inbox-source" id="inbox-source" hidden><i data-lucide="inbox"></i><span></span><button type="button" id="clear-inbox-source"><i data-lucide="x"></i></button></div>
+        </section>
+        <section class="metadata-fields">
+          <label><span>标题</span><input name="title" required></label>
+          <div class="field-row"><label><span>分类</span><select name="category" required></select></label><label><span>发布日期</span><input name="date" type="date" required></label></div>
+          <label><span>标签</span><input name="tags" placeholder="Windows, PEB, DLL"></label>
+          <label><span>固定链接</span><input name="slug" pattern="[A-Za-z0-9._-]+" placeholder="article-slug"></label>
+          <label><span>摘要</span><textarea name="summary" rows="4"></textarea></label>
+          <label class="toggle-field"><input name="draft" type="checkbox"><span>保存为草稿</span></label>
+        </section>
+      </div>
+      <footer><button class="button secondary" type="button" data-close="import-dialog">取消</button><button class="button primary" type="submit"><i data-lucide="package-check"></i>整理并生成</button></footer>
+    </form>
+  </dialog>
+
+  <dialog class="manager-dialog" id="edit-dialog">
+    <form id="edit-form">
+      <header><div><p>METADATA</p><h2>编辑文章</h2></div><button class="icon-control" type="button" data-close="edit-dialog" aria-label="关闭"><i data-lucide="x"></i></button></header>
+      <div class="dialog-body metadata-fields"><input name="id" type="hidden"><label><span>标题</span><input name="title" required></label><div class="field-row"><label><span>分类</span><select name="category" required></select></label><label><span>发布日期</span><input name="date" type="date" required></label></div><label><span>标签</span><input name="tags"></label><label><span>摘要</span><textarea name="summary" rows="4"></textarea></label><label class="toggle-field"><input name="draft" type="checkbox"><span>保存为草稿</span></label></div>
+      <footer><button class="button secondary" type="button" data-close="edit-dialog">取消</button><button class="button primary" type="submit"><i data-lucide="save"></i>保存并生成</button></footer>
+    </form>
+  </dialog>
+
+  <dialog class="manager-dialog small-dialog" id="category-dialog">
+    <form id="category-form"><header><div><p>CATEGORY</p><h2>新建分类</h2></div><button class="icon-control" type="button" data-close="category-dialog" aria-label="关闭"><i data-lucide="x"></i></button></header><div class="dialog-body metadata-fields"><label><span>名称</span><input name="name" required></label><label><span>标识</span><input name="id" pattern="[A-Za-z0-9._-]+"></label><label><span>说明</span><input name="description"></label><label><span>颜色</span><input name="color" type="color" value="#59636e"></label></div><footer><button class="button secondary" type="button" data-close="category-dialog">取消</button><button class="button primary" type="submit">创建分类</button></footer></form>
+  </dialog>
+
+  <dialog class="manager-dialog small-dialog" id="publish-dialog">
+    <form id="publish-form"><header><div><p>DEPLOY</p><h2>发布到 GitHub</h2></div><button class="icon-control" type="button" data-close="publish-dialog" aria-label="关闭"><i data-lucide="x"></i></button></header><div class="dialog-body metadata-fields"><label><span>提交说明</span><input name="commitMessage" value="Publish blog updates" required></label><label class="confirm-field"><input name="confirmed" type="checkbox" required><span>确认暂存工作区全部改动并推送到 origin/gh-pages</span></label></div><footer><button class="button secondary" type="button" data-close="publish-dialog">取消</button><button class="button danger" type="submit"><i data-lucide="rocket"></i>确认发布</button></footer></form>
+  </dialog>
+
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+</body>
+</html>
