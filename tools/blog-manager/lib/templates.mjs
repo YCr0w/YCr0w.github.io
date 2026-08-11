@@ -67,7 +67,7 @@ export function layout({ site, title, description, active, content, bodyClass = 
 <body class="${escapeHtml(bodyClass)}">
   ${nav(active, site)}
   ${content}
-  <footer class="site-footer"><span>© ${new Date().getFullYear()} ${escapeHtml(site.author)}</span><span>由 Blog Desk 整理并生成</span></footer>
+  <footer class="site-footer"><span>© ${new Date().getFullYear()} ${escapeHtml(site.author)}</span></footer>
 </body>
 </html>\n`;
 }
