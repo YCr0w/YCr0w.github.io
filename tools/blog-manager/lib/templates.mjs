@@ -21,7 +21,7 @@ function icon(name, label = "") {
   return `<i data-lucide="${name}"${aria}></i>`;
 }
 
-function nav(active) {
+function nav(active, site) {
   const links = [
     ["home", "首页", "/", "house"],
     ["categories", "分类", "/categories/", "folder-tree"],
@@ -29,26 +29,23 @@ function nav(active) {
     ["about", "关于", "/about/", "user-round"],
   ];
   return `<header class="site-header">
-    <a class="brand" href="/" aria-label="YCr0w'blog 首页"><span class="brand-mark">YC</span><span>YCr0w'blog</span></a>
+    <div class="header-profile">
+      <a class="header-identity" href="/" aria-label="返回首页"><img class="header-avatar" src="/assets/site/avatar.jpg" alt="${escapeHtml(site.author)}"><span class="header-name">${escapeHtml(site.author)}</span></a>
+      <div class="header-links"><a href="${site.github}" target="_blank" rel="noopener" aria-label="GitHub">${icon("github")}</a><a href="mailto:${site.email}" aria-label="Email">${icon("mail")}</a></div>
+    </div>
     <button class="nav-toggle icon-button" type="button" aria-label="打开导航">${icon("menu")}</button>
     <nav class="main-nav" aria-label="主导航">
       ${links.map(([id, label, href, iconName]) => `<a${active === id ? ' class="active"' : ""} href="${href}">${icon(iconName)}<span>${label}</span></a>`).join("")}
     </nav>
     <div class="header-actions">
-      <button class="icon-button" id="search-button" type="button" aria-label="搜索">${icon("search")}</button>
+      <div class="search-inline" id="search-inline">
+        <button class="icon-button" id="search-button" type="button" aria-label="搜索" aria-expanded="false">${icon("search")}</button>
+        <input id="search-input" type="search" placeholder="搜索文章、标签或分类" autocomplete="off">
+        <div class="search-results" id="search-results"></div>
+      </div>
       <button class="icon-button" id="theme-button" type="button" aria-label="切换主题">${icon("sun-moon")}</button>
     </div>
   </header>`;
-}
-
-function searchDialog() {
-  return `<dialog class="search-dialog" id="search-dialog">
-    <form method="dialog" class="search-head">
-      <label class="search-field">${icon("search")}<input id="search-input" type="search" placeholder="搜索文章、标签或分类" autocomplete="off"></label>
-      <button class="icon-button" value="close" aria-label="关闭搜索">${icon("x")}</button>
-    </form>
-    <div class="search-results" id="search-results"></div>
-  </dialog>`;
 }
 
 export function layout({ site, title, description, active, content, bodyClass = "" }) {
@@ -68,10 +65,9 @@ export function layout({ site, title, description, active, content, bodyClass = 
   <script src="/assets/js/site.js" defer></script>
 </head>
 <body class="${escapeHtml(bodyClass)}">
-  ${nav(active)}
+  ${nav(active, site)}
   ${content}
   <footer class="site-footer"><span>© ${new Date().getFullYear()} ${escapeHtml(site.author)}</span><span>由 Blog Desk 整理并生成</span></footer>
-  ${searchDialog()}
 </body>
 </html>\n`;
 }
@@ -97,27 +93,24 @@ export function postRow(post, category) {
 
 export function homePage(manifest, posts) {
   const published = posts.filter((post) => post.status === "published");
-  const categories = manifest.categories.map((category) => ({
-    ...category,
-    count: published.filter((post) => post.category === category.id).length,
-  }));
-  const content = `<main>
-    <section class="hero">
-      <div class="hero-scrim"></div>
-      <div class="hero-content">
-        <p class="hero-eyebrow">BINARY · WINDOWS · MALWARE</p>
-        <h1>${escapeHtml(manifest.site.title)}</h1>
-        <p>${escapeHtml(manifest.site.description)}</p>
-        <a class="hero-action" href="#latest">浏览最新文章 ${icon("arrow-down")}</a>
-      </div>
+  const categories = new Map(manifest.categories.map((category) => [category.id, category]));
+  const content = `<main class="home-main">
+    <section class="banner">
+      <div class="banner-scrim"></div>
+      <svg class="banner-waves" viewBox="0 24 150 28" preserveAspectRatio="none" shape-rendering="auto" aria-hidden="true">
+        <defs><path id="gentle-wave" d="M-160 44c30 0 58-18 88-18s 58 18 88 18 58-18 88-18 58 18 88 18 v44h-352z" fill="currentColor"></path></defs>
+        <g class="wave-parallax">
+          <use href="#gentle-wave" x="48" y="0" opacity="0.7"></use>
+          <use href="#gentle-wave" x="48" y="3" opacity="0.5"></use>
+          <use href="#gentle-wave" x="48" y="5" opacity="0.3"></use>
+          <use href="#gentle-wave" x="48" y="7"></use>
+        </g>
+      </svg>
+      <a class="banner-down" href="#posts" aria-label="向下滚动">${icon("chevron-down")}</a>
     </section>
-    <section class="category-band" aria-label="文章分类"><div class="section-inner category-grid">
-      ${categories.map((category) => categoryLink(category, category.count)).join("")}
-    </div></section>
-    <section class="posts-section" id="latest"><div class="section-inner content-grid">
-      <div class="section-main"><header class="section-heading"><div><p>RECENT NOTES</p><h2>最近更新</h2></div><a href="/archives/">查看归档 ${icon("arrow-right")}</a></header>
-      <div class="post-list">${published.slice(0, 8).map((post) => postRow(post, categories.find((category) => category.id === post.category))).join("")}</div></div>
-      <aside class="profile-panel"><img src="/assets/site/avatar.jpg" alt="${escapeHtml(manifest.site.author)}"><h2>${escapeHtml(manifest.site.author)}</h2><p>${escapeHtml(manifest.site.tagline)}</p><div class="profile-links"><a href="${manifest.site.github}" target="_blank" rel="noopener">${icon("github")} GitHub</a><a href="mailto:${manifest.site.email}">${icon("mail")} Email</a></div></aside>
+    <section class="posts-section" id="posts"><div class="section-inner home-feed">
+      <header class="section-heading"><div><p>RECENT NOTES</p><h2>最近更新</h2></div><a href="/archives/">查看归档 ${icon("arrow-right")}</a></header>
+      <div class="post-list">${published.slice(0, 8).map((post) => postRow(post, categories.get(post.category))).join("")}</div>
     </div></section>
   </main>`;
   return layout({ site: manifest.site, active: "home", content, bodyClass: "home-page" });
@@ -152,7 +145,7 @@ export function articlePage({ manifest, post, category, rendered, previous, next
 }
 
 export function simplePage(manifest, title, active, body) {
-  const content = `<main class="page-shell"><header class="page-heading"><p>YCR0W</p><h1>${escapeHtml(title)}</h1></header><article class="simple-content markdown-body">${body}</article></main>`;
+  const content = `<main class="page-shell"><header class="page-heading"><h1>${escapeHtml(title)}</h1></header><article class="simple-content markdown-body">${body}</article></main>`;
   return layout({ site: manifest.site, title, active, content });
 }
 

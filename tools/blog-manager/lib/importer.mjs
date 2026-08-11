@@ -64,7 +64,7 @@ function replaceHtmlAssets(source, primaryPath, assetMap, postId) {
   return $("body").length ? $("body").html() : $.root().html();
 }
 
-function postUrl(date, slug) {
+export function postUrl(date, slug) {
   const value = new Date(date);
   if (Number.isNaN(value.valueOf())) throw new Error("Article date is invalid.");
   const year = value.getFullYear();
@@ -241,6 +241,74 @@ export async function updatePost(postId, changes) {
     post.url = postUrl(post.date, slug);
   }
   post.updated = new Date().toISOString();
+  await saveManifest(manifest);
+  return post;
+}
+
+
+/**
+ * Create a new Markdown post from scratch — a front-matter template plus a
+ * short body stub — and register it in the manifest. The generated index.md
+ * is meant to be opened in Typora and filled in; the watch server picks up
+ * saves automatically. Unlike importFiles(), no external files are read.
+ *
+ * @param {object} metadata  { title, category, tags, slug, id, date, status }
+ * @returns {Promise<object>} the created post record
+ */
+export async function createPost(metadata = {}) {
+  const title = String(metadata.title || "Untitled").trim();
+  const categoryId = metadata.category || "notes";
+  const manifest = await loadManifest();
+
+  if (!manifest.categories.some((category) => category.id === categoryId)) {
+    throw new Error(`Unknown category: ${categoryId}`);
+  }
+
+  const slug = safeSegment(metadata.slug || title, `post-${Date.now()}`);
+  const id = safeSegment(metadata.id || slug);
+  if (manifest.posts.some((post) => post.id === id)) {
+    throw new Error(`A post with id '${id}' already exists.`);
+  }
+
+  const tags = Array.isArray(metadata.tags)
+    ? metadata.tags
+    : String(metadata.tags || "").split(",").map((tag) => tag.trim()).filter(Boolean);
+  const status = metadata.status === "draft" ? "draft" : "published";
+  const date = metadata.date || new Date().toISOString();
+
+  const destination = path.join(postsDir, categoryId, id);
+  assertInside(postsDir, destination);
+  await fs.mkdir(destination, { recursive: true });
+  await fs.mkdir(path.join(destination, "assets"), { recursive: true });
+
+  const frontMatter = YAML.stringify({ title, category: categoryId, tags, date, slug, status });
+  const body = [
+    "",
+    `# ${title}`,
+    "",
+    "<!-- 在这里开始书写正文。保存后本地预览自动刷新；满意后运行 deploy.bat publish 上线。 -->",
+    "",
+  ].join("\n");
+  const source = `---\n${frontMatter}---\n${body}`;
+
+  const sourcePath = path.join(destination, "index.md");
+  await fs.writeFile(sourcePath, source.endsWith("\n") ? source : `${source}\n`, "utf8");
+
+  const post = {
+    id,
+    title,
+    category: categoryId,
+    tags,
+    date: new Date(date).toISOString(),
+    updated: new Date().toISOString(),
+    url: postUrl(date, slug),
+    summary: "",
+    source: path.relative(fromRoot(), sourcePath).replaceAll(path.sep, "/"),
+    format: "markdown",
+    status,
+    legacy: false,
+  };
+  manifest.posts.push(post);
   await saveManifest(manifest);
   return post;
 }

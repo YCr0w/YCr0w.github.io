@@ -13,6 +13,16 @@ import { listInbox, loadManifest, safeSegment, saveManifest } from "./lib/storag
 const execFileAsync = promisify(execFile);
 const requestedPort = Number(process.argv.find((value) => value.startsWith("--port="))?.split("=")[1] || process.env.PORT || 4173);
 const host = "127.0.0.1";
+const watchMode = process.argv.includes("--watch");
+const liveReloadClients = new Set();
+const LIVE_RELOAD_SCRIPT = "<script>(function(){var e=new EventSource('/__livereload__');e.addEventListener('message',function(){location.reload();});})();</script>";
+
+function injectLiveReload(body) {
+  const text = body.toString("utf8");
+  return /<\/body>/i.test(text)
+    ? Buffer.from(text.replace(/<\/body>/i, `${LIVE_RELOAD_SCRIPT}</body>`), "utf8")
+    : Buffer.concat([body, Buffer.from(LIVE_RELOAD_SCRIPT, "utf8")]);
+}
 
 const mimeTypes = new Map([
   [".html", "text/html; charset=utf-8"],
@@ -150,9 +160,11 @@ async function serveFile(response, base, relativePath) {
     return false;
   }
   if (!stat.isFile()) return false;
-  const body = await fs.readFile(target);
+  const ext = path.extname(target).toLowerCase();
+  let body = await fs.readFile(target);
+  if (watchMode && ext === ".html") body = injectLiveReload(body);
   response.writeHead(200, {
-    "content-type": mimeTypes.get(path.extname(target).toLowerCase()) || "application/octet-stream",
+    "content-type": mimeTypes.get(ext) || "application/octet-stream",
     "content-length": body.length,
     "cache-control": "no-store",
   });
@@ -166,6 +178,18 @@ const server = http.createServer(async (request, response) => {
     const pathname = decodeURIComponent(url.pathname);
     if (pathname.startsWith("/api/")) {
       if (!await handleApi(request, response, pathname)) sendJson(response, 404, { error: "API route not found." });
+      return;
+    }
+
+    if (watchMode && pathname === "/__livereload__") {
+      response.writeHead(200, {
+        "content-type": "text/event-stream",
+        "cache-control": "no-store",
+        connection: "keep-alive",
+      });
+      response.write(": connected\n\n");
+      liveReloadClients.add(response);
+      request.on("close", () => liveReloadClients.delete(response));
       return;
     }
     if (pathname === "/__manager__/lucide.js") {
@@ -193,3 +217,16 @@ server.listen(requestedPort, host, () => {
   console.log(`Blog preview: http://${host}:${requestedPort}/`);
   console.log(`Blog manager: http://${host}:${requestedPort}/__manager__/`);
 });
+
+if (watchMode) {
+  const { watchAndRebuild } = await import("./lib/watch.mjs");
+  watchAndRebuild((error, result) => {
+    if (error) {
+      console.error(`[watch] rebuild failed: ${error.message}`);
+      return;
+    }
+    console.log(`[watch] rebuilt ${result.posts} posts / ${result.pages} pages${result.synced ? " (front-matter synced)" : ""}`);
+    for (const client of liveReloadClients) client.write("data: reload\n\n");
+  });
+  console.log("Watch mode: editing content/ or theme/ auto-rebuilds the site.");
+}

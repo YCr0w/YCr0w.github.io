@@ -14,20 +14,27 @@
 </head>
 <body class="">
   <header class="site-header">
-    <a class="brand" href="/" aria-label="YCr0w'blog 首页"><span class="brand-mark">YC</span><span>YCr0w'blog</span></a>
+    <div class="header-profile">
+      <a class="header-identity" href="/" aria-label="返回首页"><img class="header-avatar" src="/assets/site/avatar.jpg" alt="YCr0w"><span class="header-name">YCr0w</span></a>
+      <div class="header-links"><a href="https://github.com/YCr0w" target="_blank" rel="noopener" aria-label="GitHub"><i data-lucide="github" aria-hidden="true"></i></a><a href="mailto:3083981460@qq.com" aria-label="Email"><i data-lucide="mail" aria-hidden="true"></i></a></div>
+    </div>
     <button class="nav-toggle icon-button" type="button" aria-label="打开导航"><i data-lucide="menu" aria-hidden="true"></i></button>
     <nav class="main-nav" aria-label="主导航">
       <a href="/"><i data-lucide="house" aria-hidden="true"></i><span>首页</span></a><a class="active" href="/categories/"><i data-lucide="folder-tree" aria-hidden="true"></i><span>分类</span></a><a href="/archives/"><i data-lucide="archive" aria-hidden="true"></i><span>归档</span></a><a href="/about/"><i data-lucide="user-round" aria-hidden="true"></i><span>关于</span></a>
     </nav>
     <div class="header-actions">
-      <button class="icon-button" id="search-button" type="button" aria-label="搜索"><i data-lucide="search" aria-hidden="true"></i></button>
+      <div class="search-inline" id="search-inline">
+        <button class="icon-button" id="search-button" type="button" aria-label="搜索" aria-expanded="false"><i data-lucide="search" aria-hidden="true"></i></button>
+        <input id="search-input" type="search" placeholder="搜索文章、标签或分类" autocomplete="off">
+        <div class="search-results" id="search-results"></div>
+      </div>
       <button class="icon-button" id="theme-button" type="button" aria-label="切换主题"><i data-lucide="sun-moon" aria-hidden="true"></i></button>
     </div>
   </header>
   <main class="page-shell"><header class="page-heading"><p>TAG</p><h1>#动态调试</h1><span>1 篇相关文章</span></header><section class="post-list wide"><article class="post-row">
     <div class="post-date"><span>08/07</span><small>2024</small></div>
     <div class="post-summary">
-      <div class="post-kicker"><a href="/categories/red-team/" style="--category-color:#5967a9"><span class="category-dot"></span>红队研究</a></div>
+      <div class="post-kicker"><a href="/categories/malware-analysis/" style="--category-color:#d84a5b"><span class="category-dot"></span>恶意软件分析</a></div>
       <h2><a href="/2024/08/07/CobaltStrike%E5%8A%A8%E8%B0%83/">CobaltStrike 动态调试</a></h2>
       <p>围绕 CobaltStrike 样本展开的动态调试过程、关键流程定位与行为分析笔记。</p>
       <div class="tag-list"><a href="/tags/cobaltstrike/">#CobaltStrike</a><a href="/tags/%E5%8A%A8%E6%80%81%E8%B0%83%E8%AF%95/">#动态调试</a><a href="/tags/%E9%80%86%E5%90%91%E5%88%86%E6%9E%90/">#逆向分析</a></div>
@@ -35,12 +42,5 @@
     <a class="row-action" href="/2024/08/07/CobaltStrike%E5%8A%A8%E8%B0%83/" aria-label="阅读 CobaltStrike 动态调试"><i data-lucide="arrow-up-right" aria-hidden="true"></i></a>
   </article></section></main>
   <footer class="site-footer"><span>© 2026 YCr0w</span><span>由 Blog Desk 整理并生成</span></footer>
-  <dialog class="search-dialog" id="search-dialog">
-    <form method="dialog" class="search-head">
-      <label class="search-field"><i data-lucide="search" aria-hidden="true"></i><input id="search-input" type="search" placeholder="搜索文章、标签或分类" autocomplete="off"></label>
-      <button class="icon-button" value="close" aria-label="关闭搜索"><i data-lucide="x" aria-hidden="true"></i></button>
-    </form>
-    <div class="search-results" id="search-results"></div>
-  </dialog>
 </body>
 </html>

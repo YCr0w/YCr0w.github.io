@@ -103,6 +103,41 @@ try {
       break;
     }
 
+    case "new": {
+      const title = args.find((a) => !a.startsWith("--"));
+      if (!title) {
+        throw new Error(
+          'Usage: cli.mjs new "标题" --category <cat> [--tags a,b] [--slug ...] [--status draft|published]',
+        );
+      }
+      const metadata = { title };
+      for (const [key, value] of Object.entries({
+        category: getFlag("category"),
+        slug: getFlag("slug"),
+        status: getFlag("status"),
+      })) {
+        if (value !== undefined) metadata[key] = value;
+      }
+      const tags = getFlag("tags");
+      if (tags) metadata.tags = tags.split(",").map((tag) => tag.trim()).filter(Boolean);
+
+      const { createPost } = await import("./lib/importer.mjs");
+      const post = await createPost(metadata);
+      const { fromRoot } = await import("./lib/paths.mjs");
+      const filePath = fromRoot(...post.source.split("/"));
+      console.log(`Created "${post.title}"`);
+      console.log(`  file:   ${filePath}`);
+      console.log(`  url:    ${post.url}`);
+      console.log(`  status: ${post.status}`);
+
+      if (!getSwitch("no-build")) {
+        const { buildSite } = await import("./lib/generator.mjs");
+        await buildSite();
+        console.log("Site rebuilt. Open the file in Typora, then run: deploy.bat dev");
+      }
+      break;
+    }
+
     case "preview": {
       const port = Number(getFlag("port", "4173"));
       const { buildSite } = await import("./lib/generator.mjs");
@@ -115,6 +150,29 @@ try {
       console.log(`==> Blog manager:  ${url}__manager__/`);
       console.log(`==> PID ${pid}.  Stop with: deploy.bat stop ${port}`);
       if (!getSwitch("no-browser")) exec(`start "" "${url}"`);
+      break;
+    }
+
+    case "dev": {
+      const port = Number(getFlag("port", "4173"));
+      const { buildSite } = await import("./lib/generator.mjs");
+      await buildSite();
+      const { rootDir } = await import("./lib/paths.mjs");
+      const { spawn } = await import("node:child_process");
+      const serverPath = path.join(rootDir, "tools", "blog-manager", "server.mjs");
+      const child = spawn(process.execPath, [serverPath, `--port=${port}`, "--watch"], {
+        cwd: rootDir,
+        stdio: "inherit",
+        shell: false,
+      });
+      console.log(`\n==> Dev mode (watch + live reload): http://127.0.0.1:${port}/`);
+      console.log(`==> Manager: http://127.0.0.1:${port}/__manager__/`);
+      console.log("==> Edit in Typora, save → site rebuilds → browser auto-refreshes.");
+      console.log("==> Press Ctrl+C to stop.\n");
+      const stop = () => { child.kill(); process.exit(0); };
+      process.on("SIGINT", stop);
+      process.on("SIGTERM", stop);
+      child.on("exit", (code) => process.exit(code ?? 0));
       break;
     }
 

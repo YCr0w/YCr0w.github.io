@@ -14,36 +14,32 @@
 </head>
 <body class="">
   <header class="site-header">
-    <a class="brand" href="/" aria-label="YCr0w'blog 首页"><span class="brand-mark">YC</span><span>YCr0w'blog</span></a>
+    <div class="header-profile">
+      <a class="header-identity" href="/" aria-label="返回首页"><img class="header-avatar" src="/assets/site/avatar.jpg" alt="YCr0w"><span class="header-name">YCr0w</span></a>
+      <div class="header-links"><a href="https://github.com/YCr0w" target="_blank" rel="noopener" aria-label="GitHub"><i data-lucide="github" aria-hidden="true"></i></a><a href="mailto:3083981460@qq.com" aria-label="Email"><i data-lucide="mail" aria-hidden="true"></i></a></div>
+    </div>
     <button class="nav-toggle icon-button" type="button" aria-label="打开导航"><i data-lucide="menu" aria-hidden="true"></i></button>
     <nav class="main-nav" aria-label="主导航">
       <a href="/"><i data-lucide="house" aria-hidden="true"></i><span>首页</span></a><a class="active" href="/categories/"><i data-lucide="folder-tree" aria-hidden="true"></i><span>分类</span></a><a href="/archives/"><i data-lucide="archive" aria-hidden="true"></i><span>归档</span></a><a href="/about/"><i data-lucide="user-round" aria-hidden="true"></i><span>关于</span></a>
     </nav>
     <div class="header-actions">
-      <button class="icon-button" id="search-button" type="button" aria-label="搜索"><i data-lucide="search" aria-hidden="true"></i></button>
+      <div class="search-inline" id="search-inline">
+        <button class="icon-button" id="search-button" type="button" aria-label="搜索" aria-expanded="false"><i data-lucide="search" aria-hidden="true"></i></button>
+        <input id="search-input" type="search" placeholder="搜索文章、标签或分类" autocomplete="off">
+        <div class="search-results" id="search-results"></div>
+      </div>
       <button class="icon-button" id="theme-button" type="button" aria-label="切换主题"><i data-lucide="sun-moon" aria-hidden="true"></i></button>
     </div>
   </header>
   <main class="page-shell"><header class="page-heading"><p>TOPICS</p><h1>分类</h1><span>按研究方向浏览文章</span></header><section class="directory-list"><a class="category-link" href="/categories/malware-analysis/" style="--category-color:#d84a5b">
-    <span class="category-dot"></span><span><strong>恶意软件分析</strong><small>样本行为、加载链与对抗技术</small></span><b>1</b>
-  </a><a class="category-link" href="/categories/windows-internals/" style="--category-color:#187f76">
-    <span class="category-dot"></span><span><strong>Windows 内核机制</strong><small>PEB、模块加载与系统结构</small></span><b>1</b>
+    <span class="category-dot"></span><span><strong>恶意软件分析</strong><small>样本行为、加载链与对抗技术</small></span><b>2</b>
+  </a><a class="category-link" href="/categories/anti-cheat/" style="--category-color:#5967a9">
+    <span class="category-dot"></span><span><strong>外挂与免杀分析</strong><small>反作弊对抗与免杀技术</small></span><b>0</b>
   </a><a class="category-link" href="/categories/windows-security/" style="--category-color:#d59b28">
-    <span class="category-dot"></span><span><strong>Windows 安全</strong><small>攻击面、利用方式与防护思路</small></span><b>1</b>
-  </a><a class="category-link" href="/categories/red-team/" style="--category-color:#5967a9">
-    <span class="category-dot"></span><span><strong>红队研究</strong><small>工具链、调试与对抗分析</small></span><b>1</b>
-  </a><a class="category-link" href="/categories/reverse-pwn/" style="--category-color:#7b5a9a">
-    <span class="category-dot"></span><span><strong>逆向与 Pwn</strong><small>二进制分析与漏洞研究</small></span><b>0</b>
-  </a><a class="category-link" href="/categories/notes/" style="--category-color:#59636e">
-    <span class="category-dot"></span><span><strong>学习随笔</strong><small>零散记录与实践备忘</small></span><b>0</b>
+    <span class="category-dot"></span><span><strong>Windows安全</strong><small>攻击面、利用方式与防护思路</small></span><b>2</b>
+  </a><a class="category-link" href="/categories/ctf/" style="--category-color:#7b5a9a">
+    <span class="category-dot"></span><span><strong>CTF</strong><small>竞赛题解与技巧</small></span><b>0</b>
   </a></section></main>
   <footer class="site-footer"><span>© 2026 YCr0w</span><span>由 Blog Desk 整理并生成</span></footer>
-  <dialog class="search-dialog" id="search-dialog">
-    <form method="dialog" class="search-head">
-      <label class="search-field"><i data-lucide="search" aria-hidden="true"></i><input id="search-input" type="search" placeholder="搜索文章、标签或分类" autocomplete="off"></label>
-      <button class="icon-button" value="close" aria-label="关闭搜索"><i data-lucide="x" aria-hidden="true"></i></button>
-    </form>
-    <div class="search-results" id="search-results"></div>
-  </dialog>
 </body>
 </html>

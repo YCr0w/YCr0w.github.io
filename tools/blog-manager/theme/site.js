@@ -17,17 +17,39 @@ document.addEventListener("DOMContentLoaded", () => {
     localStorage.setItem("site-theme", root.dataset.theme);
   });
 
-  const dialog = document.querySelector("#search-dialog");
+  const searchInline = document.querySelector("#search-inline");
+  const searchButton = document.querySelector("#search-button");
   const input = document.querySelector("#search-input");
   const results = document.querySelector("#search-results");
   let searchIndex;
 
-  document.querySelector("#search-button")?.addEventListener("click", async () => {
-    dialog?.showModal();
+  const openSearch = async () => {
+    searchInline?.classList.add("expanded");
+    searchButton?.setAttribute("aria-expanded", "true");
     input?.focus();
     if (!searchIndex) searchIndex = await fetch("/search.json").then((response) => response.json());
-  });
+  };
+  const closeSearch = () => {
+    searchInline?.classList.remove("expanded");
+    searchButton?.setAttribute("aria-expanded", "false");
+  };
 
+  searchButton?.addEventListener("click", async (event) => {
+    event.stopPropagation();
+    if (searchInline?.classList.contains("expanded")) {
+      closeSearch();
+      if (input) input.value = "";
+      results?.replaceChildren();
+    } else {
+      await openSearch();
+    }
+  });
+  document.addEventListener("click", (event) => {
+    if (searchInline && !searchInline.contains(event.target)) closeSearch();
+  });
+  input?.addEventListener("keydown", (event) => {
+    if (event.key === "Escape") { closeSearch(); input.blur(); }
+  });
   input?.addEventListener("input", () => {
     const query = input.value.trim().toLocaleLowerCase("zh-CN");
     if (!query || !searchIndex) {
@@ -63,6 +85,17 @@ document.addEventListener("DOMContentLoaded", () => {
       viewer.showModal();
     });
   });
+
+  const revealSelector = ".post-row, .category-link, .section-heading, .page-heading, .article-header, .directory-list > *, .tag-directory > *";
+  const revealObserver = new IntersectionObserver((entries) => {
+    for (const entry of entries) {
+      if (!entry.isIntersecting) continue;
+      entry.target.classList.add("revealed");
+      revealObserver.unobserve(entry.target);
+    }
+  }, { rootMargin: "0px 0px -8%" });
+  document.querySelectorAll(revealSelector).forEach((el) => revealObserver.observe(el));
+  setTimeout(() => document.querySelectorAll(revealSelector).forEach((el) => el.classList.add("revealed")), 3000);
 });
 
 function escapeText(value) {

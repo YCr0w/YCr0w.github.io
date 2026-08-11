@@ -14,18 +14,25 @@
 </head>
 <body class="article-page">
   <header class="site-header">
-    <a class="brand" href="/" aria-label="YCr0w'blog 首页"><span class="brand-mark">YC</span><span>YCr0w'blog</span></a>
+    <div class="header-profile">
+      <a class="header-identity" href="/" aria-label="返回首页"><img class="header-avatar" src="/assets/site/avatar.jpg" alt="YCr0w"><span class="header-name">YCr0w</span></a>
+      <div class="header-links"><a href="https://github.com/YCr0w" target="_blank" rel="noopener" aria-label="GitHub"><i data-lucide="github" aria-hidden="true"></i></a><a href="mailto:3083981460@qq.com" aria-label="Email"><i data-lucide="mail" aria-hidden="true"></i></a></div>
+    </div>
     <button class="nav-toggle icon-button" type="button" aria-label="打开导航"><i data-lucide="menu" aria-hidden="true"></i></button>
     <nav class="main-nav" aria-label="主导航">
       <a href="/"><i data-lucide="house" aria-hidden="true"></i><span>首页</span></a><a href="/categories/"><i data-lucide="folder-tree" aria-hidden="true"></i><span>分类</span></a><a href="/archives/"><i data-lucide="archive" aria-hidden="true"></i><span>归档</span></a><a href="/about/"><i data-lucide="user-round" aria-hidden="true"></i><span>关于</span></a>
     </nav>
     <div class="header-actions">
-      <button class="icon-button" id="search-button" type="button" aria-label="搜索"><i data-lucide="search" aria-hidden="true"></i></button>
+      <div class="search-inline" id="search-inline">
+        <button class="icon-button" id="search-button" type="button" aria-label="搜索" aria-expanded="false"><i data-lucide="search" aria-hidden="true"></i></button>
+        <input id="search-input" type="search" placeholder="搜索文章、标签或分类" autocomplete="off">
+        <div class="search-results" id="search-results"></div>
+      </div>
       <button class="icon-button" id="theme-button" type="button" aria-label="切换主题"><i data-lucide="sun-moon" aria-hidden="true"></i></button>
     </div>
   </header>
   <main class="article-shell">
-    <article class="article"><header class="article-header"><a class="article-category" href="/categories/windows-internals/" style="--category-color:#187f76"><span class="category-dot"></span>Windows 内核机制</a><h1>Windows 模块加载方式与 PEB 模块遍历</h1><p>梳理 Windows 静态与动态链接方式，以及通过 PEB 模块链表枚举已加载模块的实现思路。</p><div class="article-meta"><span><i data-lucide="calendar-days" aria-hidden="true"></i>2024年8月7日</span><span><i data-lucide="clock-3" aria-hidden="true"></i>24 分钟阅读</span></div><div class="tag-list"><a href="/tags/windows/">#Windows</a><a href="/tags/peb/">#PEB</a><a href="/tags/dll/">#DLL</a></div></header><div class="article-body markdown-body"><h2 id="使用-Windows-API">使用 Windows API</h2><p>‍</p>
+    <article class="article"><header class="article-header"><a class="article-category" href="/categories/windows-security/" style="--category-color:#d59b28"><span class="category-dot"></span>Windows安全</a><h1>Windows 模块加载方式与 PEB 模块遍历</h1><p>梳理 Windows 静态与动态链接方式，以及通过 PEB 模块链表枚举已加载模块的实现思路。</p><div class="article-meta"><span><i data-lucide="calendar-days" aria-hidden="true"></i>2024年8月7日</span><span><i data-lucide="clock-3" aria-hidden="true"></i>24 分钟阅读</span></div><div class="tag-list"><a href="/tags/windows/">#Windows</a><a href="/tags/peb/">#PEB</a><a href="/tags/dll/">#DLL</a></div></header><div class="article-body markdown-body"><h2 id="使用-Windows-API">使用 Windows API</h2><p>‍</p>
 <h4 id="静态链接-Static-Linking"><a href="#静态链接-Static-Linking" class="headerlink" title="静态链接 (Static Linking) :"></a><strong>静态链接 (Static Linking)</strong> :</h4><ul>
 <li>在编译时将 DLL 中的函数链接到可执行文件中。</li>
 <li>应用程序在运行时不需要额外加载 DLL。</li>
@@ -208,12 +215,5 @@
     <nav class="post-navigation"><a href="/2024/08/07/CobaltStrike%E5%8A%A8%E8%B0%83/"><i data-lucide="arrow-left" aria-hidden="true"></i><span><small>上一篇</small>CobaltStrike 动态调试</span></a><a href="/2024/08/08/pikabot/"><span><small>下一篇</small>Pikabot 样本分析</span><i data-lucide="arrow-right" aria-hidden="true"></i></a></nav>
   </main>
   <footer class="site-footer"><span>© 2026 YCr0w</span><span>由 Blog Desk 整理并生成</span></footer>
-  <dialog class="search-dialog" id="search-dialog">
-    <form method="dialog" class="search-head">
-      <label class="search-field"><i data-lucide="search" aria-hidden="true"></i><input id="search-input" type="search" placeholder="搜索文章、标签或分类" autocomplete="off"></label>
-      <button class="icon-button" value="close" aria-label="关闭搜索"><i data-lucide="x" aria-hidden="true"></i></button>
-    </form>
-    <div class="search-results" id="search-results"></div>
-  </dialog>
 </body>
 </html>

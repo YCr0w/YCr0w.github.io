@@ -46,6 +46,8 @@ if /i "%MODE%"=="check"    goto :check
 if /i "%MODE%"=="publish"  goto :publish
 if /i "%MODE%"=="stop"     goto :stop
 if /i "%MODE%"=="import"   goto :import
+if /i "%MODE%"=="new"      goto :new
+if /i "%MODE%"=="dev"      goto :dev
 goto :usage
 
 :preview
@@ -90,16 +92,40 @@ goto :import_loop
 node "%SCRIPT_DIR%\tools\blog-manager\cli.mjs" import!IMPORT_ARGS!
 goto :end
 
+:new
+REM Create a new post and print its path (open in Typora).
+REM Usage: deploy.bat new "标题" --category ^<cat^> [--tags a,b] [--slug ...] [--status draft]
+shift
+set "NEW_ARGS="
+:new_loop
+if "%~1"=="" goto :new_run
+set NEW_ARGS=!NEW_ARGS! "%~1"
+shift
+goto :new_loop
+:new_run
+node "%SCRIPT_DIR%\tools\blog-manager\cli.mjs" new !NEW_ARGS!
+goto :end
+
+:dev
+REM Dev mode: build once, then watch + live reload until Ctrl+C.
+set "PORT=%~2"
+if "%PORT%"=="" set "PORT=4173"
+node "%SCRIPT_DIR%\tools\blog-manager\cli.mjs" dev --port=%PORT%
+goto :end
+
 :usage
 echo.
 echo Blog Desk deploy script
 echo.
 echo   deploy.bat                  Preview (build + validate + serve)
 echo   deploy.bat preview [port]   Custom port preview
+echo   deploy.bat dev [port]       Dev: watch + live reload (Typora save = rebuild)
 echo   deploy.bat check            Build + validate without serving
 echo   deploy.bat publish "msg"    Commit and push to origin/gh-pages
 echo   deploy.bat stop [port]      Stop preview server
 echo   deploy.bat import ^<path^>   Import article from Yuque/Typora export
+echo   deploy.bat new "title" --category ^<cat^> [--tags a,b] [--slug s]
+echo                              Create a new post, then open it in Typora
 echo.
 
 :end
