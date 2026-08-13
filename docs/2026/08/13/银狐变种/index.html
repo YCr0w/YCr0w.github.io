@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#15171a">
-  <meta name="description" content="钓鱼网站： 下载的网址为 https://pub-5b1d8f3f01e7407cbbb26b935d2094f4.r2.dev/QuarkPC_V1.9.0.151_pc_pf30002.msi 通过钓鱼网站下载之后是一个 QuarkPC_V1.9.0.151_pc_pf30002.msi 安装包 这个.msi 文件是没有数字签名的 解...">
+  <meta name="description" content="记录伪装成夸克网盘安装包的银狐木马投放链：MSI 解包、ziplib.dll 白加黑加载与加密压缩包释放执行的逆向分析。">
   <meta name="author" content="YCr0w">
   <title>银狐变种 | YCr0w&#39;blog</title>
   <link rel="icon" type="image/x-icon" href="/assets/site/favicon.ico">
@@ -32,7 +32,7 @@
     </div>
   </header>
   <main class="article-shell">
-    <article class="article"><header class="article-header"><a class="article-category" href="/categories/malware-analysis/" style="--category-color:#d84a5b"><span class="category-dot"></span>恶意软件分析</a><h1>银狐变种</h1><p>钓鱼网站： 下载的网址为 https://pub-5b1d8f3f01e7407cbbb26b935d2094f4.r2.dev/QuarkPC_V1.9.0.151_pc_pf30002.msi 通过钓鱼网站下载之后是一个 QuarkPC_V1.9.0.151_pc_pf30002.msi 安装包 这个.msi 文件是没有数字签名的 解...</p><div class="article-meta"><span><i data-lucide="calendar-days" aria-hidden="true"></i>2026年8月13日</span><span><i data-lucide="clock-3" aria-hidden="true"></i>11 分钟阅读</span></div><div class="tag-list"><a href="/tags/winos/">#WinOS</a></div></header><div class="article-body markdown-body"><p>钓鱼网站：</p>
+    <article class="article"><header class="article-header"><a class="article-category" href="/categories/malware-analysis/" style="--category-color:#d84a5b"><span class="category-dot"></span>恶意软件分析</a><h1>银狐变种</h1><p>记录伪装成夸克网盘安装包的银狐木马投放链：MSI 解包、ziplib.dll 白加黑加载与加密压缩包释放执行的逆向分析。</p><div class="article-meta"><span><i data-lucide="calendar-days" aria-hidden="true"></i>2026年8月13日</span><span><i data-lucide="clock-3" aria-hidden="true"></i>11 分钟阅读</span></div><div class="tag-list"><a href="/tags/winos/">#WinOS</a></div></header><div class="article-body markdown-body"><p>钓鱼网站：</p>
 <p><img src="/assets/posts/%E9%93%B6%E7%8B%90%E5%8F%98%E7%A7%8D/image/1737015537902-18850079-36d6-48cc-8c12-29e636c39a16.png" alt="银狐变种" loading="lazy" decoding="async"></p>
 <p>下载的网址为 <code>https://pub-5b1d8f3f01e7407cbbb26b935d2094f4.r2.dev/QuarkPC_V1.9.0.151_pc_pf30002.msi</code></p>
 <p><img src="/assets/posts/%E9%93%B6%E7%8B%90%E5%8F%98%E7%A7%8D/image/1737015569125-422b4c32-885a-4d44-be92-cb607c387162.png" alt="银狐变种" loading="lazy" decoding="async"></p>

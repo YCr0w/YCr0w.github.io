@@ -17,10 +17,10 @@
       "description": "样本行为、加载链与对抗技术"
     },
     {
-      "id": "anti-cheat",
-      "name": "外挂与免杀分析",
+      "id": "others",
+      "name": "其他",
       "color": "#5967a9",
-      "description": "反作弊对抗与免杀技术"
+      "description": "其他技术与杂项记录"
     },
     {
       "id": "windows-security",
@@ -152,7 +152,7 @@
       "date": "2026-08-13T07:50:08.661Z",
       "updated": "2026-08-13T07:50:08.709Z",
       "url": "/2026/08/13/koi/",
-      "summary": "",
+      "summary": "记录一个带数字签名的 Inno Setup 加载器样本：安装包解包、混淆 JS 加载脚本分析与 PowerShell 远程下载执行木马的行为追踪。",
       "source": "content/posts/malware-analysis/koi/index.md",
       "format": "markdown",
       "status": "published",
@@ -168,7 +168,7 @@
       "date": "2026-08-13T07:51:08.113Z",
       "updated": "2026-08-13T07:51:08.143Z",
       "url": "/2026/08/13/%E9%93%B6%E7%8B%90-go/",
-      "summary": "",
+      "summary": "记录伪装成 WPS 安装包的银狐木马分析：MSI 解包、借助开源 zpaq 工具解密释放载荷与 DLL 侧加载的逆向过程。",
       "source": "content/posts/malware-analysis/银狐-go/index.md",
       "format": "markdown",
       "status": "published",
@@ -184,7 +184,7 @@
       "date": "2026-08-13T07:52:22.143Z",
       "updated": "2026-08-13T07:52:22.265Z",
       "url": "/2026/08/13/%E9%93%B6%E7%8B%90%E5%8F%98%E7%A7%8D/",
-      "summary": "",
+      "summary": "记录伪装成夸克网盘安装包的银狐木马投放链：MSI 解包、ziplib.dll 白加黑加载与加密压缩包释放执行的逆向分析。",
       "source": "content/posts/malware-analysis/银狐变种/index.md",
       "format": "markdown",
       "status": "published",
