@@ -124,7 +124,72 @@
       "format": "markdown",
       "status": "published",
       "legacy": false
+    },
+    {
+      "id": "com-hijack",
+      "title": "COM Hijack",
+      "category": "windows-security",
+      "tags": [
+        "COM"
+      ],
+      "date": "2026-08-13T07:48:09.119Z",
+      "updated": "2026-08-13T07:48:09.133Z",
+      "url": "/2026/08/13/com-hijack/",
+      "summary": "COM劫持基础简介",
+      "source": "content/posts/windows-security/com-hijack/index.md",
+      "format": "markdown",
+      "status": "published",
+      "legacy": false
+    },
+    {
+      "id": "koi",
+      "title": "Koi Loader",
+      "category": "malware-analysis",
+      "tags": [
+        "Inno Setup",
+        "ps1"
+      ],
+      "date": "2026-08-13T07:50:08.661Z",
+      "updated": "2026-08-13T07:50:08.709Z",
+      "url": "/2026/08/13/koi/",
+      "summary": "",
+      "source": "content/posts/malware-analysis/koi/index.md",
+      "format": "markdown",
+      "status": "published",
+      "legacy": false
+    },
+    {
+      "id": "银狐-go",
+      "title": "银狐(Go)",
+      "category": "malware-analysis",
+      "tags": [
+        "Go"
+      ],
+      "date": "2026-08-13T07:51:08.113Z",
+      "updated": "2026-08-13T07:51:08.143Z",
+      "url": "/2026/08/13/%E9%93%B6%E7%8B%90-go/",
+      "summary": "",
+      "source": "content/posts/malware-analysis/银狐-go/index.md",
+      "format": "markdown",
+      "status": "published",
+      "legacy": false
+    },
+    {
+      "id": "银狐变种",
+      "title": "银狐变种",
+      "category": "malware-analysis",
+      "tags": [
+        "WinOS"
+      ],
+      "date": "2026-08-13T07:52:22.143Z",
+      "updated": "2026-08-13T07:52:22.265Z",
+      "url": "/2026/08/13/%E9%93%B6%E7%8B%90%E5%8F%98%E7%A7%8D/",
+      "summary": "",
+      "source": "content/posts/malware-analysis/银狐变种/index.md",
+      "format": "markdown",
+      "status": "published",
+      "legacy": false
     }
   ],
-  "updatedAt": "2026-08-13T05:44:35.107Z"
+  "updatedAt": "2026-08-13T07:52:22.265Z"
 }

