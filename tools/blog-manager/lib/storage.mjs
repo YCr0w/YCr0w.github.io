@@ -46,6 +46,16 @@ export function safeSegment(value, fallback = "untitled") {
   return normalized || fallback;
 }
 
+
+/**
+ * Split a tag source into a clean array. Accepts an existing array or a
+ * string separated by ASCII comma, full-width comma (，) or enumeration
+ * comma (、), so CJK input works without surprising the user.
+ */
+export function splitTags(value) {
+  const list = Array.isArray(value) ? value : String(value ?? "").split(/[,，、]/);
+  return list.map((tag) => String(tag).trim()).filter(Boolean);
+}
 export function assertInside(parent, candidate) {
   const relative = path.relative(parent, candidate);
   if (relative.startsWith("..") || path.isAbsolute(relative)) {

@@ -16,6 +16,7 @@
  */
 import path from "node:path";
 import { exec } from "node:child_process";
+import { splitTags } from "./lib/storage.mjs";
 
 const command = process.argv[2] ?? "build";
 const args = process.argv.slice(3);
@@ -88,7 +89,7 @@ try {
         if (value !== undefined) metadata[key] = value;
       }
       const tags = getFlag("tags");
-      if (tags) metadata.tags = tags.split(",").map((t) => t.trim()).filter(Boolean);
+      if (tags) metadata.tags = splitTags(tags);
 
       const { importFromPath } = await import("./lib/importer.mjs");
       const post = await importFromPath(path.resolve(inputPath), metadata);
@@ -115,11 +116,12 @@ try {
         category: getFlag("category"),
         slug: getFlag("slug"),
         status: getFlag("status"),
+        summary: getFlag("summary"),
       })) {
         if (value !== undefined) metadata[key] = value;
       }
       const tags = getFlag("tags");
-      if (tags) metadata.tags = tags.split(",").map((tag) => tag.trim()).filter(Boolean);
+      if (tags) metadata.tags = splitTags(tags);
 
       const { createPost } = await import("./lib/importer.mjs");
       const post = await createPost(metadata);

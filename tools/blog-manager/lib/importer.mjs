@@ -8,6 +8,7 @@ import {
   loadManifest,
   safeSegment,
   saveManifest,
+  splitTags,
 } from "./storage.mjs";
 
 const maxImportBytes = 120 * 1024 * 1024;
@@ -183,17 +184,13 @@ async function importFiles(inputFiles, metadata) {
   const sourcePath = path.join(destination, sourceName);
   await fs.writeFile(sourcePath, rewritten.endsWith("\n") ? rewritten : `${rewritten}\n`, "utf8");
 
-  const exportedTags = Array.isArray(exportedMetadata.tags)
-    ? exportedMetadata.tags
-    : String(exportedMetadata.tags || "").split(",");
-  const tags = Array.isArray(metadata.tags)
-    ? metadata.tags
-    : String(metadata.tags || exportedTags.join(",")).split(",");
+  const tagSource = metadata.tags?.length ? metadata.tags : exportedMetadata.tags;
+  const tags = splitTags(tagSource);
   const post = {
     id,
     title,
     category: categoryId,
-    tags: tags.map((tag) => tag.trim()).filter(Boolean),
+    tags,
     date: new Date(date).toISOString(),
     updated: new Date().toISOString(),
     url: postUrl(date, slug),
@@ -232,8 +229,7 @@ export async function updatePost(postId, changes) {
     if (changes[field] !== undefined) post[field] = String(changes[field]).trim();
   }
   if (changes.tags !== undefined) {
-    post.tags = (Array.isArray(changes.tags) ? changes.tags : String(changes.tags).split(","))
-      .map((tag) => tag.trim()).filter(Boolean);
+    post.tags = splitTags(changes.tags);
   }
   if (changes.date) {
     post.date = new Date(changes.date).toISOString();
@@ -270,9 +266,8 @@ export async function createPost(metadata = {}) {
     throw new Error(`A post with id '${id}' already exists.`);
   }
 
-  const tags = Array.isArray(metadata.tags)
-    ? metadata.tags
-    : String(metadata.tags || "").split(",").map((tag) => tag.trim()).filter(Boolean);
+  const tags = splitTags(metadata.tags);
+  const summary = String(metadata.summary || "").trim();
   const status = metadata.status === "draft" ? "draft" : "published";
   const date = metadata.date || new Date().toISOString();
 
@@ -281,7 +276,7 @@ export async function createPost(metadata = {}) {
   await fs.mkdir(destination, { recursive: true });
   await fs.mkdir(path.join(destination, "assets"), { recursive: true });
 
-  const frontMatter = YAML.stringify({ title, category: categoryId, tags, date, slug, status });
+  const frontMatter = YAML.stringify({ title, summary, category: categoryId, tags, date, slug, status });
   const body = [
     "",
     `# ${title}`,
@@ -302,7 +297,7 @@ export async function createPost(metadata = {}) {
     date: new Date(date).toISOString(),
     updated: new Date().toISOString(),
     url: postUrl(date, slug),
-    summary: "",
+    summary,
     source: path.relative(fromRoot(), sourcePath).replaceAll(path.sep, "/"),
     format: "markdown",
     status,

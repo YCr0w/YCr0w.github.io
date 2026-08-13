@@ -1,0 +1,220 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#15171a">
+  <meta name="description" content="APT-C-48 组织以伪装成 PDF 的钓鱼样本为例，记录 ChaCha20 加密识别、COM 组件创建计划任务与网络上线行为的分析过程。">
+  <meta name="author" content="YCr0w">
+  <title>APT-C-48（CNC）组织钓鱼攻击 | YCr0w&#39;blog</title>
+  <link rel="icon" type="image/x-icon" href="/assets/site/favicon.ico">
+  <link rel="stylesheet" href="/assets/css/site.css">
+  <script src="/assets/vendor/lucide.js" defer></script>
+  <script src="/assets/js/site.js" defer></script>
+</head>
+<body class="article-page">
+  <header class="site-header">
+    <div class="header-profile">
+      <a class="header-identity" href="/" aria-label="返回首页"><img class="header-avatar" src="/assets/site/avatar.jpg" alt="YCr0w"><span class="header-name">YCr0w</span></a>
+      <div class="header-links"><a href="https://github.com/YCr0w" target="_blank" rel="noopener" aria-label="GitHub"><i data-lucide="github" aria-hidden="true"></i></a><a href="mailto:3083981460@qq.com" aria-label="Email"><i data-lucide="mail" aria-hidden="true"></i></a></div>
+    </div>
+    <button class="nav-toggle icon-button" type="button" aria-label="打开导航"><i data-lucide="menu" aria-hidden="true"></i></button>
+    <nav class="main-nav" aria-label="主导航">
+      <a href="/"><i data-lucide="house" aria-hidden="true"></i><span>首页</span></a><a href="/categories/"><i data-lucide="folder-tree" aria-hidden="true"></i><span>分类</span></a><a href="/archives/"><i data-lucide="archive" aria-hidden="true"></i><span>归档</span></a><a href="/about/"><i data-lucide="user-round" aria-hidden="true"></i><span>关于</span></a>
+    </nav>
+    <div class="header-actions">
+      <div class="search-inline" id="search-inline">
+        <button class="icon-button" id="search-button" type="button" aria-label="搜索" aria-expanded="false"><i data-lucide="search" aria-hidden="true"></i></button>
+        <input id="search-input" type="search" placeholder="搜索文章、标签或分类" autocomplete="off">
+        <div class="search-results" id="search-results"></div>
+      </div>
+      <button class="icon-button" id="theme-button" type="button" aria-label="切换主题"><i data-lucide="sun-moon" aria-hidden="true"></i></button>
+    </div>
+  </header>
+  <main class="article-shell">
+    <article class="article"><header class="article-header"><a class="article-category" href="/categories/malware-analysis/" style="--category-color:#d84a5b"><span class="category-dot"></span>恶意软件分析</a><h1>APT-C-48（CNC）组织钓鱼攻击</h1><p>APT-C-48 组织以伪装成 PDF 的钓鱼样本为例，记录 ChaCha20 加密识别、COM 组件创建计划任务与网络上线行为的分析过程。</p><div class="article-meta"><span><i data-lucide="calendar-days" aria-hidden="true"></i>2026年8月13日</span><span><i data-lucide="clock-3" aria-hidden="true"></i>6 分钟阅读</span></div><div class="tag-list"><a href="/tags/%E5%A8%81%E8%83%81%E6%83%85%E6%8A%A5/">#威胁情报</a><a href="/tags/%E6%81%B6%E6%84%8F%E8%BD%AF%E4%BB%B6%E5%88%86%E6%9E%90/">#恶意软件分析</a></div></header><div class="article-body markdown-body"><p>关键点：</p>
+<ul>
+<li>利用COM组件创建计划任务；</li>
+<li>图标为pdf的exe文件；</li>
+</ul>
+<p>MD5:ef98ed09bedea8daef9d09ec62ffe9cc</p>
+<p><a href="https://mp.weixin.qq.com/s/Xb8bEZMV3FHC1O6lWt-4pg">APT-C-48（CNC）组织近期钓鱼攻击活动分析报告</a></p>
+<p><img src="/assets/posts/apt-c-48/image/01-exe%E4%BC%AA%E8%A3%85pdf%E5%9B%BE%E6%A0%87.png" alt="APT-C-48（CNC）组织钓鱼攻击" loading="lazy" decoding="async"></p>
+<p>将exe文件的图标修改了，修改为pdf文件，通过将exe文件伪装为pdf的个人简历用于钓鱼(使用<a href="https://www.52pojie.cn/thread-1842026-1-1.html">Resource Hacker</a>可以修改</p>
+<h3 id="chacha20-encrypt">ChaCha20 Encrypt</h3>
+<p>使用IDA分析，主函数中前面存在大量数据，猜测有加密</p>
+<p><img src="/assets/posts/apt-c-48/image/02-IDA%E4%B8%BB%E5%87%BD%E6%95%B0%E5%8A%A0%E5%AF%86%E6%95%B0%E6%8D%AE.png" alt="APT-C-48（CNC）组织钓鱼攻击" loading="lazy" decoding="async"></p>
+<p>分析可以发现</p>
+<p><img src="/assets/posts/apt-c-48/image/03-ChaCha20%E5%8A%A0%E5%AF%86%E8%AF%86%E5%88%AB.png" alt="APT-C-48（CNC）组织钓鱼攻击" loading="lazy" decoding="async"></p>
+<p>很典型的chacha20</p>
+<pre><code class="hljs language-c"><span class="hljs-comment">// Function to rotate a 32-bit integer left</span>
+<span class="hljs-type">static</span> <span class="hljs-keyword">inline</span> <span class="hljs-type">uint32_t</span> <span class="hljs-title function_">rotate_left</span><span class="hljs-params">(<span class="hljs-type">uint32_t</span> value, <span class="hljs-type">int</span> count)</span> {
+    <span class="hljs-keyword">return</span> (value &lt;&lt; count) | (value &gt;&gt; (<span class="hljs-number">32</span> - count));
+}
+
+<span class="hljs-comment">// Quarter round function</span>
+<span class="hljs-type">static</span> <span class="hljs-type">void</span> <span class="hljs-title function_">quarter_round</span><span class="hljs-params">(<span class="hljs-type">uint32_t</span> *a, <span class="hljs-type">uint32_t</span> *b, <span class="hljs-type">uint32_t</span> *c, <span class="hljs-type">uint32_t</span> *d)</span> {
+    *a += *b; *d = rotate_left(*d ^ *a, <span class="hljs-number">16</span>);
+    *c += *d; *b = rotate_left(*b ^ *c, <span class="hljs-number">12</span>);
+    *a += *b; *d = rotate_left(*d ^ *a, <span class="hljs-number">8</span>);
+    *c += *d; *b = rotate_left(*b ^ *c, <span class="hljs-number">7</span>);
+}
+
+<span class="hljs-comment">// Function to generate a single ChaCha20 block</span>
+<span class="hljs-type">static</span> <span class="hljs-type">void</span> <span class="hljs-title function_">chacha20_block</span><span class="hljs-params">(<span class="hljs-type">uint32_t</span> *state, <span class="hljs-type">uint8_t</span> *output)</span> {
+    <span class="hljs-type">uint32_t</span> x[<span class="hljs-number">16</span>];
+    <span class="hljs-built_in">memcpy</span>(x, state, <span class="hljs-keyword">sizeof</span>(x));
+
+    <span class="hljs-keyword">for</span> (<span class="hljs-type">int</span> i = <span class="hljs-number">0</span>; i &lt; CHACHA20_ROUNDS; i += <span class="hljs-number">2</span>) {
+        quarter_round(&amp;x[<span class="hljs-number">0</span>], &amp;x[<span class="hljs-number">4</span>], &amp;x[<span class="hljs-number">8</span>], &amp;x[<span class="hljs-number">12</span>]);
+        quarter_round(&amp;x[<span class="hljs-number">1</span>], &amp;x[<span class="hljs-number">5</span>], &amp;x[<span class="hljs-number">9</span>], &amp;x[<span class="hljs-number">13</span>]);
+        quarter_round(&amp;x[<span class="hljs-number">2</span>], &amp;x[<span class="hljs-number">6</span>], &amp;x[<span class="hljs-number">10</span>], &amp;x[<span class="hljs-number">14</span>]);
+        quarter_round(&amp;x[<span class="hljs-number">3</span>], &amp;x[<span class="hljs-number">7</span>], &amp;x[<span class="hljs-number">11</span>], &amp;x[<span class="hljs-number">15</span>]);
+    }
+
+    <span class="hljs-keyword">for</span> (<span class="hljs-type">int</span> i = <span class="hljs-number">0</span>; i &lt; <span class="hljs-number">16</span>; i++) {
+        ((<span class="hljs-type">uint32_t</span> *)output)[i] = x[i] + state[i];
+    }
+}
+
+<span class="hljs-comment">// Function to initialize the ChaCha20 state</span>
+<span class="hljs-type">void</span> <span class="hljs-title function_">chacha20_init_state</span><span class="hljs-params">(<span class="hljs-type">uint32_t</span> *state, <span class="hljs-type">const</span> <span class="hljs-type">uint8_t</span> key[<span class="hljs-number">32</span>], <span class="hljs-type">uint32_t</span> counter, <span class="hljs-type">const</span> <span class="hljs-type">uint8_t</span> nonce[<span class="hljs-number">12</span>])</span> {
+    <span class="hljs-type">static</span> <span class="hljs-type">const</span> <span class="hljs-type">uint32_t</span> sigma[<span class="hljs-number">4</span>] = {
+        <span class="hljs-number">0x61707865</span>, <span class="hljs-number">0x3320646e</span>, <span class="hljs-number">0x79622d32</span>, <span class="hljs-number">0x6b206574</span> <span class="hljs-comment">// "expand 32-byte k"</span>
+    };
+
+    <span class="hljs-built_in">memcpy</span>(state, sigma, <span class="hljs-keyword">sizeof</span>(sigma));
+    <span class="hljs-built_in">memcpy</span>(state + <span class="hljs-number">4</span>, key, <span class="hljs-number">32</span>);
+    state[<span class="hljs-number">12</span>] = counter; <span class="hljs-comment">// Counter</span>
+    <span class="hljs-built_in">memcpy</span>(state + <span class="hljs-number">13</span>, nonce, <span class="hljs-number">12</span>);
+}
+
+<span class="hljs-comment">// ChaCha20 encrypt/decrypt function</span>
+<span class="hljs-type">void</span> <span class="hljs-title function_">ChaCha20XOR</span><span class="hljs-params">(<span class="hljs-type">uint8_t</span> key[<span class="hljs-number">32</span>], <span class="hljs-type">uint32_t</span> counter, <span class="hljs-type">uint8_t</span> nonce[<span class="hljs-number">12</span>], <span class="hljs-type">uint8_t</span> *in, <span class="hljs-type">uint8_t</span> *out, <span class="hljs-type">int</span> inlen)</span> {
+    <span class="hljs-type">int</span> i, j;
+    <span class="hljs-type">uint32_t</span> s[<span class="hljs-number">16</span>];
+    <span class="hljs-type">uint8_t</span> block[CHACHA20_BLOCK_SIZE];
+
+    chacha20_init_state(s, key, counter, nonce);
+
+    <span class="hljs-keyword">for</span> (i = <span class="hljs-number">0</span>; i &lt; inlen; i += CHACHA20_BLOCK_SIZE) {
+        chacha20_block(s, block);
+        s[<span class="hljs-number">12</span>]++; 
+
+        <span class="hljs-keyword">for</span> (j = <span class="hljs-number">0</span>; j &lt; CHACHA20_BLOCK_SIZE &amp;&amp; (i + j) &lt; inlen; j++) {
+            out[i + j] = in[i + j] ^ block[j];
+        }
+    }
+}
+</code></pre><p>动态调试解密之后的数据</p>
+<p><img src="/assets/posts/apt-c-48/image/04-%E5%8A%A8%E6%80%81%E8%B0%83%E8%AF%95%E8%A7%A3%E5%AF%86%E6%95%B0%E6%8D%AE.png" alt="APT-C-48（CNC）组织钓鱼攻击" loading="lazy" decoding="async"></p>
+<p><code>C:\\Windows\\System32\\cmd.exe /c C:\\Users\\陈帅-南京航天航空大学电子信息-个人简历.pdf</code></p>
+<p><img src="/assets/posts/apt-c-48/image/05-%E8%A7%A3%E5%AF%86%E5%90%8E%E7%9A%84cmd%E5%91%BD%E4%BB%A4.png" alt="APT-C-48（CNC）组织钓鱼攻击" loading="lazy" decoding="async"></p>
+<p><img src="/assets/posts/apt-c-48/image/06-%E8%BF%9C%E7%A8%8B%E8%8E%B7%E5%8F%96pdf%E6%95%B0%E6%8D%AE.png" alt="APT-C-48（CNC）组织钓鱼攻击" loading="lazy" decoding="async"></p>
+<p>从<code> [https://panbaiclu.com/Guide/structure](https://panbaiclu.com/Guide/structure)</code>处获取陈帅-南京航天航空大学电子信息-个人简历.pdf的数据，为了后续写入</p>
+<p><img src="/assets/posts/apt-c-48/image/07-%E5%88%9B%E5%BB%BA%E7%BA%BF%E7%A8%8B%E4%B8%8E%E5%8F%8D%E6%A3%80%E6%B5%8B%E5%88%A4%E6%96%AD.png" alt="APT-C-48（CNC）组织钓鱼攻击" loading="lazy" decoding="async"></p>
+<p>创建新线程为了打开正确的pdf文件，然后1070行的判断使用的两个函数分别是检测反调试与反虚拟机的</p>
+<h3 id="反虚拟机和反调试">反虚拟机和反调试</h3>
+<p><img src="/assets/posts/apt-c-48/image/08-%E5%8F%8D%E8%B0%83%E8%AF%95%E8%BF%9B%E7%A8%8B%E6%A3%80%E6%B5%8B.png" alt="APT-C-48（CNC）组织钓鱼攻击" loading="lazy" decoding="async"></p>
+<p>反调试检测的是进程中特定名称的进程是否存在，而这些进程名称已经用chacha20加密；后续的反虚拟机也是如此</p>
+<p><img src="/assets/posts/apt-c-48/image/09-%E9%81%8D%E5%8E%86%E8%BF%9B%E7%A8%8B%E5%AF%B9%E6%AF%94.png" alt="APT-C-48（CNC）组织钓鱼攻击" loading="lazy" decoding="async"></p>
+<p>检测的方式较为简单，遍历当前系统所有进程，然后一一对比</p>
+<p>反调检测的进程包含：</p>
+<table>
+<thead>
+<tr>
+<th>ollydbg.exe</th>
+<th>x64dbg.exe</th>
+<th>idag.exe</th>
+<th>idaw.exe</th>
+<th>idaq.exe</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>idaq64.exe</td>
+<td>ImmunityDebugger.exe</td>
+<td>Wireshark.exe</td>
+<td>dumpcap.exe</td>
+<td>HookExplorer.exe</td>
+</tr>
+<tr>
+<td>ImportREC.exe</td>
+<td>LordPE.exe</td>
+<td>PEiD.exe</td>
+<td>PETools.exe</td>
+<td>procexp.exe</td>
+</tr>
+<tr>
+<td>procexp64.exe</td>
+<td>procmon.exe</td>
+<td>windbg.exe</td>
+<td>ResourceHacker.exe</td>
+<td>ProcessHacker.exe</td>
+</tr>
+<tr>
+<td>QzhddrUpdate.exe</td>
+<td>QzhddrSrv.exe</td>
+<td>QzhddrGuard.exe</td>
+<td>iSafeClient.exe</td>
+<td>nedr-agent.exe</td>
+</tr>
+<tr>
+<td>antivirus.exe</td>
+<td>nedr-etd.exe</td>
+<td>procdump64.exe</td>
+<td></td>
+<td></td>
+</tr>
+</tbody></table>
+<p><img src="/assets/posts/apt-c-48/image/10-%E5%8F%8D%E8%99%9A%E6%8B%9F%E6%9C%BA%E6%A3%80%E6%B5%8B.png" alt="APT-C-48（CNC）组织钓鱼攻击" loading="lazy" decoding="async"></p>
+<p>这部分为反虚拟机的，检测的方式与上面反调方式一样，多了一个检测<code>HKEY_LOCAL_MACHINE\HARDWARE\DESCRIPTION\System\SystemBiosVersion</code>注册表值的检测</p>
+<p><img src="/assets/posts/apt-c-48/image/11-%E5%8F%8D%E8%99%9A%E6%8B%9F%E6%9C%BA%E8%BF%9B%E7%A8%8B%E5%88%97%E8%A1%A8.png" alt="APT-C-48（CNC）组织钓鱼攻击" loading="lazy" decoding="async"></p>
+<p><img src="/assets/posts/apt-c-48/image/12-RegGetValueA%E6%A3%80%E6%B5%8B%E6%B3%A8%E5%86%8C%E8%A1%A8.png" alt="APT-C-48（CNC）组织钓鱼攻击" loading="lazy" decoding="async"></p>
+<p>其中检测注册表值用的是RegGetValueA函数</p>
+<p>检测的进程包括：</p>
+<table>
+<thead>
+<tr>
+<th>vmtoolsd.exe</th>
+<th>vmware-tray.exe</th>
+<th>vmware.exe</th>
+<th>VGAuthService.exe</th>
+<th>vm3dservice.exe</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>VirtualBox.exe</td>
+<td>VBoxManage.exe</td>
+<td>VirtualBoxVM.exe</td>
+<td>vboxtray.exe</td>
+<td></td>
+</tr>
+</tbody></table>
+<p><img src="/assets/posts/apt-c-48/image/13-%E6%A3%80%E6%B5%8B%E5%88%B0%E5%88%86%E6%9E%90%E7%8E%AF%E5%A2%83%E5%90%8E%E8%87%AA%E8%BA%AB%E6%B8%85%E7%90%86.png" alt="APT-C-48（CNC）组织钓鱼攻击" loading="lazy" decoding="async"></p>
+<p>检测了如果存在调试or虚拟环境的可能，会使用SetFileInformationByHandle函数将自身进行清理</p>
+<p><img src="/assets/posts/apt-c-48/image/14-SetFileInformationByHandle%E6%B8%85%E7%90%86.png" alt="APT-C-48（CNC）组织钓鱼攻击" loading="lazy" decoding="async"></p>
+<h3 id="持久化与组件下载">持久化与组件下载</h3>
+<p><img src="/assets/posts/apt-c-48/image/15-GetUserNameW%E8%8E%B7%E5%8F%96%E7%94%A8%E6%88%B7%E5%90%8D.png" alt="APT-C-48（CNC）组织钓鱼攻击" loading="lazy" decoding="async"></p>
+<p>GetUserNameW函数获取当前系统用户名称，然后调用网络连接函数</p>
+<p><img src="/assets/posts/apt-c-48/image/16-%E7%BD%91%E7%BB%9C%E9%80%9A%E4%BF%A1%E4%B8%8A%E7%BA%BF.png" alt="APT-C-48（CNC）组织钓鱼攻击" loading="lazy" decoding="async"></p>
+<p>初步进行网络通信，进行上线操作</p>
+<p><img src="/assets/posts/apt-c-48/image/17-InternetOpenUrlW%E8%8E%B7%E5%8F%96%E8%B5%84%E6%BA%90.png" alt="APT-C-48（CNC）组织钓鱼攻击" loading="lazy" decoding="async"></p>
+<p>使用InternetOpenUrlW函数打开链接获取远程资源</p>
+<p><code>[https://panbaiclu.com/APIs/BaiduSearchAPI](https://panbaiclu.com/APIs/BaiduSearchAPI)</code></p>
+<p><code>[https://panbaiclu.com/Metadata/indexes](https://panbaiclu.com/Metadata/indexes)</code></p>
+<p><img src="/assets/posts/apt-c-48/image/18-COM%E7%BB%84%E4%BB%B6%E5%88%9B%E5%BB%BA%E8%AE%A1%E5%88%92%E4%BB%BB%E5%8A%A1.png" alt="APT-C-48（CNC）组织钓鱼攻击" loading="lazy" decoding="async"></p>
+<p>使用COM组件<code>{0F87369F-0A4E-4CFC-0BD3-3E730E615472}</code>创建计划任务，让<code>"C:\Users\user\AppData\Local\Microsoft\Feeds\msfeedsync.exe"</code>自启动</p>
+<p><img src="/assets/posts/apt-c-48/image/19-%E8%BF%9C%E7%A8%8B%E8%B5%84%E6%BA%90%E5%86%99%E5%85%A5msfeedsync.png" alt="APT-C-48（CNC）组织钓鱼攻击" loading="lazy" decoding="async"></p>
+<p>将从远程获取的资源写入<code>msfeedsync.exe</code>中，属于先创建计划任务，然后创建文件</p>
+<p><img src="/assets/posts/apt-c-48/image/20-scs64%E8%AE%A1%E5%88%92%E4%BB%BB%E5%8A%A1%E5%88%9B%E5%BB%BA.png" alt="APT-C-48（CNC）组织钓鱼攻击" loading="lazy" decoding="async"></p>
+<p>这里的步骤也是进行了两次，同时还在<code>"C:\Users\user\AppData\Roaming\SCSCloudService\scs64.exe"</code>创建了一个，这个也创建了计划任务</p>
+<p>但是由于URL失效导致后续部分丢失</p>
+<p><img src="/assets/posts/apt-c-48/image/21-%E6%93%8D%E4%BD%9C%E5%AE%8C%E6%88%90%E5%90%8E%E8%87%AA%E8%BA%AB%E6%B8%85%E9%99%A4.png" alt="APT-C-48（CNC）组织钓鱼攻击" loading="lazy" decoding="async"></p>
+<p>等到所有操作都进行了之后，会和上面检测到调试与虚拟化一样，执行同样操作，将自身进行清除</p>
+</div><footer class="article-footer"><div><span>本文链接</span><a href="https://ycr0w.github.io/2026/08/13/apt-c-48/">https://ycr0w.github.io/2026/08/13/apt-c-48/</a></div></footer></article>
+    <aside class="article-aside"><div class="toc"><span>目录</span><a class="toc-level-3" href="#chacha20-encrypt">ChaCha20 Encrypt</a><a class="toc-level-3" href="#%E5%8F%8D%E8%99%9A%E6%8B%9F%E6%9C%BA%E5%92%8C%E5%8F%8D%E8%B0%83%E8%AF%95">反虚拟机和反调试</a><a class="toc-level-3" href="#%E6%8C%81%E4%B9%85%E5%8C%96%E4%B8%8E%E7%BB%84%E4%BB%B6%E4%B8%8B%E8%BD%BD">持久化与组件下载</a></div></aside>
+    <nav class="post-navigation"><a href="/2024/08/08/pikabot/"><i data-lucide="arrow-left" aria-hidden="true"></i><span><small>上一篇</small>Pikabot 样本分析</span></a></nav>
+  </main>
+  <footer class="site-footer"><span>© 2026 YCr0w</span></footer>
+</body>
+</html>

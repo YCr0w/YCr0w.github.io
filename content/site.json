@@ -107,7 +107,24 @@
       "format": "html",
       "status": "published",
       "legacy": true
+    },
+    {
+      "id": "apt-c-48",
+      "title": "APT-C-48（CNC）组织钓鱼攻击",
+      "category": "malware-analysis",
+      "tags": [
+        "威胁情报",
+        "恶意软件分析"
+      ],
+      "date": "2026-08-13T05:44:35.073Z",
+      "updated": "2026-08-13T05:44:35.107Z",
+      "url": "/2026/08/13/apt-c-48/",
+      "summary": "APT-C-48 组织以伪装成 PDF 的钓鱼样本为例，记录 ChaCha20 加密识别、COM 组件创建计划任务与网络上线行为的分析过程。",
+      "source": "content/posts/malware-analysis/apt-c-48/index.md",
+      "format": "markdown",
+      "status": "published",
+      "legacy": false
     }
   ],
-  "updatedAt": "2026-08-11T08:09:02.294Z"
+  "updatedAt": "2026-08-13T05:44:35.107Z"
 }
