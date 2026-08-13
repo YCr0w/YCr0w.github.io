@@ -1,0 +1,523 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#15171a">
+  <meta name="description" content="核心部分的函数存在大量的混淆 ida无法正常分析，也无法正常反编译，但是通过调试就会发现 运行SIMD这些指令时，只有RIP寄存器会变（这个是正常行为），也就是说这些SIMD混淆指令是不会影响正常通用寄存器的运算的，所以可以全部patch，通过进一步调试分析，最终的去混淆ida python如下： import os import ida...">
+  <meta name="author" content="YCr0w">
+  <title>SIMD混淆 | YCr0w&#39;blog</title>
+  <link rel="icon" type="image/x-icon" href="/assets/site/favicon.ico">
+  <link rel="stylesheet" href="/assets/css/site.css">
+  <script src="/assets/vendor/lucide.js" defer></script>
+  <script src="/assets/js/site.js" defer></script>
+</head>
+<body class="article-page">
+  <header class="site-header">
+    <div class="header-profile">
+      <a class="header-identity" href="/" aria-label="返回首页"><img class="header-avatar" src="/assets/site/avatar.jpg" alt="YCr0w"><span class="header-name">YCr0w</span></a>
+      <div class="header-links"><a href="https://github.com/YCr0w" target="_blank" rel="noopener" aria-label="GitHub"><i data-lucide="github" aria-hidden="true"></i></a><a href="mailto:3083981460@qq.com" aria-label="Email"><i data-lucide="mail" aria-hidden="true"></i></a></div>
+    </div>
+    <button class="nav-toggle icon-button" type="button" aria-label="打开导航"><i data-lucide="menu" aria-hidden="true"></i></button>
+    <nav class="main-nav" aria-label="主导航">
+      <a href="/"><i data-lucide="house" aria-hidden="true"></i><span>首页</span></a><a href="/categories/"><i data-lucide="folder-tree" aria-hidden="true"></i><span>分类</span></a><a href="/archives/"><i data-lucide="archive" aria-hidden="true"></i><span>归档</span></a><a href="/about/"><i data-lucide="user-round" aria-hidden="true"></i><span>关于</span></a>
+    </nav>
+    <div class="header-actions">
+      <div class="search-inline" id="search-inline">
+        <button class="icon-button" id="search-button" type="button" aria-label="搜索" aria-expanded="false"><i data-lucide="search" aria-hidden="true"></i></button>
+        <input id="search-input" type="search" placeholder="搜索文章、标签或分类" autocomplete="off">
+        <div class="search-results" id="search-results"></div>
+      </div>
+      <button class="icon-button" id="theme-button" type="button" aria-label="切换主题"><i data-lucide="sun-moon" aria-hidden="true"></i></button>
+    </div>
+  </header>
+  <main class="article-shell">
+    <article class="article"><header class="article-header"><a class="article-category" href="/categories/malware-analysis/" style="--category-color:#d84a5b"><span class="category-dot"></span>恶意软件分析</a><h1>SIMD混淆</h1><p>核心部分的函数存在大量的混淆 ida无法正常分析，也无法正常反编译，但是通过调试就会发现 运行SIMD这些指令时，只有RIP寄存器会变（这个是正常行为），也就是说这些SIMD混淆指令是不会影响正常通用寄存器的运算的，所以可以全部patch，通过进一步调试分析，最终的去混淆ida python如下： import os import ida...</p><div class="article-meta"><span><i data-lucide="calendar-days" aria-hidden="true"></i>2026年8月13日</span><span><i data-lucide="clock-3" aria-hidden="true"></i>16 分钟阅读</span></div><div class="tag-list"></div></header><div class="article-body markdown-body"><p>核心部分的函数存在大量的混淆</p>
+<p><img src="/assets/posts/simd%E6%B7%B7%E6%B7%86/images/1774176434587-c678389e-5fc8-4d17-83c1-0b4a018c7dff.png" alt="SIMD混淆" loading="lazy" decoding="async"></p>
+<p>ida无法正常分析，也无法正常反编译，但是通过调试就会发现</p>
+<p><img src="/assets/posts/simd%E6%B7%B7%E6%B7%86/images/1774184293205-8f2c15a6-cbdc-473c-aba8-9610d1ce0611.png" alt="SIMD混淆" loading="lazy" decoding="async"></p>
+<p><img src="/assets/posts/simd%E6%B7%B7%E6%B7%86/images/1774184304714-430c444f-9b7c-46a1-893a-be6dbbf6780e.png" alt="SIMD混淆" loading="lazy" decoding="async"></p>
+<p>运行SIMD这些指令时，只有RIP寄存器会变（这个是正常行为），也就是说这些SIMD混淆指令是不会影响正常通用寄存器的运算的，所以可以全部patch，通过进一步调试分析，最终的去混淆ida python如下：</p>
+<pre><code class="hljs language-python"><span class="hljs-keyword">import</span> os
+<span class="hljs-keyword">import</span> ida_ua
+<span class="hljs-keyword">import</span> ida_bytes
+<span class="hljs-keyword">import</span> ida_auto
+<span class="hljs-keyword">import</span> ida_kernwin
+<span class="hljs-keyword">import</span> ida_idaapi
+<span class="hljs-keyword">import</span> idc
+<span class="hljs-keyword">import</span> idautils
+
+START = <span class="hljs-number">0x00007FF96194D875</span>
+END   = <span class="hljs-number">0x00007FF961954D21</span>  
+
+PRESERVE_EXTERNAL_XREF_TARGETS = <span class="hljs-literal">False</span>
+
+FORCE_DEFINE_HIDDEN_CODE = <span class="hljs-literal">True</span>
+
+PRINT_ALL_VALID_ADDRS = <span class="hljs-literal">True</span>
+
+PRESERVE_ANY_GPR_TOUCHING_SIMD = <span class="hljs-literal">True</span>
+
+PROTECTED_GPR_TOKENS = {
+    <span class="hljs-string">"rax"</span>, <span class="hljs-string">"eax"</span>, <span class="hljs-string">"ax"</span>, <span class="hljs-string">"al"</span>, <span class="hljs-string">"ah"</span>,
+    <span class="hljs-string">"rbx"</span>, <span class="hljs-string">"ebx"</span>, <span class="hljs-string">"bx"</span>, <span class="hljs-string">"bl"</span>, <span class="hljs-string">"bh"</span>,
+    <span class="hljs-string">"rcx"</span>, <span class="hljs-string">"ecx"</span>, <span class="hljs-string">"cx"</span>, <span class="hljs-string">"cl"</span>, <span class="hljs-string">"ch"</span>,
+    <span class="hljs-string">"rdx"</span>, <span class="hljs-string">"edx"</span>, <span class="hljs-string">"dx"</span>, <span class="hljs-string">"dl"</span>, <span class="hljs-string">"dh"</span>,
+    <span class="hljs-string">"rsi"</span>, <span class="hljs-string">"esi"</span>, <span class="hljs-string">"si"</span>, <span class="hljs-string">"sil"</span>,
+    <span class="hljs-string">"rdi"</span>, <span class="hljs-string">"edi"</span>, <span class="hljs-string">"di"</span>, <span class="hljs-string">"dil"</span>,
+    <span class="hljs-string">"rbp"</span>, <span class="hljs-string">"ebp"</span>, <span class="hljs-string">"bp"</span>, <span class="hljs-string">"bpl"</span>,
+    <span class="hljs-string">"rsp"</span>, <span class="hljs-string">"esp"</span>, <span class="hljs-string">"sp"</span>, <span class="hljs-string">"spl"</span>,
+    <span class="hljs-string">"r8"</span>, <span class="hljs-string">"r8d"</span>, <span class="hljs-string">"r8w"</span>, <span class="hljs-string">"r8b"</span>,
+    <span class="hljs-string">"r9"</span>, <span class="hljs-string">"r9d"</span>, <span class="hljs-string">"r9w"</span>, <span class="hljs-string">"r9b"</span>,
+    <span class="hljs-string">"r10"</span>, <span class="hljs-string">"r10d"</span>, <span class="hljs-string">"r10w"</span>, <span class="hljs-string">"r10b"</span>,
+    <span class="hljs-string">"r11"</span>, <span class="hljs-string">"r11d"</span>, <span class="hljs-string">"r11w"</span>, <span class="hljs-string">"r11b"</span>,
+    <span class="hljs-string">"r12"</span>, <span class="hljs-string">"r12d"</span>, <span class="hljs-string">"r12w"</span>, <span class="hljs-string">"r12b"</span>,
+    <span class="hljs-string">"r13"</span>, <span class="hljs-string">"r13d"</span>, <span class="hljs-string">"r13w"</span>, <span class="hljs-string">"r13b"</span>,
+    <span class="hljs-string">"r14"</span>, <span class="hljs-string">"r14d"</span>, <span class="hljs-string">"r14w"</span>, <span class="hljs-string">"r14b"</span>,
+    <span class="hljs-string">"r15"</span>, <span class="hljs-string">"r15d"</span>, <span class="hljs-string">"r15w"</span>, <span class="hljs-string">"r15b"</span>,
+}
+
+OUTPUT_TXT_NAME = <span class="hljs-string">"valid_instructions_7FF96FAAD874_7FF96FAB4D21.txt"</span>
+
+<span class="hljs-comment"># 典型 SIMD / 向量指令助记符（可扩展）</span>
+SIMD_MNEMS = {
+    <span class="hljs-string">"movaps"</span>, <span class="hljs-string">"movups"</span>, <span class="hljs-string">"movdqa"</span>, <span class="hljs-string">"movdqu"</span>, <span class="hljs-string">"movapd"</span>, <span class="hljs-string">"movupd"</span>,
+    <span class="hljs-string">"addps"</span>, <span class="hljs-string">"subps"</span>, <span class="hljs-string">"mulps"</span>, <span class="hljs-string">"divps"</span>, <span class="hljs-string">"xorps"</span>, <span class="hljs-string">"andps"</span>, <span class="hljs-string">"orps"</span>,
+    <span class="hljs-string">"addpd"</span>, <span class="hljs-string">"subpd"</span>, <span class="hljs-string">"mulpd"</span>, <span class="hljs-string">"divpd"</span>, <span class="hljs-string">"xorpd"</span>, <span class="hljs-string">"andpd"</span>, <span class="hljs-string">"orpd"</span>,
+    <span class="hljs-string">"pshufd"</span>, <span class="hljs-string">"shufps"</span>, <span class="hljs-string">"unpcklps"</span>, <span class="hljs-string">"unpckhps"</span>,
+    <span class="hljs-string">"pcmpeqb"</span>, <span class="hljs-string">"pcmpgtb"</span>, <span class="hljs-string">"packuswb"</span>, <span class="hljs-string">"punpcklbw"</span>, <span class="hljs-string">"punpckhbw"</span>,
+    <span class="hljs-string">"paddb"</span>, <span class="hljs-string">"paddw"</span>, <span class="hljs-string">"paddd"</span>, <span class="hljs-string">"psubb"</span>, <span class="hljs-string">"psubw"</span>, <span class="hljs-string">"psubd"</span>,
+    <span class="hljs-string">"pmullw"</span>, <span class="hljs-string">"pmulld"</span>, <span class="hljs-string">"pxor"</span>, <span class="hljs-string">"pand"</span>, <span class="hljs-string">"por"</span>,
+    <span class="hljs-string">"psubusw"</span>, <span class="hljs-string">"pshufb"</span>, <span class="hljs-string">"punpcklqdq"</span>,
+    <span class="hljs-string">"movd"</span>, <span class="hljs-string">"movq"</span>, <span class="hljs-string">"pinsrd"</span>, <span class="hljs-string">"pextrd"</span>, <span class="hljs-string">"cvtsi2ss"</span>, <span class="hljs-string">"cvttss2si"</span>,
+    <span class="hljs-string">"vzeroupper"</span>, <span class="hljs-string">"vmovdqa"</span>, <span class="hljs-string">"vmovdqu"</span>, <span class="hljs-string">"vmovaps"</span>, <span class="hljs-string">"vmovups"</span>,
+    <span class="hljs-string">"vaddps"</span>, <span class="hljs-string">"vsubps"</span>, <span class="hljs-string">"vmulps"</span>, <span class="hljs-string">"vdivps"</span>, <span class="hljs-string">"vxorps"</span>,
+    <span class="hljs-string">"vaddpd"</span>, <span class="hljs-string">"vsubpd"</span>, <span class="hljs-string">"vmulpd"</span>, <span class="hljs-string">"vdivpd"</span>, <span class="hljs-string">"vxorpd"</span>,
+    <span class="hljs-string">"vpaddd"</span>, <span class="hljs-string">"vpsubd"</span>, <span class="hljs-string">"vpxor"</span>, <span class="hljs-string">"vpand"</span>, <span class="hljs-string">"vpor"</span>,
+    <span class="hljs-string">"vpshufb"</span>, <span class="hljs-string">"vperm2i128"</span>, <span class="hljs-string">"vpunpcklqdq"</span>
+}
+
+REG_TOKENS = (<span class="hljs-string">"xmm"</span>, <span class="hljs-string">"ymm"</span>, <span class="hljs-string">"zmm"</span>, <span class="hljs-string">"mm"</span>)
+SUSPICIOUS_DB_PREFIXES = {<span class="hljs-number">0x66</span>, <span class="hljs-number">0xC4</span>, <span class="hljs-number">0xC5</span>, <span class="hljs-number">0x62</span>}
+
+
+<span class="hljs-keyword">def</span> <span class="hljs-title function_">is_code</span>(<span class="hljs-params">ea</span>):
+    <span class="hljs-keyword">return</span> ida_bytes.is_code(ida_bytes.get_flags(ea))
+
+
+<span class="hljs-keyword">def</span> <span class="hljs-title function_">decode_size</span>(<span class="hljs-params">ea</span>):
+    insn = ida_ua.insn_t()
+    <span class="hljs-keyword">return</span> ida_ua.decode_insn(insn, ea)
+
+
+<span class="hljs-keyword">def</span> <span class="hljs-title function_">try_make_code</span>(<span class="hljs-params">ea</span>):
+    size = decode_size(ea)
+    <span class="hljs-keyword">if</span> size &gt; <span class="hljs-number">0</span> <span class="hljs-keyword">and</span> is_code(ea):
+        <span class="hljs-keyword">return</span> size
+
+    ida_bytes.del_items(ea, ida_bytes.DELIT_SIMPLE, <span class="hljs-number">1</span>)
+    created = idc.create_insn(ea)
+    <span class="hljs-keyword">if</span> created:
+        size = decode_size(ea)
+        <span class="hljs-keyword">if</span> size &gt; <span class="hljs-number">0</span>:
+            <span class="hljs-keyword">return</span> size
+
+    <span class="hljs-keyword">return</span> decode_size(ea)
+
+
+<span class="hljs-keyword">def</span> <span class="hljs-title function_">has_external_code_xref_to</span>(<span class="hljs-params">ea, start, end</span>):
+    <span class="hljs-keyword">for</span> xr <span class="hljs-keyword">in</span> idautils.XrefsTo(ea, <span class="hljs-number">0</span>):
+        frm = xr.frm
+        <span class="hljs-keyword">if</span> frm &lt; start <span class="hljs-keyword">or</span> frm &gt;= end:
+            <span class="hljs-keyword">if</span> ida_bytes.is_code(ida_bytes.get_flags(frm)):
+                <span class="hljs-keyword">return</span> <span class="hljs-literal">True</span>
+    <span class="hljs-keyword">return</span> <span class="hljs-literal">False</span>
+
+
+<span class="hljs-keyword">def</span> <span class="hljs-title function_">get_disasm</span>(<span class="hljs-params">ea</span>):
+    <span class="hljs-keyword">return</span> (idc.generate_disasm_line(ea, <span class="hljs-number">0</span>) <span class="hljs-keyword">or</span> <span class="hljs-string">""</span>).strip()
+
+
+<span class="hljs-keyword">def</span> <span class="hljs-title function_">is_suspicious_db</span>(<span class="hljs-params">ea</span>):
+    disasm = get_disasm(ea).lower()
+    <span class="hljs-keyword">if</span> <span class="hljs-keyword">not</span> disasm.startswith(<span class="hljs-string">"db"</span>):
+        <span class="hljs-keyword">return</span> <span class="hljs-literal">False</span>
+    b = ida_bytes.get_byte(ea)
+    <span class="hljs-keyword">return</span> b <span class="hljs-keyword">in</span> SUSPICIOUS_DB_PREFIXES
+
+
+<span class="hljs-keyword">def</span> <span class="hljs-title function_">is_simd_like_insn</span>(<span class="hljs-params">ea</span>):
+    mnem = (idc.print_insn_mnem(ea) <span class="hljs-keyword">or</span> <span class="hljs-string">""</span>).lower()
+    <span class="hljs-keyword">if</span> <span class="hljs-keyword">not</span> mnem:
+        <span class="hljs-keyword">return</span> <span class="hljs-literal">False</span>
+
+    <span class="hljs-keyword">if</span> mnem <span class="hljs-keyword">in</span> SIMD_MNEMS:
+        <span class="hljs-keyword">return</span> <span class="hljs-literal">True</span>
+
+    <span class="hljs-keyword">if</span> mnem.startswith(<span class="hljs-string">"v"</span>) <span class="hljs-keyword">and</span> <span class="hljs-built_in">len</span>(mnem) &gt;= <span class="hljs-number">3</span>:
+        <span class="hljs-keyword">for</span> i <span class="hljs-keyword">in</span> <span class="hljs-built_in">range</span>(<span class="hljs-number">8</span>):
+            op = idc.print_operand(ea, i)
+            <span class="hljs-keyword">if</span> <span class="hljs-keyword">not</span> op:
+                <span class="hljs-keyword">break</span>
+            l = op.lower()
+            <span class="hljs-keyword">if</span> <span class="hljs-built_in">any</span>(tok <span class="hljs-keyword">in</span> l <span class="hljs-keyword">for</span> tok <span class="hljs-keyword">in</span> REG_TOKENS):
+                <span class="hljs-keyword">return</span> <span class="hljs-literal">True</span>
+
+    <span class="hljs-keyword">for</span> i <span class="hljs-keyword">in</span> <span class="hljs-built_in">range</span>(<span class="hljs-number">8</span>):
+        op = idc.print_operand(ea, i)
+        <span class="hljs-keyword">if</span> <span class="hljs-keyword">not</span> op:
+            <span class="hljs-keyword">break</span>
+        l = op.lower()
+        <span class="hljs-keyword">if</span> <span class="hljs-built_in">any</span>(tok <span class="hljs-keyword">in</span> l <span class="hljs-keyword">for</span> tok <span class="hljs-keyword">in</span> REG_TOKENS):
+            <span class="hljs-keyword">return</span> <span class="hljs-literal">True</span>
+
+    <span class="hljs-keyword">return</span> <span class="hljs-literal">False</span>
+
+
+<span class="hljs-keyword">def</span> <span class="hljs-title function_">touches_protected_gpr</span>(<span class="hljs-params">ea</span>):
+    <span class="hljs-string">"""若指令操作数涉及受保护通用寄存器，则返回 True。"""</span>
+    <span class="hljs-keyword">for</span> i <span class="hljs-keyword">in</span> <span class="hljs-built_in">range</span>(<span class="hljs-number">8</span>):
+        op = idc.print_operand(ea, i)
+        <span class="hljs-keyword">if</span> <span class="hljs-keyword">not</span> op:
+            <span class="hljs-keyword">break</span>
+        l = op.lower()
+        <span class="hljs-keyword">for</span> reg <span class="hljs-keyword">in</span> PROTECTED_GPR_TOKENS:
+            <span class="hljs-keyword">if</span> (
+                l == reg
+                <span class="hljs-keyword">or</span> l.startswith(reg + <span class="hljs-string">","</span>)
+                <span class="hljs-keyword">or</span> l.endswith(<span class="hljs-string">", "</span> + reg)
+                <span class="hljs-keyword">or</span> l.startswith(<span class="hljs-string">"["</span> + reg)
+                <span class="hljs-keyword">or</span> (<span class="hljs-string">"["</span> + reg + <span class="hljs-string">"+"</span>) <span class="hljs-keyword">in</span> l
+                <span class="hljs-keyword">or</span> (<span class="hljs-string">"["</span> + reg + <span class="hljs-string">"-"</span>) <span class="hljs-keyword">in</span> l
+                <span class="hljs-keyword">or</span> (<span class="hljs-string">", "</span> + reg + <span class="hljs-string">"]"</span>) <span class="hljs-keyword">in</span> l
+                <span class="hljs-keyword">or</span> (<span class="hljs-string">", "</span> + reg + <span class="hljs-string">"+"</span>) <span class="hljs-keyword">in</span> l
+                <span class="hljs-keyword">or</span> (<span class="hljs-string">", "</span> + reg + <span class="hljs-string">"-"</span>) <span class="hljs-keyword">in</span> l
+                <span class="hljs-keyword">or</span> (<span class="hljs-string">" "</span> + reg) <span class="hljs-keyword">in</span> l
+            ):
+                <span class="hljs-keyword">return</span> <span class="hljs-literal">True</span>
+    <span class="hljs-keyword">return</span> <span class="hljs-literal">False</span>
+
+
+<span class="hljs-keyword">def</span> <span class="hljs-title function_">should_preserve_simd_insn</span>(<span class="hljs-params">ea, start, end</span>):
+    <span class="hljs-keyword">if</span> PRESERVE_ANY_GPR_TOUCHING_SIMD <span class="hljs-keyword">and</span> touches_protected_gpr(ea):
+        <span class="hljs-keyword">return</span> <span class="hljs-literal">True</span>
+
+    <span class="hljs-keyword">if</span> PRESERVE_EXTERNAL_XREF_TARGETS <span class="hljs-keyword">and</span> has_external_code_xref_to(ea, start, end):
+        <span class="hljs-keyword">return</span> <span class="hljs-literal">True</span>
+
+    <span class="hljs-keyword">return</span> <span class="hljs-literal">False</span>
+
+
+<span class="hljs-keyword">def</span> <span class="hljs-title function_">is_nop_insn</span>(<span class="hljs-params">ea</span>):
+    <span class="hljs-keyword">return</span> (idc.print_insn_mnem(ea) <span class="hljs-keyword">or</span> <span class="hljs-string">""</span>).lower() == <span class="hljs-string">"nop"</span>
+
+
+<span class="hljs-keyword">def</span> <span class="hljs-title function_">nop_range</span>(<span class="hljs-params">ea, size</span>):
+    ida_bytes.patch_bytes(ea, <span class="hljs-string">b"\x90"</span> * size)
+    ida_bytes.del_items(ea, ida_bytes.DELIT_SIMPLE, size)
+    cur = ea
+    end = ea + size
+    <span class="hljs-keyword">while</span> cur &lt; end:
+        idc.create_insn(cur)
+        cur += <span class="hljs-number">1</span>
+
+
+<span class="hljs-keyword">def</span> <span class="hljs-title function_">save_valid_instructions</span>(<span class="hljs-params">valid_insns, output_path, start, end</span>):
+    <span class="hljs-keyword">with</span> <span class="hljs-built_in">open</span>(output_path, <span class="hljs-string">"w"</span>, encoding=<span class="hljs-string">"utf-8"</span>) <span class="hljs-keyword">as</span> f:
+        f.write(<span class="hljs-string">f"Range: <span class="hljs-subst">{start:#x}</span> - <span class="hljs-subst">{end:#x}</span>\n"</span>)
+        f.write(<span class="hljs-string">f"Valid non-NOP instruction count: <span class="hljs-subst">{<span class="hljs-built_in">len</span>(valid_insns)}</span>\n"</span>)
+        f.write(<span class="hljs-string">"="</span> * <span class="hljs-number">100</span> + <span class="hljs-string">"\n"</span>)
+        <span class="hljs-keyword">for</span> ea, disasm <span class="hljs-keyword">in</span> valid_insns:
+            f.write(<span class="hljs-string">f"<span class="hljs-subst">{ea:#018x}</span>  <span class="hljs-subst">{disasm}</span>\n"</span>)
+
+
+<span class="hljs-keyword">def</span> <span class="hljs-title function_">scan_and_patch</span>(<span class="hljs-params">start, end</span>):
+    ea = start
+    patched = <span class="hljs-number">0</span>
+    skipped_xref = <span class="hljs-number">0</span>
+    undecoded = <span class="hljs-number">0</span>
+    forced_code = <span class="hljs-number">0</span>
+    suspicious_db = <span class="hljs-number">0</span>
+
+    <span class="hljs-keyword">while</span> ea &lt; end:
+        size = decode_size(ea)
+
+        <span class="hljs-keyword">if</span> size &lt;= <span class="hljs-number">0</span> <span class="hljs-keyword">and</span> FORCE_DEFINE_HIDDEN_CODE:
+            size = try_make_code(ea)
+            <span class="hljs-keyword">if</span> size &gt; <span class="hljs-number">0</span>:
+                forced_code += <span class="hljs-number">1</span>
+
+        <span class="hljs-keyword">if</span> size &lt;= <span class="hljs-number">0</span>:
+            undecoded += <span class="hljs-number">1</span>
+            ea += <span class="hljs-number">1</span>
+            <span class="hljs-keyword">continue</span>
+
+        <span class="hljs-keyword">if</span> is_suspicious_db(ea):
+            suspicious_db += <span class="hljs-number">1</span>
+            <span class="hljs-keyword">if</span> FORCE_DEFINE_HIDDEN_CODE:
+                retry_size = try_make_code(ea)
+                <span class="hljs-keyword">if</span> retry_size &gt; <span class="hljs-number">0</span>:
+                    size = retry_size
+
+        will_patch = <span class="hljs-literal">False</span>
+        <span class="hljs-keyword">if</span> is_simd_like_insn(ea):
+            <span class="hljs-keyword">if</span> should_preserve_simd_insn(ea, start, end):
+                <span class="hljs-keyword">if</span> PRESERVE_EXTERNAL_XREF_TARGETS <span class="hljs-keyword">and</span> has_external_code_xref_to(ea, start, end):
+                    skipped_xref += <span class="hljs-number">1</span>
+                will_patch = <span class="hljs-literal">False</span>
+            <span class="hljs-keyword">else</span>:
+                will_patch = <span class="hljs-literal">True</span>
+
+        <span class="hljs-keyword">if</span> will_patch:
+            nop_range(ea, size)
+            patched += <span class="hljs-number">1</span>
+
+        ea += <span class="hljs-built_in">max</span>(size, <span class="hljs-number">1</span>)
+
+    ida_auto.auto_mark_range(start, end, ida_auto.AU_CODE)
+    ida_auto.auto_wait()
+    <span class="hljs-keyword">return</span> patched, skipped_xref, undecoded, forced_code, suspicious_db
+
+
+<span class="hljs-keyword">def</span> <span class="hljs-title function_">collect_valid_non_nop</span>(<span class="hljs-params">start, end</span>):
+    ea = start
+    valid = []
+    still_simd = []
+    raw_db = []
+
+    <span class="hljs-keyword">while</span> ea &lt; end:
+        size = decode_size(ea)
+        <span class="hljs-keyword">if</span> size &lt;= <span class="hljs-number">0</span>:
+            ea += <span class="hljs-number">1</span>
+            <span class="hljs-keyword">continue</span>
+
+        disasm = get_disasm(ea)
+        <span class="hljs-keyword">if</span> disasm.lower().startswith(<span class="hljs-string">"db"</span>):
+            raw_db.append((ea, disasm))
+        <span class="hljs-keyword">elif</span> <span class="hljs-keyword">not</span> is_nop_insn(ea):
+            <span class="hljs-keyword">if</span> is_simd_like_insn(ea):
+                still_simd.append((ea, disasm))
+            valid.append((ea, disasm))
+
+        ea += <span class="hljs-built_in">max</span>(size, <span class="hljs-number">1</span>)
+
+    <span class="hljs-keyword">return</span> valid, still_simd, raw_db
+
+
+<span class="hljs-keyword">def</span> <span class="hljs-title function_">run</span>(<span class="hljs-params">start, end</span>):
+    total_patched = <span class="hljs-number">0</span>
+    total_skipped_xref = <span class="hljs-number">0</span>
+    total_undecoded = <span class="hljs-number">0</span>
+    total_forced_code = <span class="hljs-number">0</span>
+    total_suspicious_db = <span class="hljs-number">0</span>
+
+    <span class="hljs-keyword">for</span> _ <span class="hljs-keyword">in</span> <span class="hljs-built_in">range</span>(<span class="hljs-number">2</span>):
+        patched, skipped_xref, undecoded, forced_code, suspicious_db = scan_and_patch(start, end)
+        total_patched += patched
+        total_skipped_xref += skipped_xref
+        total_undecoded += undecoded
+        total_forced_code += forced_code
+        total_suspicious_db += suspicious_db
+
+    valid_non_nop_insns, still_simd, raw_db = collect_valid_non_nop(start, end)
+
+    <span class="hljs-keyword">if</span> PRINT_ALL_VALID_ADDRS:
+        <span class="hljs-built_in">print</span>(<span class="hljs-string">"\n[valid non-NOP instruction addresses]"</span>)
+        <span class="hljs-keyword">for</span> va, _ <span class="hljs-keyword">in</span> valid_non_nop_insns:
+            <span class="hljs-built_in">print</span>(<span class="hljs-string">f"<span class="hljs-subst">{va:#018x}</span>"</span>)
+
+    idb_path = idc.get_idb_path()
+    out_dir = os.path.dirname(idb_path) <span class="hljs-keyword">if</span> idb_path <span class="hljs-keyword">else</span> os.getcwd()
+    out_path = os.path.join(out_dir, OUTPUT_TXT_NAME)
+    save_valid_instructions(valid_non_nop_insns, out_path, start, end)
+
+    msg = (
+        <span class="hljs-string">f"[done] range: <span class="hljs-subst">{start:#x}</span> - <span class="hljs-subst">{end:#x}</span>\n"</span>
+        <span class="hljs-string">f"patched SIMD-like insns: <span class="hljs-subst">{total_patched}</span>\n"</span>
+        <span class="hljs-string">f"skipped (external xref targets): <span class="hljs-subst">{total_skipped_xref}</span>\n"</span>
+        <span class="hljs-string">f"forced hidden code definitions: <span class="hljs-subst">{total_forced_code}</span>\n"</span>
+        <span class="hljs-string">f"suspicious db prefixes seen: <span class="hljs-subst">{total_suspicious_db}</span>\n"</span>
+        <span class="hljs-string">f"undecoded bytes visited: <span class="hljs-subst">{total_undecoded}</span>\n"</span>
+        <span class="hljs-string">f"valid non-NOP instructions kept: <span class="hljs-subst">{<span class="hljs-built_in">len</span>(valid_non_nop_insns)}</span>\n"</span>
+        <span class="hljs-string">f"remaining SIMD-like instructions: <span class="hljs-subst">{<span class="hljs-built_in">len</span>(still_simd)}</span>\n"</span>
+        <span class="hljs-string">f"remaining raw db entries: <span class="hljs-subst">{<span class="hljs-built_in">len</span>(raw_db)}</span>\n"</span>
+        <span class="hljs-string">f"saved to: <span class="hljs-subst">{out_path}</span>\n"</span>
+    )
+
+    <span class="hljs-built_in">print</span>(msg)
+
+    <span class="hljs-keyword">if</span> still_simd:
+        <span class="hljs-built_in">print</span>(<span class="hljs-string">"\n[warning] remaining SIMD-like instructions:"</span>)
+        <span class="hljs-keyword">for</span> ea, disasm <span class="hljs-keyword">in</span> still_simd[:<span class="hljs-number">100</span>]:
+            <span class="hljs-built_in">print</span>(<span class="hljs-string">f"<span class="hljs-subst">{ea:#018x}</span>  <span class="hljs-subst">{disasm}</span>"</span>)
+
+    <span class="hljs-keyword">if</span> raw_db:
+        <span class="hljs-built_in">print</span>(<span class="hljs-string">"\n[warning] remaining raw db entries:"</span>)
+        <span class="hljs-keyword">for</span> ea, disasm <span class="hljs-keyword">in</span> raw_db[:<span class="hljs-number">100</span>]:
+            <span class="hljs-built_in">print</span>(<span class="hljs-string">f"<span class="hljs-subst">{ea:#018x}</span>  <span class="hljs-subst">{disasm}</span>"</span>)
+
+    ida_kernwin.info(msg)
+
+
+<span class="hljs-keyword">if</span> __name__ == <span class="hljs-string">"__main__"</span>:
+    run(START, END)
+</code></pre><p>运行之后效果如下：</p>
+<p><img src="/assets/posts/simd%E6%B7%B7%E6%B7%86/images/1774184669413-ddbb25cd-c770-446d-9f08-03f1cbcd5075.png" alt="SIMD混淆" loading="lazy" decoding="async"></p>
+<p>同时会将这片地址范围内有效的指令及其地址输出到valid_instructions_7FF96FAAD874_7FF96FAB4D21.txt</p>
+<p><img src="/assets/posts/simd%E6%B7%B7%E6%B7%86/images/1774184723916-43d45a91-f008-4199-8bb9-94ad274fab45.png" alt="SIMD混淆" loading="lazy" decoding="async"></p>
+<p>这个去混淆脚本依旧有个缺点，就是无法自动去除ida中未识别的指令，只能保存未数据（虽然无法全自动去除，但是也保证了不会过分去除导致正常代码无法运行）</p>
+<p>针对这些数据块，只需要根据给出的地址，去手动让ida识别为指令，然后再运行一遍去混淆脚本即可，最终效果如下：</p>
+<p><img src="/assets/posts/simd%E6%B7%B7%E6%B7%86/images/1774185126710-916c9711-3a4e-41e1-96bf-cd4a7445948b.png" alt="SIMD混淆" loading="lazy" decoding="async"></p>
+<p>再让大模型润色一下，得到最终的完整逻辑</p>
+<pre><code class="hljs language-c">; ============================================================
+    ; 主逻辑：
+; <span class="hljs-number">1</span>) 建立栈帧
+; <span class="hljs-number">2</span>) 反复清空局部缓冲区（疑似扰动/延时/混淆残留）
+; <span class="hljs-number">3</span>) 通过 call/pop 取当前位置，计算内部基址
+; <span class="hljs-number">4</span>) 调用辅助函数获得目标缓冲区
+; <span class="hljs-number">5</span>) 从 base+<span class="hljs-number">0x32F0E8</span> 拷贝 <span class="hljs-number">0x19202</span> 字节到目标缓冲区
+; <span class="hljs-number">6</span>) 用 base+<span class="hljs-number">0x223866</span> 的 <span class="hljs-number">0x14</span> 字节循环密钥对目标缓冲区异或
+; <span class="hljs-number">7</span>) 调用解码后的代码
+; ============================================================
+
+    sub_main_logic proc near
+    push    rbp
+    push    rsi
+    push    rdi
+    mov     rbp, rsp
+    sub     rsp, <span class="hljs-number">0</span>A0h
+
+    ; r8  = 局部缓冲区起始地址
+    ; rcx = 内层计数
+    ; rdx = 外层计数
+    ; 这段逻辑表现为：反复将一个 <span class="hljs-number">0x73</span> 字节的小缓冲区清零
+    lea     r8, [rsp+<span class="hljs-number">0</span>A0h+var_80]
+    xor     rdx, rdx
+
+loc_zero_outer:
+xor     rcx, rcx
+
+loc_zero_inner:
+mov     [r8+rcx], cl         ; 因为 cl 此时为 <span class="hljs-number">0</span>，所以相当于写 <span class="hljs-number">0</span>
+    inc     rcx
+    cmp     rcx, <span class="hljs-number">72</span>h
+    jbe     <span class="hljs-type">short</span> loc_zero_inner
+
+    inc     rdx
+    cmp     rdx, <span class="hljs-number">3</span>D092Bh
+    jbe     <span class="hljs-type">short</span> loc_zero_outer
+
+    ; -----------------------------
+        ; 取当前位置（RIP 技巧）并回推出内部基址
+    ; -----------------------------
+        call    $+<span class="hljs-number">5</span>
+        pop     rax
+    sub     rax, <span class="hljs-number">6F</span>8BEh          ; rax = base
+
+    ; 保存 base 到 xmm13，后续多次取回使用
+    movq    xmm13, rax
+
+    ; -----------------------------
+        ; 调用辅助函数，返回目标缓冲区地址
+    ; -----------------------------
+        call    near ptr loc_7FF9619554EF+<span class="hljs-number">5</span>
+        mov     [rbp<span class="hljs-number">-8</span>], rax         ; [rbp<span class="hljs-number">-8</span>] = dst
+
+    ; -----------------------------
+        ; 构造 <span class="hljs-built_in">memcpy</span> 参数
+    ; dst = rax
+    ; src = base + <span class="hljs-number">0x32F0E8</span>
+        ; len = <span class="hljs-number">0x19202</span>
+            ; -----------------------------
+                movq    rsi, xmm13           ; rsi = base
+    add     rsi, <span class="hljs-number">32F</span>0E8h         ; rsi = src
+    mov     rcx, <span class="hljs-number">19202</span>h          ; rcx = size
+    mov     rdi, rax             ; rdi = dst
+
+    cld
+    rep movsb                    ; <span class="hljs-built_in">memcpy</span>(dst, src, <span class="hljs-number">0x19202</span>)
+
+        ; -----------------------------
+            ; 恢复目标地址，准备异或解码
+    ; key = base + <span class="hljs-number">0x223866</span>
+        ; key_len = <span class="hljs-number">0x14</span>
+            ; -----------------------------
+                mov     rdi, [rbp<span class="hljs-number">-8</span>]         ; rdi = dst
+    mov     r11, <span class="hljs-number">14</span>h             ; key length = <span class="hljs-number">0x14</span>
+        xor     rax, rax
+    xor     rcx, rcx             ; rcx = i
+
+    movq    r9, xmm13            ; r9 = base
+    add     r9, <span class="hljs-number">223866</span>h          ; r9 = key
+
+loc_xor_loop:
+xor     rdx, rdx             ; rdx 清零，供 div 取余使用
+    mov     rax, rcx             ; rax = i
+    div     r11                  ; rdx = i % <span class="hljs-number">0x14</span>
+
+        mov     r10b, [r9+rdx]       ; key_byte = key[i % <span class="hljs-number">0x14</span>]
+    xor     [rdi+rcx], r10b      ; dst[i] ^= key_byte
+
+    inc     rcx
+    cmp     rcx, <span class="hljs-number">19201</span>h
+    jbe     loc_xor_loop
+
+    ; -----------------------------
+        ; 调用解码后的代码
+    ; -----------------------------
+        call    rdi
+
+    add     rsp, <span class="hljs-number">0</span>A0h
+    pop     rdi
+    pop     rsi
+    pop     rbp
+    xor     rax, rax
+    retn
+
+sub_main_logic endp
+
+<span class="hljs-comment">//大致c逻辑为：</span>
+<span class="hljs-type">int</span> <span class="hljs-title function_">sub_main_logic</span><span class="hljs-params">(<span class="hljs-type">void</span>)</span>
+    {
+        <span class="hljs-type">unsigned</span> <span class="hljs-type">char</span> tmp[<span class="hljs-number">0x80</span>];
+        <span class="hljs-type">unsigned</span> <span class="hljs-type">char</span> *base;
+        <span class="hljs-type">unsigned</span> <span class="hljs-type">char</span> *dst;
+        <span class="hljs-type">unsigned</span> <span class="hljs-type">char</span> *src;
+        <span class="hljs-type">unsigned</span> <span class="hljs-type">char</span> *key;
+
+        <span class="hljs-comment">// 疑似扰动/混淆残留</span>
+        <span class="hljs-keyword">for</span> (<span class="hljs-type">size_t</span> outer = <span class="hljs-number">0</span>; outer &lt;= <span class="hljs-number">0x3D092B</span>; outer++) {
+            <span class="hljs-keyword">for</span> (<span class="hljs-type">size_t</span> inner = <span class="hljs-number">0</span>; inner &lt;= <span class="hljs-number">0x72</span>; inner++) {
+                tmp[inner] = <span class="hljs-number">0</span>;
+            }
+        }
+
+        base = get_rip() - <span class="hljs-number">0x6F8BE</span>;
+        dst  = sub_7FF9619554EF_plus_5();
+
+    src = base + <span class="hljs-number">0x32F0E8</span>;
+    <span class="hljs-built_in">memcpy</span>(dst, src, <span class="hljs-number">0x19202</span>);
+
+    key = base + <span class="hljs-number">0x223866</span>;
+    <span class="hljs-keyword">for</span> (<span class="hljs-type">size_t</span> i = <span class="hljs-number">0</span>; i &lt;= <span class="hljs-number">0x19201</span>; i++) {
+        dst[i] ^= key[i % <span class="hljs-number">0x14</span>];
+    }
+
+    ((<span class="hljs-type">void</span>(*)())dst)();
+    <span class="hljs-keyword">return</span> <span class="hljs-number">0</span>;
+}
+
+</code></pre><p>混淆前效果：</p>
+<p><img src="/assets/posts/simd%E6%B7%B7%E6%B7%86/images/1774262865830-30e4d563-f684-4673-9ec7-010f3d36434e.png" alt="SIMD混淆" loading="lazy" decoding="async"></p>
+<p>直接跳转运行shellcode</p>
+<p>混淆之后的效果：</p>
+<p><img src="/assets/posts/simd%E6%B7%B7%E6%B7%86/images/1774262631235-28194438-9718-462c-a065-cf6f0a44bd3b.png" alt="SIMD混淆" loading="lazy" decoding="async"></p>
+<p><img src="/assets/posts/simd%E6%B7%B7%E6%B7%86/images/1774262690376-121bd9cc-58ae-4948-90f3-28ac632e8918.png" alt="SIMD混淆" loading="lazy" decoding="async"></p>
+<p>解密之后会继续运行shellcode逻辑，本质对shellcode不产生实质性影响</p>
+</div><footer class="article-footer"><div><span>本文链接</span><a href="https://ycr0w.github.io/2026/08/13/simd%E6%B7%B7%E6%B7%86/">https://ycr0w.github.io/2026/08/13/simd%E6%B7%B7%E6%B7%86/</a></div></footer></article>
+    <aside class="article-aside"><div class="toc"><span>目录</span><small>本文暂无目录</small></div></aside>
+    <nav class="post-navigation"><a href="/2026/08/13/powershell-exploits/"><i data-lucide="arrow-left" aria-hidden="true"></i><span><small>上一篇</small>PowerShell Exploits</span></a><a href="/2026/08/13/storm/"><span><small>下一篇</small>Storm</span><i data-lucide="arrow-right" aria-hidden="true"></i></a></nav>
+  </main>
+  <footer class="site-footer"><span>© 2026 YCr0w</span></footer>
+</body>
+</html>

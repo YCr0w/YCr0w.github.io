@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#15171a">
+  <meta name="description" content="https://github.com/antonioCoco/SspiUacBypass?tab=readme-ov-file https://github.com/hfiref0x/UACME 78（requires current user account password not to be blank. 原理： 通过 SSPI 在...">
+  <meta name="author" content="YCr0w">
+  <title>Bypassing UAC with SSPI Datagram Contexts | YCr0w&#39;blog</title>
+  <link rel="icon" type="image/x-icon" href="/assets/site/favicon.ico">
+  <link rel="stylesheet" href="/assets/css/site.css">
+  <script src="/assets/vendor/lucide.js" defer></script>
+  <script src="/assets/js/site.js" defer></script>
+</head>
+<body class="article-page">
+  <header class="site-header">
+    <div class="header-profile">
+      <a class="header-identity" href="/" aria-label="返回首页"><img class="header-avatar" src="/assets/site/avatar.jpg" alt="YCr0w"><span class="header-name">YCr0w</span></a>
+      <div class="header-links"><a href="https://github.com/YCr0w" target="_blank" rel="noopener" aria-label="GitHub"><i data-lucide="github" aria-hidden="true"></i></a><a href="mailto:3083981460@qq.com" aria-label="Email"><i data-lucide="mail" aria-hidden="true"></i></a></div>
+    </div>
+    <button class="nav-toggle icon-button" type="button" aria-label="打开导航"><i data-lucide="menu" aria-hidden="true"></i></button>
+    <nav class="main-nav" aria-label="主导航">
+      <a href="/"><i data-lucide="house" aria-hidden="true"></i><span>首页</span></a><a href="/categories/"><i data-lucide="folder-tree" aria-hidden="true"></i><span>分类</span></a><a href="/archives/"><i data-lucide="archive" aria-hidden="true"></i><span>归档</span></a><a href="/about/"><i data-lucide="user-round" aria-hidden="true"></i><span>关于</span></a>
+    </nav>
+    <div class="header-actions">
+      <div class="search-inline" id="search-inline">
+        <button class="icon-button" id="search-button" type="button" aria-label="搜索" aria-expanded="false"><i data-lucide="search" aria-hidden="true"></i></button>
+        <input id="search-input" type="search" placeholder="搜索文章、标签或分类" autocomplete="off">
+        <div class="search-results" id="search-results"></div>
+      </div>
+      <button class="icon-button" id="theme-button" type="button" aria-label="切换主题"><i data-lucide="sun-moon" aria-hidden="true"></i></button>
+    </div>
+  </header>
+  <main class="article-shell">
+    <article class="article"><header class="article-header"><a class="article-category" href="/categories/malware-analysis/" style="--category-color:#d84a5b"><span class="category-dot"></span>恶意软件分析</a><h1>Bypassing UAC with SSPI Datagram Contexts</h1><p>https://github.com/antonioCoco/SspiUacBypass?tab=readme-ov-file https://github.com/hfiref0x/UACME 78（requires current user account password not to be blank. 原理： 通过 SSPI 在...</p><div class="article-meta"><span><i data-lucide="calendar-days" aria-hidden="true"></i>2026年8月13日</span><span><i data-lucide="clock-3" aria-hidden="true"></i>2 分钟阅读</span></div><div class="tag-list"></div></header><div class="article-body markdown-body"><p><a href="https://github.com/antonioCoco/SspiUacBypass?tab=readme-ov-file">https://github.com/antonioCoco/SspiUacBypass?tab=readme-ov-file</a></p>
+<p><a href="https://github.com/hfiref0x/UACME">https://github.com/hfiref0x/UACME</a>  78（requires current user account password not to be blank.</p>
+<p><img src="/assets/posts/bypassing-uac-with-sspi-datagram-contexts/images/1743770899901-8f5e62b1-5e2c-41d8-b422-32461c246fa7.png" alt="Bypassing UAC with SSPI Datagram Contexts" loading="lazy" decoding="async"></p>
+<p><img src="/assets/posts/bypassing-uac-with-sspi-datagram-contexts/images/1743508539480-81e1239d-4b6a-426b-8536-b1ff63f2f0a6.png" alt="Bypassing UAC with SSPI Datagram Contexts" loading="lazy" decoding="async"></p>
+<p>原理：</p>
+<p>通过 SSPI 在本地使用 NTLM 伪造网络身份验证</p>
+<p> <code>AcquireCredentialsHandle</code> 是 Windows 安全支持提供程序接口（SSPI）中的一个函数，用于获取凭据的句柄。凭据句柄用于后续的身份验证过程  </p>
+<p><strong>凭据的获取</strong>：如果在一个登录会话中多次调用 <code>AcquireCredentialsHandle</code>，系统可能会使用第一个创建的凭据token，而不是实际调用者的token。这意味着不论当前用户是谁，系统可能会错误地使用一个较低权限或不正确的凭据。  </p>
+<p>token混淆（token confusion）</p>
+<p>在完成身份验证时，LSASS 创建了一个新的登录会话，并生成 具有更高权限的 token和一个过滤的 LUA 令牌。这个token具有完整的管理权限，而 LUA token则限制了用户的权限。</p>
+<p>因为在同一个会话中多次调用 <code>AcquireCredentialsHandle</code>，服务器可能会将请求视为来自更高权限的token，而实际上请求是通过 LUA token发出的。此时，服务器可能错误地认为用户拥有更高的权限。</p>
+<p> 环回网络认证是指应用程序（通常是服务）尝试通过网络协议访问自身资源 </p>
+<p>demo实现：</p>
+<p>通过<code>AcquireCredentialsHandle</code>函数获取出战和入站的NTLM凭据句柄，</p>
+<p>然后使用通过 <code>InitializeSecurityContext</code> 和 <code>AcceptSecurityContext</code> 完成 NTLM Negotiation 、Challenge、Response，生成身份验证令，连续生成两次</p>
+<p>然后增加判断，判断当前线程是否以较低的模拟级别运行，</p>
+<p>RpcConnect连接到<code>\\\\127.0.0.1\\pipe\\ntsvcs</code></p>
+</div><footer class="article-footer"><div><span>本文链接</span><a href="https://ycr0w.github.io/2026/08/13/bypassing-uac-with-sspi-datagram-contexts/">https://ycr0w.github.io/2026/08/13/bypassing-uac-with-sspi-datagram-contexts/</a></div></footer></article>
+    <aside class="article-aside"><div class="toc"><span>目录</span><small>本文暂无目录</small></div></aside>
+    <nav class="post-navigation"><a href="/2026/08/13/360wfp_exploit/"><i data-lucide="arrow-left" aria-hidden="true"></i><span><small>上一篇</small>360WFP_Exploit</span></a><a href="/2026/08/13/lamehug/"><span><small>下一篇</small>LAMEHUG</span><i data-lucide="arrow-right" aria-hidden="true"></i></a></nav>
+  </main>
+  <footer class="site-footer"><span>© 2026 YCr0w</span></footer>
+</body>
+</html>

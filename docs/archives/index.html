@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#15171a">
-  <meta name="description" content="9 篇研究与学习记录">
+  <meta name="description" content="20 篇研究与学习记录">
   <meta name="author" content="YCr0w">
   <title>归档 | YCr0w&#39;blog</title>
   <link rel="icon" type="image/x-icon" href="/assets/site/favicon.ico">
@@ -31,7 +31,106 @@
       <button class="icon-button" id="theme-button" type="button" aria-label="切换主题"><i data-lucide="sun-moon" aria-hidden="true"></i></button>
     </div>
   </header>
-  <main class="page-shell"><header class="page-heading"><p>CHRONOLOGY</p><h1>归档</h1><span>9 篇研究与学习记录</span></header><section class="post-list wide"><article class="post-row">
+  <main class="page-shell"><header class="page-heading"><p>CHRONOLOGY</p><h1>归档</h1><span>20 篇研究与学习记录</span></header><section class="post-list wide"><article class="post-row">
+    <div class="post-date"><span>08/13</span><small>2026</small></div>
+    <div class="post-summary">
+      <div class="post-kicker"><a href="/categories/malware-analysis/" style="--category-color:#d84a5b"><span class="category-dot"></span>恶意软件分析</a></div>
+      <h2><a href="/2026/08/13/%E9%93%B6%E7%8B%90-10%E6%9C%88/">银狐 10月</a></h2>
+      <p>（1）BYOVD技术关闭杀软进程实现方式 开源项目，已经被杀，可以再分析一下BdApiUtil64.sys驱动（√ （2）rwdriver.sys 实现的edr致盲方式 直接看开源代码就行（√ （3）对特定API函数HOOK来实现Rootkit技术的技术细节 YiFanyi_setup.exe Inno Setup安装程序，有阿里的无效签...</p>
+      <div class="tag-list"></div>
+    </div>
+    <a class="row-action" href="/2026/08/13/%E9%93%B6%E7%8B%90-10%E6%9C%88/" aria-label="阅读 银狐 10月"><i data-lucide="arrow-up-right" aria-hidden="true"></i></a>
+  </article><article class="post-row">
+    <div class="post-date"><span>08/13</span><small>2026</small></div>
+    <div class="post-summary">
+      <div class="post-kicker"><a href="/categories/malware-analysis/" style="--category-color:#d84a5b"><span class="category-dot"></span>恶意软件分析</a></div>
+      <h2><a href="/2026/08/13/winos-4.0/">Winos 4.0</a></h2>
+      <p>dokan2.dll 分析sub_7FF8AD1E312E 使用SetWindowPos隐藏运行时的任务栏图标，接着的主要逻辑在sub_7FF8AD1E2141函数中，跟进 前面部分是回文算法，没什么用，疑似用于混淆，直接跳过 检查MZ标志与PE标志，解析PE头找到IAT 上面一大部分是回文算法，还是没用的混淆，直接跳过，IAT HOOK...</p>
+      <div class="tag-list"></div>
+    </div>
+    <a class="row-action" href="/2026/08/13/winos-4.0/" aria-label="阅读 Winos 4.0"><i data-lucide="arrow-up-right" aria-hidden="true"></i></a>
+  </article><article class="post-row">
+    <div class="post-date"><span>08/13</span><small>2026</small></div>
+    <div class="post-summary">
+      <div class="post-kicker"><a href="/categories/malware-analysis/" style="--category-color:#d84a5b"><span class="category-dot"></span>恶意软件分析</a></div>
+      <h2><a href="/2026/08/13/valleyrat/">ValleyRAT</a></h2>
+      <p>（1） UAC 绕过方法的三种方法以及代码实现 （2）样本终止与对抗杀软的实现方式 （3）反沙箱实现方式 钓鱼部分 钓鱼方式采用的是使用powershell lnk伪装为个人简介pdf Hash： SHA256:ae857addc8eb51dbfa7d0a76b19dae7a6f275f7bf1042d1c982aca4f80ce635e...</p>
+      <div class="tag-list"></div>
+    </div>
+    <a class="row-action" href="/2026/08/13/valleyrat/" aria-label="阅读 ValleyRAT"><i data-lucide="arrow-up-right" aria-hidden="true"></i></a>
+  </article><article class="post-row">
+    <div class="post-date"><span>08/13</span><small>2026</small></div>
+    <div class="post-summary">
+      <div class="post-kicker"><a href="/categories/malware-analysis/" style="--category-color:#d84a5b"><span class="category-dot"></span>恶意软件分析</a></div>
+      <h2><a href="/2026/08/13/storm/">Storm</a></h2>
+      <p>https://reliaquest.com/blog/threat-spotlight-storm-0249-precision-endpoint-exploitation/ Spear.msi HASH SHA256:8113fc3b4f82fb49f8dd853ca8e1275e0dfb06e48f39830708e4437fe8a...</p>
+      <div class="tag-list"></div>
+    </div>
+    <a class="row-action" href="/2026/08/13/storm/" aria-label="阅读 Storm"><i data-lucide="arrow-up-right" aria-hidden="true"></i></a>
+  </article><article class="post-row">
+    <div class="post-date"><span>08/13</span><small>2026</small></div>
+    <div class="post-summary">
+      <div class="post-kicker"><a href="/categories/malware-analysis/" style="--category-color:#d84a5b"><span class="category-dot"></span>恶意软件分析</a></div>
+      <h2><a href="/2026/08/13/simd%E6%B7%B7%E6%B7%86/">SIMD混淆</a></h2>
+      <p>核心部分的函数存在大量的混淆 ida无法正常分析，也无法正常反编译，但是通过调试就会发现 运行SIMD这些指令时，只有RIP寄存器会变（这个是正常行为），也就是说这些SIMD混淆指令是不会影响正常通用寄存器的运算的，所以可以全部patch，通过进一步调试分析，最终的去混淆ida python如下： import os import ida...</p>
+      <div class="tag-list"></div>
+    </div>
+    <a class="row-action" href="/2026/08/13/simd%E6%B7%B7%E6%B7%86/" aria-label="阅读 SIMD混淆"><i data-lucide="arrow-up-right" aria-hidden="true"></i></a>
+  </article><article class="post-row">
+    <div class="post-date"><span>08/13</span><small>2026</small></div>
+    <div class="post-summary">
+      <div class="post-kicker"><a href="/categories/windows-security/" style="--category-color:#d59b28"><span class="category-dot"></span>Windows安全</a></div>
+      <h2><a href="/2026/08/13/powershell-exploits/">PowerShell Exploits</a></h2>
+      <p>**DisableRegistryTools** powershell 介绍 它诞生于 2006 年，是一款功能强大的命令行 Shell 和脚本语言。 面向对象，PowerShell 不仅可以处理文本，还可以处理结构化数据。 基于 .NET 构建：这使得 PowerShell 能够深入访问 Windows 内部机制，并使其在系统管理方面拥...</p>
+      <div class="tag-list"></div>
+    </div>
+    <a class="row-action" href="/2026/08/13/powershell-exploits/" aria-label="阅读 PowerShell Exploits"><i data-lucide="arrow-up-right" aria-hidden="true"></i></a>
+  </article><article class="post-row">
+    <div class="post-date"><span>08/13</span><small>2026</small></div>
+    <div class="post-summary">
+      <div class="post-kicker"><a href="/categories/malware-analysis/" style="--category-color:#d84a5b"><span class="category-dot"></span>恶意软件分析</a></div>
+      <h2><a href="/2026/08/13/mostererat/">MostereRAT</a></h2>
+      <p>https://www.fortinet.com/blog/threat-research/mostererat-deployed-anydesk-tightvnc-for-covert-full-access 任务： 该样本通过 “CreateSvcRpc” 技术创建具有系统权限的服务，这一技术在代码层面是如何实现的？ 该样本能够创建一...</p>
+      <div class="tag-list"></div>
+    </div>
+    <a class="row-action" href="/2026/08/13/mostererat/" aria-label="阅读 MostereRAT"><i data-lucide="arrow-up-right" aria-hidden="true"></i></a>
+  </article><article class="post-row">
+    <div class="post-date"><span>08/13</span><small>2026</small></div>
+    <div class="post-summary">
+      <div class="post-kicker"><a href="/categories/malware-analysis/" style="--category-color:#d84a5b"><span class="category-dot"></span>恶意软件分析</a></div>
+      <h2><a href="/2026/08/13/lamehug/">LAMEHUG</a></h2>
+      <p>静态字符串与 Prompt 提取阶段。代码里隐藏了哪些 base64 编码的文本？解码后得到的自然语言描述具体指示了什么攻击目标（比如系统信息收集或文档窃取）？ LLM 调用与动态命令生成阶段。恶意程序如何构造并发送请求到 Hugging Face API？它使用的是哪个模型（Qwen2.5-Coder-32B-Instruct）？认证...</p>
+      <div class="tag-list"></div>
+    </div>
+    <a class="row-action" href="/2026/08/13/lamehug/" aria-label="阅读 LAMEHUG"><i data-lucide="arrow-up-right" aria-hidden="true"></i></a>
+  </article><article class="post-row">
+    <div class="post-date"><span>08/13</span><small>2026</small></div>
+    <div class="post-summary">
+      <div class="post-kicker"><a href="/categories/malware-analysis/" style="--category-color:#d84a5b"><span class="category-dot"></span>恶意软件分析</a></div>
+      <h2><a href="/2026/08/13/bypassing-uac-with-sspi-datagram-contexts/">Bypassing UAC with SSPI Datagram Contexts</a></h2>
+      <p>https://github.com/antonioCoco/SspiUacBypass?tab=readme-ov-file https://github.com/hfiref0x/UACME 78（requires current user account password not to be blank. 原理： 通过 SSPI 在...</p>
+      <div class="tag-list"></div>
+    </div>
+    <a class="row-action" href="/2026/08/13/bypassing-uac-with-sspi-datagram-contexts/" aria-label="阅读 Bypassing UAC with SSPI Datagram Contexts"><i data-lucide="arrow-up-right" aria-hidden="true"></i></a>
+  </article><article class="post-row">
+    <div class="post-date"><span>08/13</span><small>2026</small></div>
+    <div class="post-summary">
+      <div class="post-kicker"><a href="/categories/malware-analysis/" style="--category-color:#d84a5b"><span class="category-dot"></span>恶意软件分析</a></div>
+      <h2><a href="/2026/08/13/360wfp_exploit/">360WFP_Exploit</a></h2>
+      <p>https://github.com/kyxiaxiang/360WFP_Exploit 使用360netmon_x64_wfp.sys驱动来阻断流量，从而实现目标程序断网 因为该驱动是360的官方驱动，所以在云沙箱并没有出现明显的查杀，同时在win10/11能够正常加载 根据代码中的实现知道是IOCTL 0x00220804为接收用户态...</p>
+      <div class="tag-list"></div>
+    </div>
+    <a class="row-action" href="/2026/08/13/360wfp_exploit/" aria-label="阅读 360WFP_Exploit"><i data-lucide="arrow-up-right" aria-hidden="true"></i></a>
+  </article><article class="post-row">
+    <div class="post-date"><span>08/13</span><small>2026</small></div>
+    <div class="post-summary">
+      <div class="post-kicker"><a href="/categories/malware-analysis/" style="--category-color:#d84a5b"><span class="category-dot"></span>恶意软件分析</a></div>
+      <h2><a href="/2026/08/13/2025_3_28-%E9%93%B6%E7%8B%90/">2025_3_28 银狐</a></h2>
+      <p>Todesk.exe SHA256:e302c001a4855634547e5f0d5739f1e2ab79b77445f5fc5922a268aab8da5cd9 MD5:07da88a8baa27a4e7100e6d6bb46635f SHA1:1f84a9c189cf8b4e828ff69c70946261e6c022c6 运行之后...</p>
+      <div class="tag-list"></div>
+    </div>
+    <a class="row-action" href="/2026/08/13/2025_3_28-%E9%93%B6%E7%8B%90/" aria-label="阅读 2025_3_28 银狐"><i data-lucide="arrow-up-right" aria-hidden="true"></i></a>
+  </article><article class="post-row">
     <div class="post-date"><span>08/13</span><small>2026</small></div>
     <div class="post-summary">
       <div class="post-kicker"><a href="/categories/malware-analysis/" style="--category-color:#d84a5b"><span class="category-dot"></span>恶意软件分析</a></div>

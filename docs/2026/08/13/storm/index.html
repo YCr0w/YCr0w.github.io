@@ -1,0 +1,372 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#15171a">
+  <meta name="description" content="https://reliaquest.com/blog/threat-spotlight-storm-0249-precision-endpoint-exploitation/ Spear.msi HASH SHA256:8113fc3b4f82fb49f8dd853ca8e1275e0dfb06e48f39830708e4437fe8a...">
+  <meta name="author" content="YCr0w">
+  <title>Storm | YCr0w&#39;blog</title>
+  <link rel="icon" type="image/x-icon" href="/assets/site/favicon.ico">
+  <link rel="stylesheet" href="/assets/css/site.css">
+  <script src="/assets/vendor/lucide.js" defer></script>
+  <script src="/assets/js/site.js" defer></script>
+</head>
+<body class="article-page">
+  <header class="site-header">
+    <div class="header-profile">
+      <a class="header-identity" href="/" aria-label="返回首页"><img class="header-avatar" src="/assets/site/avatar.jpg" alt="YCr0w"><span class="header-name">YCr0w</span></a>
+      <div class="header-links"><a href="https://github.com/YCr0w" target="_blank" rel="noopener" aria-label="GitHub"><i data-lucide="github" aria-hidden="true"></i></a><a href="mailto:3083981460@qq.com" aria-label="Email"><i data-lucide="mail" aria-hidden="true"></i></a></div>
+    </div>
+    <button class="nav-toggle icon-button" type="button" aria-label="打开导航"><i data-lucide="menu" aria-hidden="true"></i></button>
+    <nav class="main-nav" aria-label="主导航">
+      <a href="/"><i data-lucide="house" aria-hidden="true"></i><span>首页</span></a><a href="/categories/"><i data-lucide="folder-tree" aria-hidden="true"></i><span>分类</span></a><a href="/archives/"><i data-lucide="archive" aria-hidden="true"></i><span>归档</span></a><a href="/about/"><i data-lucide="user-round" aria-hidden="true"></i><span>关于</span></a>
+    </nav>
+    <div class="header-actions">
+      <div class="search-inline" id="search-inline">
+        <button class="icon-button" id="search-button" type="button" aria-label="搜索" aria-expanded="false"><i data-lucide="search" aria-hidden="true"></i></button>
+        <input id="search-input" type="search" placeholder="搜索文章、标签或分类" autocomplete="off">
+        <div class="search-results" id="search-results"></div>
+      </div>
+      <button class="icon-button" id="theme-button" type="button" aria-label="切换主题"><i data-lucide="sun-moon" aria-hidden="true"></i></button>
+    </div>
+  </header>
+  <main class="article-shell">
+    <article class="article"><header class="article-header"><a class="article-category" href="/categories/malware-analysis/" style="--category-color:#d84a5b"><span class="category-dot"></span>恶意软件分析</a><h1>Storm</h1><p>https://reliaquest.com/blog/threat-spotlight-storm-0249-precision-endpoint-exploitation/ Spear.msi HASH SHA256:8113fc3b4f82fb49f8dd853ca8e1275e0dfb06e48f39830708e4437fe8a...</p><div class="article-meta"><span><i data-lucide="calendar-days" aria-hidden="true"></i>2026年8月13日</span><span><i data-lucide="clock-3" aria-hidden="true"></i>12 分钟阅读</span></div><div class="tag-list"></div></header><div class="article-body markdown-body"><p><a href="https://reliaquest.com/blog/threat-spotlight-storm-0249-precision-endpoint-exploitation/">https://reliaquest.com/blog/threat-spotlight-storm-0249-precision-endpoint-exploitation/</a></p>
+<p>Spear.msi</p>
+<p>HASH</p>
+<p>SHA256:<code>8113fc3b4f82fb49f8dd853ca8e1275e0dfb06e48f39830708e4437fe8afbdfb</code></p>
+<p>MD5:<code>aa157129a9df47ede836516dd4c7ec2d</code></p>
+<p>SHA1:<code>423f2fcf7ed347ee57c1a3cffa14099ec16ad09c</code></p>
+<h3 id="spear.msi">Spear.msi</h3>
+<p>Orca打开.msi文件</p>
+<p><img src="/assets/posts/storm/images/1773733788578-93456718-eef1-4d49-9be2-11355e50eb8c.png" alt="Storm" loading="lazy" decoding="async"></p>
+<p>通过用户自定义行为可以很明显的发现需要分析的文件，以及释放的路径</p>
+<p><img src="/assets/posts/storm/images/1773840520935-7a756472-d71c-4241-b745-97db363b9706.png" alt="Storm" loading="lazy" decoding="async"></p>
+<p>Register目录下可以看到通过修改注册表来实现持久化</p>
+<p>把.msi安装包修改为.zip解压就能拿到需要分析的文件<code>SentinelAgentWorker.exe</code>、<code>SentinelAgentCore.dll</code>、<code>vcruntime140.dll</code></p>
+<p><img src="/assets/posts/storm/images/1773840885802-22f4b4f2-8672-40fe-9267-608c19c53f75.png" alt="Storm" loading="lazy" decoding="async"></p>
+<p>SentinelAgentWorker.exe为哨兵的exe，没有问题，通过查看SentinelAgentWorker导入表即可知道需要分析的dll以及函数</p>
+<p><img src="/assets/posts/storm/images/1773840994708-78d8355d-8040-4768-9f96-734cbcf8f172.png" alt="Storm" loading="lazy" decoding="async"></p>
+<h3 id="sentinelagentcore">SentinelAgentCore</h3>
+<p><img src="/assets/posts/storm/images/1773905489179-fac359dc-f650-46e5-9896-fcbe8655d7d7.png" alt="Storm" loading="lazy" decoding="async"></p>
+<p>该dll使用了一个吊销的签名</p>
+<p>查看这个dll的导出表发现都使用wscanf_s进行了转发</p>
+<p><img src="/assets/posts/storm/images/1773913795783-d40c8be5-980a-4548-be7c-5d789bf746b8.png" alt="Storm" loading="lazy" decoding="async"></p>
+<p>采用了dll劫持，分析wscanf_s_0会发现存在大量混淆（这个混淆暂时无法识别进行大量的SIMD运算，ida采用的是线性反汇编对这种代码识别效果不是很好，可以考虑使用ghidra尝试）</p>
+<p><img src="/assets/posts/storm/images/1773913754182-2a7ed44c-35a6-420a-825d-83b14dff8518.png" alt="Storm" loading="lazy" decoding="async"></p>
+<p>api流下断点会发现无法成功，这里采用插桩可以发现前面部分调用了VirtualAlloc等函数，但是具体调用方法无法很明确的分析（在VirtualAlloc函数下断点无法</p>
+<p><img src="/assets/posts/storm/images/1773900661029-d65bf3f5-8bbf-4d61-a494-fc99ca46bddc.png" alt="Storm" loading="lazy" decoding="async"></p>
+<p>sub_2ADACAD046E</p>
+<p>遍历pe加载所需的dll与api</p>
+<p><img src="/assets/posts/storm/images/1773900692787-44ad509c-1e83-483a-8ea9-4f2a91252497.png" alt="Storm" loading="lazy" decoding="async"></p>
+<p>比较明显的dll反射式加载</p>
+<p><img src="/assets/posts/storm/images/1773900711682-04093536-9b1f-4991-b9bf-630596d45874.png" alt="Storm" loading="lazy" decoding="async"></p>
+<p>写个ida python脚本把dll提取出来单独分析</p>
+<p>exp：</p>
+<pre><code class="hljs language-python"><span class="hljs-keyword">import</span> struct
+<span class="hljs-keyword">import</span> idaapi
+<span class="hljs-keyword">import</span> ida_name
+<span class="hljs-keyword">import</span> ida_bytes
+<span class="hljs-keyword">import</span> ida_kernwin
+
+TARGET_NAME = <span class="hljs-string">"word_2ADACAD1C02"</span>  <span class="hljs-comment">#地址 or 符号名称</span>
+
+<span class="hljs-keyword">def</span> <span class="hljs-title function_">u16</span>(<span class="hljs-params">b, off</span>): <span class="hljs-keyword">return</span> struct.unpack_from(<span class="hljs-string">"&lt;H"</span>, b, off)[<span class="hljs-number">0</span>]
+<span class="hljs-keyword">def</span> <span class="hljs-title function_">u32</span>(<span class="hljs-params">b, off</span>): <span class="hljs-keyword">return</span> struct.unpack_from(<span class="hljs-string">"&lt;I"</span>, b, off)[<span class="hljs-number">0</span>]
+
+<span class="hljs-keyword">def</span> <span class="hljs-title function_">dump_embedded_pe</span>(<span class="hljs-params">start_ea, out_path</span>):
+    head = ida_bytes.get_bytes(start_ea, <span class="hljs-number">0x1000</span>)
+    <span class="hljs-keyword">if</span> <span class="hljs-keyword">not</span> head <span class="hljs-keyword">or</span> <span class="hljs-built_in">len</span>(head) &lt; <span class="hljs-number">0x100</span>:
+        <span class="hljs-keyword">raise</span> RuntimeError(<span class="hljs-string">"无法读取PE头数据"</span>)
+
+    <span class="hljs-comment"># DOS</span>
+    <span class="hljs-keyword">if</span> u16(head, <span class="hljs-number">0x00</span>) != <span class="hljs-number">0x5A4D</span>:  <span class="hljs-comment"># 'MZ'</span>
+        <span class="hljs-keyword">raise</span> RuntimeError(<span class="hljs-string">"不是有效MZ头"</span>)
+    e_lfanew = u32(head, <span class="hljs-number">0x3C</span>)
+
+    <span class="hljs-comment"># 确保能读到 NT headers</span>
+    need = e_lfanew + <span class="hljs-number">0x200</span>
+    <span class="hljs-keyword">if</span> <span class="hljs-built_in">len</span>(head) &lt; need:
+        more = ida_bytes.get_bytes(start_ea, need)
+        <span class="hljs-keyword">if</span> <span class="hljs-keyword">not</span> more:
+            <span class="hljs-keyword">raise</span> RuntimeError(<span class="hljs-string">"无法读取NT头"</span>)
+        head = more
+
+    <span class="hljs-comment"># NT Signature</span>
+    <span class="hljs-keyword">if</span> u32(head, e_lfanew) != <span class="hljs-number">0x00004550</span>:  <span class="hljs-comment"># 'PE\0\0'</span>
+        <span class="hljs-keyword">raise</span> RuntimeError(<span class="hljs-string">"不是有效PE签名"</span>)
+
+    file_hdr_off = e_lfanew + <span class="hljs-number">4</span>
+    num_sections = u16(head, file_hdr_off + <span class="hljs-number">2</span>)
+    size_opt_hdr = u16(head, file_hdr_off + <span class="hljs-number">16</span>)
+
+    opt_off = file_hdr_off + <span class="hljs-number">20</span>
+    magic = u16(head, opt_off)
+    <span class="hljs-keyword">if</span> magic <span class="hljs-keyword">not</span> <span class="hljs-keyword">in</span> (<span class="hljs-number">0x10B</span>, <span class="hljs-number">0x20B</span>):
+        <span class="hljs-keyword">raise</span> RuntimeError(<span class="hljs-string">"OptionalHeader Magic异常: 0x%X"</span> % magic)
+
+    size_of_headers = u32(head, opt_off + <span class="hljs-number">0x3C</span>)
+    sec_off = opt_off + size_opt_hdr
+
+    <span class="hljs-comment"># 读完整节表</span>
+    need2 = sec_off + num_sections * <span class="hljs-number">40</span>
+    <span class="hljs-keyword">if</span> <span class="hljs-built_in">len</span>(head) &lt; need2:
+        more = ida_bytes.get_bytes(start_ea, need2)
+        <span class="hljs-keyword">if</span> <span class="hljs-keyword">not</span> more <span class="hljs-keyword">or</span> <span class="hljs-built_in">len</span>(more) &lt; need2:
+            <span class="hljs-keyword">raise</span> RuntimeError(<span class="hljs-string">"无法完整读取节表"</span>)
+        head = more
+
+    <span class="hljs-comment"># 估算原始文件大小：max(SizeOfHeaders, each PointerToRawData + SizeOfRawData)</span>
+    file_size = <span class="hljs-built_in">max</span>(size_of_headers, <span class="hljs-number">0x400</span>)
+    <span class="hljs-keyword">for</span> i <span class="hljs-keyword">in</span> <span class="hljs-built_in">range</span>(num_sections):
+        sh = sec_off + i * <span class="hljs-number">40</span>
+        size_raw = u32(head, sh + <span class="hljs-number">16</span>)
+        ptr_raw = u32(head, sh + <span class="hljs-number">20</span>)
+        end_raw = ptr_raw + size_raw
+        <span class="hljs-keyword">if</span> end_raw &gt; file_size:
+            file_size = end_raw
+
+    <span class="hljs-keyword">if</span> file_size &lt;= <span class="hljs-number">0</span> <span class="hljs-keyword">or</span> file_size &gt; <span class="hljs-number">200</span> * <span class="hljs-number">1024</span> * <span class="hljs-number">1024</span>:
+        <span class="hljs-keyword">raise</span> RuntimeError(<span class="hljs-string">"计算出的文件大小异常: %d"</span> % file_size)
+
+    blob = ida_bytes.get_bytes(start_ea, file_size)
+    <span class="hljs-keyword">if</span> <span class="hljs-keyword">not</span> blob <span class="hljs-keyword">or</span> <span class="hljs-built_in">len</span>(blob) &lt; file_size:
+        <span class="hljs-keyword">raise</span> RuntimeError(<span class="hljs-string">"读取完整DLL失败，可能IDB未映射完整缓冲区"</span>)
+
+    <span class="hljs-keyword">with</span> <span class="hljs-built_in">open</span>(out_path, <span class="hljs-string">"wb"</span>) <span class="hljs-keyword">as</span> f:
+        f.write(blob)
+
+
+<span class="hljs-keyword">def</span> <span class="hljs-title function_">main</span>():
+    ea = ida_name.get_name_ea(idaapi.BADADDR, TARGET_NAME)
+    <span class="hljs-keyword">if</span> ea == idaapi.BADADDR:
+        ea = ida_kernwin.ask_addr(idaapi.BADADDR, <span class="hljs-string">"符号未找到，请输入DLL起始地址"</span>)
+        <span class="hljs-keyword">if</span> ea <span class="hljs-keyword">in</span> (<span class="hljs-literal">None</span>, idaapi.BADADDR):
+            <span class="hljs-built_in">print</span>(<span class="hljs-string">"[-] 未提供有效地址"</span>)
+            <span class="hljs-keyword">return</span>
+
+    out_path = ida_kernwin.ask_file(<span class="hljs-literal">True</span>, <span class="hljs-string">"*.dll"</span>, <span class="hljs-string">"保存导出的反射DLL"</span>)
+    <span class="hljs-keyword">if</span> <span class="hljs-keyword">not</span> out_path:
+        <span class="hljs-built_in">print</span>(<span class="hljs-string">"[-] 用户取消"</span>)
+        <span class="hljs-keyword">return</span>
+
+    <span class="hljs-keyword">try</span>:
+        dump_embedded_pe(ea, out_path)
+    <span class="hljs-keyword">except</span> Exception <span class="hljs-keyword">as</span> e:
+        <span class="hljs-built_in">print</span>(<span class="hljs-string">"[-] 导出失败: %s"</span> % e)
+
+<span class="hljs-keyword">if</span> __name__ == <span class="hljs-string">"__main__"</span>:
+    main()
+</code></pre><h3 id="dll1">DLL1</h3>
+<p><img src="/assets/posts/storm/images/1773905757947-53d955b9-43fc-47ac-8461-0eac86c1e485.png" alt="Storm" loading="lazy" decoding="async"></p>
+<p><img src="/assets/posts/storm/images/1773905798766-38a1a071-1860-4102-9ba1-e5c2db3e3ea7.png" alt="Storm" loading="lazy" decoding="async"></p>
+<p>检测rundll32.exe与regsvr32.exe进程（似乎有反沙箱的作用，询问ai得到的答案如下：</p>
+<p><img src="/assets/posts/storm/images/1773905953061-c81cea66-274f-482f-8aeb-7d95f7f533a1.png" alt="Storm" loading="lazy" decoding="async"></p>
+<p><img src="/assets/posts/storm/images/1773905870565-75b32054-2491-4e45-9ec8-94a151401a74.png" alt="Storm" loading="lazy" decoding="async"></p>
+<p><img src="/assets/posts/storm/images/1773906984238-daa4f25d-c12a-4dc9-8fa4-cff411746a31.png" alt="Storm" loading="lazy" decoding="async"></p>
+<p>采用NtCreateSection + NtMapViewOfSection相较于VirtualAlloc/VirtualProtect存在的优势如下：</p>
+<p><img src="/assets/posts/storm/images/1773906402773-77e2c3b6-4010-47d8-9d29-409ccb78985b.png" alt="Storm" loading="lazy" decoding="async"></p>
+<p>再次写一个ida python脚本将shellcode提取出来单独分析</p>
+<p>exp：</p>
+<pre><code class="hljs language-python"><span class="hljs-keyword">import</span> ida_bytes
+<span class="hljs-keyword">import</span> ida_name
+<span class="hljs-keyword">import</span> ida_idaapi
+
+
+<span class="hljs-keyword">def</span> <span class="hljs-title function_">dump_payload</span>(<span class="hljs-params">
+    out_path=<span class="hljs-string">r"&lt;Storage_Path&gt;"</span>,<span class="hljs-comment">#根据需要进行修改</span>
+    symbol_name=<span class="hljs-string">"byte_180003090"</span>,
+    fallback_start=<span class="hljs-number">0x180003090</span>,
+    size=<span class="hljs-number">0x16600</span>,
+</span>):
+
+    start = ida_name.get_name_ea(ida_idaapi.BADADDR, symbol_name)
+    <span class="hljs-keyword">if</span> start == ida_idaapi.BADADDR:
+        start = fallback_start
+
+    blob = ida_bytes.get_bytes(start, size)
+    <span class="hljs-keyword">if</span> blob <span class="hljs-keyword">is</span> <span class="hljs-literal">None</span> <span class="hljs-keyword">or</span> <span class="hljs-built_in">len</span>(blob) != size:
+        <span class="hljs-built_in">print</span>(<span class="hljs-string">f"[!] 导出失败: start=<span class="hljs-subst">{<span class="hljs-built_in">hex</span>(start)}</span> size=<span class="hljs-subst">{size}</span>"</span>)
+        <span class="hljs-keyword">return</span> <span class="hljs-literal">False</span>
+
+    <span class="hljs-keyword">with</span> <span class="hljs-built_in">open</span>(out_path, <span class="hljs-string">"wb"</span>) <span class="hljs-keyword">as</span> f:
+        f.write(blob)
+
+    <span class="hljs-keyword">return</span> <span class="hljs-literal">True</span>
+
+
+<span class="hljs-keyword">if</span> __name__ == <span class="hljs-string">"__main__"</span>:
+    dump_payload()
+</code></pre><p>导出的shellcode查看属性可以发现就是一个dll</p>
+<h3 id="dll2">DLL2</h3>
+<p>该dll的所有导出表都是指向这个循环函数</p>
+<p><img src="/assets/posts/storm/images/1773978764573-2f826c12-b73d-4ed5-8a55-23dd467c4316.png" alt="Storm" loading="lazy" decoding="async"></p>
+<p><img src="/assets/posts/storm/images/1773988481019-06ac5418-fe4e-4fe6-b28e-ec20a623121d.png" alt="Storm" loading="lazy" decoding="async"></p>
+<p>hash api调用</p>
+<p><img src="/assets/posts/storm/images/1773988527809-af90b39d-423c-4103-b7b2-bf712b4feb15.png" alt="Storm" loading="lazy" decoding="async"></p>
+<pre><code class="hljs language-c">HMODULE <span class="hljs-title function_">resolve_module_base_by_hash_peb</span><span class="hljs-params">(<span class="hljs-type">uint32_t</span> target_hash)</span>
+{
+    PPEB peb = NtCurrentPeb();
+    PLIST_ENTRY head = &amp;peb-&gt;Ldr-&gt;InLoadOrderModuleList;
+
+    <span class="hljs-keyword">for</span> (PLIST_ENTRY e = head-&gt;Flink; e-&gt;Flink; e = e-&gt;Flink)
+    {
+        <span class="hljs-type">wchar_t</span>* baseName = ((LDR_DATA_TABLE_ENTRY*)e)-&gt;BaseDllName.Buffer;
+        <span class="hljs-type">uint16_t</span> byteLen   = ((LDR_DATA_TABLE_ENTRY*)e)-&gt;BaseDllName.Length;
+
+        <span class="hljs-type">wchar_t</span>* lower = wcs_to_lower_tmpbuf(baseName, byteLen / <span class="hljs-number">2</span>);
+        <span class="hljs-type">uint32_t</span> hash = crc32_hash_bytes((<span class="hljs-type">uint8_t</span>*)lower, <span class="hljs-number">2</span> * wcslen16(lower));
+
+        <span class="hljs-keyword">if</span> (hash == target_hash)
+            <span class="hljs-keyword">return</span> ((LDR_DATA_TABLE_ENTRY*)e)-&gt;DllBase;
+    }
+    <span class="hljs-keyword">return</span> <span class="hljs-number">0</span>;
+}
+</code></pre><p>反调试</p>
+<p><img src="/assets/posts/storm/images/1773988547629-8b81318e-95dc-491f-ae3e-c2e870c70da3.png" alt="Storm" loading="lazy" decoding="async"></p>
+<p>检测网卡（反沙箱</p>
+<p><img src="/assets/posts/storm/images/1773988581614-cd6119c3-d3ee-433c-b594-af0cc8cabb50.png" alt="Storm" loading="lazy" decoding="async"></p>
+<pre><code class="hljs language-c"><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&lt;windows.h&gt;</span></span>
+<span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&lt;iphlpapi.h&gt;</span></span>
+<span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&lt;stdio.h&gt;</span></span>
+
+<span class="hljs-meta">#<span class="hljs-keyword">pragma</span> comment(lib, <span class="hljs-string">"iphlpapi.lib"</span>)</span>
+
+<span class="hljs-type">static</span> <span class="hljs-type">void</span>* <span class="hljs-title function_">alloc_adapter_buffer</span><span class="hljs-params">(ULONG size)</span> {
+    <span class="hljs-type">void</span>* p = VirtualAlloc(<span class="hljs-literal">NULL</span>, size, MEM_RESERVE | MEM_COMMIT, PAGE_READWRITE);
+    <span class="hljs-keyword">if</span> (p) {
+        ZeroMemory(p, size);
+    }
+    <span class="hljs-keyword">return</span> p;
+}
+
+<span class="hljs-comment">// 0 -&gt; 发现某适配器 AddressLength &gt; 6</span>
+<span class="hljs-comment">// 1 -&gt; 未发现，或者流程失败</span>
+<span class="hljs-type">int</span> <span class="hljs-title function_">check_adapters_like_sample</span><span class="hljs-params">(<span class="hljs-type">void</span>)</span> {
+    ULONG size = <span class="hljs-number">0</span>;
+    DWORD ret;
+    PIP_ADAPTER_INFO info = <span class="hljs-literal">NULL</span>, cur = <span class="hljs-literal">NULL</span>;
+
+    ret = GetAdaptersInfo(<span class="hljs-literal">NULL</span>, &amp;size);
+    <span class="hljs-keyword">if</span> (ret != ERROR_BUFFER_OVERFLOW) {
+        <span class="hljs-keyword">return</span> <span class="hljs-number">1</span>; 
+    }
+
+    info = (PIP_ADAPTER_INFO)alloc_adapter_buffer(size);
+    <span class="hljs-keyword">if</span> (!info) {
+        <span class="hljs-keyword">return</span> <span class="hljs-number">1</span>;
+    }
+
+    <span class="hljs-comment">// 获取链表</span>
+    ret = GetAdaptersInfo(info, &amp;size);
+    <span class="hljs-keyword">if</span> (ret != ERROR_SUCCESS) {
+        VirtualFree(info, <span class="hljs-number">0</span>, MEM_RELEASE);
+        <span class="hljs-keyword">return</span> <span class="hljs-number">1</span>;
+    }
+
+    <span class="hljs-comment">// 遍历链表，检查 AddressLength（常规为 6）</span>
+    <span class="hljs-keyword">for</span> (cur = info; cur != <span class="hljs-literal">NULL</span>; cur = cur-&gt;Next) {
+        <span class="hljs-keyword">if</span> (cur-&gt;AddressLength &gt; <span class="hljs-number">6</span>) {
+            VirtualFree(info, <span class="hljs-number">0</span>, MEM_RELEASE);
+            <span class="hljs-keyword">return</span> <span class="hljs-number">0</span>;
+        }
+    }
+
+    VirtualFree(info, <span class="hljs-number">0</span>, MEM_RELEASE);
+    <span class="hljs-keyword">return</span> <span class="hljs-number">1</span>;
+}
+
+<span class="hljs-type">int</span> <span class="hljs-title function_">main</span><span class="hljs-params">(<span class="hljs-type">void</span>)</span> {
+    <span class="hljs-type">int</span> r = check_adapters_like_sample();
+    <span class="hljs-built_in">printf</span>(<span class="hljs-string">"result = %d\n"</span>, r);
+    <span class="hljs-keyword">return</span> <span class="hljs-number">0</span>;
+}
+</code></pre><p>获取系统配置信息（volume、user name</p>
+<p><img src="/assets/posts/storm/images/1773988666925-376935a8-621f-4f50-857e-4264cef095fb.png" alt="Storm" loading="lazy" decoding="async"></p>
+<pre><code class="hljs language-cpp"><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&lt;windows.h&gt;</span></span>
+<span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&lt;stdio.h&gt;</span></span>
+<span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&lt;iphlpapi.h&gt;</span></span>
+<span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&lt;lmcons.h&gt;</span> </span>
+<span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&lt;wchar.h&gt;</span></span>
+
+<span class="hljs-meta">#<span class="hljs-keyword">pragma</span> comment(lib, <span class="hljs-string">"Advapi32.lib"</span>)</span>
+
+<span class="hljs-function"><span class="hljs-type">static</span> <span class="hljs-type">int</span> <span class="hljs-title">get_first_volume_info</span><span class="hljs-params">(<span class="hljs-type">void</span>)</span> </span>{
+    WCHAR volumeName[MAX_PATH] = {<span class="hljs-number">0</span>};   <span class="hljs-comment">// \\?\Volume{GUID}\
+    WCHAR fsName[MAX_PATH] = {0};       // NTFS/FAT32/...</span>
+    WCHAR label[MAX_PATH] = {<span class="hljs-number">0</span>};        <span class="hljs-comment">// 卷标</span>
+
+    DWORD serialNumber = <span class="hljs-number">0</span>;
+    DWORD maxCompLen = <span class="hljs-number">0</span>;
+    DWORD fsFlags = <span class="hljs-number">0</span>;
+
+    HANDLE hFind = <span class="hljs-built_in">FindFirstVolumeW</span>(volumeName, MAX_PATH);
+    <span class="hljs-keyword">if</span> (hFind == INVALID_HANDLE_VALUE) {
+        <span class="hljs-built_in">printf</span>(<span class="hljs-string">"FindFirstVolumeW failed, err=%lu\n"</span>, <span class="hljs-built_in">GetLastError</span>());
+        <span class="hljs-keyword">return</span> <span class="hljs-number">0</span>;
+    }
+
+    BOOL ok = <span class="hljs-built_in">GetVolumeInformationW</span>(
+    volumeName,          <span class="hljs-comment">// root path name</span>
+    label, MAX_PATH,     <span class="hljs-comment">// volume label</span>
+    &amp;serialNumber,       <span class="hljs-comment">// serial number</span>
+    &amp;maxCompLen,         <span class="hljs-comment">// max component length</span>
+    &amp;fsFlags,            <span class="hljs-comment">// filesystem flags</span>
+    fsName, MAX_PATH     <span class="hljs-comment">// filesystem name</span>
+    );
+
+    <span class="hljs-built_in">FindVolumeClose</span>(hFind);
+
+    <span class="hljs-keyword">if</span> (!ok) {
+        <span class="hljs-built_in">printf</span>(<span class="hljs-string">"GetVolumeInformationW failed, err=%lu\n"</span>, <span class="hljs-built_in">GetLastError</span>());
+        <span class="hljs-keyword">return</span> <span class="hljs-number">0</span>;
+    }
+
+    <span class="hljs-built_in">wprintf</span>(<span class="hljs-string">L"[Volume]\n"</span>);
+    <span class="hljs-built_in">wprintf</span>(<span class="hljs-string">L"  Name       : %ls\n"</span>, volumeName);
+    <span class="hljs-built_in">wprintf</span>(<span class="hljs-string">L"  Label      : %ls\n"</span>, label[<span class="hljs-number">0</span>] ? label : <span class="hljs-string">L"(empty)"</span>);
+    <span class="hljs-built_in">wprintf</span>(<span class="hljs-string">L"  FS         : %ls\n"</span>, fsName);
+    <span class="hljs-built_in">printf</span> (<span class="hljs-string">"  Serial     : 0x%08lX\n"</span>, serialNumber);
+    <span class="hljs-built_in">printf</span> (<span class="hljs-string">"  MaxCompLen : %lu\n"</span>, maxCompLen);
+    <span class="hljs-built_in">printf</span> (<span class="hljs-string">"  FS Flags   : 0x%08lX\n"</span>, fsFlags);
+
+    <span class="hljs-keyword">return</span> <span class="hljs-number">1</span>;
+}
+
+<span class="hljs-function"><span class="hljs-type">static</span> <span class="hljs-type">int</span> <span class="hljs-title">get_username_info</span><span class="hljs-params">(<span class="hljs-type">void</span>)</span> </span>{
+    CHAR user[UNLEN + <span class="hljs-number">1</span>] = {<span class="hljs-number">0</span>}; 
+    DWORD size = (DWORD)<span class="hljs-built_in">sizeof</span>(user);
+
+    <span class="hljs-keyword">if</span> (!<span class="hljs-built_in">GetUserNameA</span>(user, &amp;size)) {
+        <span class="hljs-built_in">printf</span>(<span class="hljs-string">"GetUserNameA failed, err=%lu\n"</span>, <span class="hljs-built_in">GetLastError</span>());
+        <span class="hljs-keyword">return</span> <span class="hljs-number">0</span>;
+    }
+    <span class="hljs-built_in">printf</span>(<span class="hljs-string">"[User]\n"</span>);
+    <span class="hljs-built_in">printf</span>(<span class="hljs-string">"  Username   : %s\n"</span>, user);
+    <span class="hljs-built_in">printf</span>(<span class="hljs-string">"  Length(+NUL): %lu\n"</span>, size);
+
+    <span class="hljs-type">char</span> out[<span class="hljs-number">512</span>] = {<span class="hljs-number">0</span>};
+    <span class="hljs-built_in">wsprintfA</span>(out, <span class="hljs-string">"Security Trainee %s"</span>, user);
+    <span class="hljs-built_in">printf</span>(<span class="hljs-string">"  Formatted  : %s\n"</span>, out);
+
+    <span class="hljs-keyword">return</span> <span class="hljs-number">1</span>;
+}
+
+<span class="hljs-function"><span class="hljs-type">int</span> <span class="hljs-title">main</span><span class="hljs-params">(<span class="hljs-type">void</span>)</span> </span>{
+    <span class="hljs-built_in">get_first_volume_info</span>();
+    <span class="hljs-built_in">get_username_info</span>();
+    <span class="hljs-keyword">return</span> <span class="hljs-number">0</span>;
+}
+</code></pre><p>解密url（ <a href="https://hristomasitomasdf.com/work/">https://hristomasitomasdf.com/work/</a></p>
+<p><img src="/assets/posts/storm/images/1773988916178-54086179-b2ff-4eed-b693-8d3cdfd9d587.png" alt="Storm" loading="lazy" decoding="async"></p>
+<p>后续就是常规的c2功能</p>
+<p><img src="/assets/posts/storm/images/1774013580831-7380034d-44e5-4db0-8309-5d8f7544a2dd.png" alt="Storm" loading="lazy" decoding="async"></p>
+<p>格式化获取到的信息</p>
+</div><footer class="article-footer"><div><span>本文链接</span><a href="https://ycr0w.github.io/2026/08/13/storm/">https://ycr0w.github.io/2026/08/13/storm/</a></div></footer></article>
+    <aside class="article-aside"><div class="toc"><span>目录</span><a class="toc-level-3" href="#spear.msi">Spear.msi</a><a class="toc-level-3" href="#sentinelagentcore">SentinelAgentCore</a><a class="toc-level-3" href="#dll1">DLL1</a><a class="toc-level-3" href="#dll2">DLL2</a></div></aside>
+    <nav class="post-navigation"><a href="/2026/08/13/simd%E6%B7%B7%E6%B7%86/"><i data-lucide="arrow-left" aria-hidden="true"></i><span><small>上一篇</small>SIMD混淆</span></a><a href="/2026/08/13/valleyrat/"><span><small>下一篇</small>ValleyRAT</span><i data-lucide="arrow-right" aria-hidden="true"></i></a></nav>
+  </main>
+  <footer class="site-footer"><span>© 2026 YCr0w</span></footer>
+</body>
+</html>

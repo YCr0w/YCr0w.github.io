@@ -1,0 +1,435 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#15171a">
+  <meta name="description" content="dokan2.dll 分析sub_7FF8AD1E312E 使用SetWindowPos隐藏运行时的任务栏图标，接着的主要逻辑在sub_7FF8AD1E2141函数中，跟进 前面部分是回文算法，没什么用，疑似用于混淆，直接跳过 检查MZ标志与PE标志，解析PE头找到IAT 上面一大部分是回文算法，还是没用的混淆，直接跳过，IAT HOOK...">
+  <meta name="author" content="YCr0w">
+  <title>Winos 4.0 | YCr0w&#39;blog</title>
+  <link rel="icon" type="image/x-icon" href="/assets/site/favicon.ico">
+  <link rel="stylesheet" href="/assets/css/site.css">
+  <script src="/assets/vendor/lucide.js" defer></script>
+  <script src="/assets/js/site.js" defer></script>
+</head>
+<body class="article-page">
+  <header class="site-header">
+    <div class="header-profile">
+      <a class="header-identity" href="/" aria-label="返回首页"><img class="header-avatar" src="/assets/site/avatar.jpg" alt="YCr0w"><span class="header-name">YCr0w</span></a>
+      <div class="header-links"><a href="https://github.com/YCr0w" target="_blank" rel="noopener" aria-label="GitHub"><i data-lucide="github" aria-hidden="true"></i></a><a href="mailto:3083981460@qq.com" aria-label="Email"><i data-lucide="mail" aria-hidden="true"></i></a></div>
+    </div>
+    <button class="nav-toggle icon-button" type="button" aria-label="打开导航"><i data-lucide="menu" aria-hidden="true"></i></button>
+    <nav class="main-nav" aria-label="主导航">
+      <a href="/"><i data-lucide="house" aria-hidden="true"></i><span>首页</span></a><a href="/categories/"><i data-lucide="folder-tree" aria-hidden="true"></i><span>分类</span></a><a href="/archives/"><i data-lucide="archive" aria-hidden="true"></i><span>归档</span></a><a href="/about/"><i data-lucide="user-round" aria-hidden="true"></i><span>关于</span></a>
+    </nav>
+    <div class="header-actions">
+      <div class="search-inline" id="search-inline">
+        <button class="icon-button" id="search-button" type="button" aria-label="搜索" aria-expanded="false"><i data-lucide="search" aria-hidden="true"></i></button>
+        <input id="search-input" type="search" placeholder="搜索文章、标签或分类" autocomplete="off">
+        <div class="search-results" id="search-results"></div>
+      </div>
+      <button class="icon-button" id="theme-button" type="button" aria-label="切换主题"><i data-lucide="sun-moon" aria-hidden="true"></i></button>
+    </div>
+  </header>
+  <main class="article-shell">
+    <article class="article"><header class="article-header"><a class="article-category" href="/categories/malware-analysis/" style="--category-color:#d84a5b"><span class="category-dot"></span>恶意软件分析</a><h1>Winos 4.0</h1><p>dokan2.dll 分析sub_7FF8AD1E312E 使用SetWindowPos隐藏运行时的任务栏图标，接着的主要逻辑在sub_7FF8AD1E2141函数中，跟进 前面部分是回文算法，没什么用，疑似用于混淆，直接跳过 检查MZ标志与PE标志，解析PE头找到IAT 上面一大部分是回文算法，还是没用的混淆，直接跳过，IAT HOOK...</p><div class="article-meta"><span><i data-lucide="calendar-days" aria-hidden="true"></i>2026年8月13日</span><span><i data-lucide="clock-3" aria-hidden="true"></i>9 分钟阅读</span></div><div class="tag-list"></div></header><div class="article-body markdown-body"><h2 id="dokan2.dll">dokan2.dll</h2>
+<p><img src="/assets/posts/winos-4.0/images/1763628631411-5a054089-81f6-41ac-990c-ccc8cb474067.png" alt="Winos 4.0" loading="lazy" decoding="async"></p>
+<p><img src="/assets/posts/winos-4.0/images/1763642688691-1f53305a-1a53-4b7e-ac31-bc4fa3de7e71.png" alt="Winos 4.0" loading="lazy" decoding="async"></p>
+<p>分析sub_7FF8AD1E312E</p>
+<p><img src="/assets/posts/winos-4.0/images/1763642713339-5a157d91-9600-4ebf-aeb9-23e3e49aa4d5.png" alt="Winos 4.0" loading="lazy" decoding="async"></p>
+<p>使用SetWindowPos隐藏运行时的任务栏图标，接着的主要逻辑在sub_7FF8AD1E2141函数中，跟进</p>
+<p><img src="/assets/posts/winos-4.0/images/1763642811389-f469131c-3c52-4b38-8b9f-28eda884839a.png" alt="Winos 4.0" loading="lazy" decoding="async"></p>
+<p>前面部分是回文算法，没什么用，疑似用于混淆，直接跳过</p>
+<p><img src="/assets/posts/winos-4.0/images/1763642867292-ff62ddea-b745-40b0-aad6-3b8d73447195.png" alt="Winos 4.0" loading="lazy" decoding="async"></p>
+<p>检查MZ标志与PE标志，解析PE头找到IAT</p>
+<p><img src="/assets/posts/winos-4.0/images/1763643093016-201a5ea3-9e60-4314-9789-e3572bb85c4d.png" alt="Winos 4.0" loading="lazy" decoding="async"></p>
+<p>上面一大部分是回文算法，还是没用的混淆，直接跳过，IAT HOOK实现的关键点，hook的目标函数为：sub_7FF8AD1E2108</p>
+<p><img src="/assets/posts/winos-4.0/images/1763643183205-753164db-3e59-495f-9e8d-7f43c757a8a7.png" alt="Winos 4.0" loading="lazy" decoding="async"></p>
+<p>拼接sw.dat路径</p>
+<p>由于改样本存在反射式dll加载，通过代码逻辑可以分析得到open file与read file函数位置</p>
+<p><img src="/assets/posts/winos-4.0/images/1763643406610-d8a5cceb-ada2-4f4a-9541-43527d303d34.png" alt="Winos 4.0" loading="lazy" decoding="async"></p>
+<p>sub_7FF8AD27C950函数负责open sw.dat，sub_7FF8AD25BBA0函数负责read sw.dat</p>
+<p><img src="/assets/posts/winos-4.0/images/1763643446120-aa5ff693-f321-4322-9fad-bbc4413fc5a9.png" alt="Winos 4.0" loading="lazy" decoding="async"></p>
+<p>修改内存属性用于运行读取sw.dat数据（shellcode）</p>
+<p>下断点运行，获得读取数据<code>offset：0；size：33107h</code></p>
+<p>可以直接从sw.dat dump也可以通过脚本读取</p>
+<pre><code class="hljs language-cpp"><span class="hljs-function">def <span class="hljs-title">extract_saw_dat</span><span class="hljs-params">(input_file, output_file, size_hex=<span class="hljs-number">0x33107</span>)</span>:
+    try:
+        with open(input_file, <span class="hljs-string">'rb'</span>) as f_in:
+            data =</span> f_in.<span class="hljs-built_in">read</span>(size_hex) 
+        
+        <span class="hljs-function">with <span class="hljs-title">open</span><span class="hljs-params">(output_file, <span class="hljs-string">'wb'</span>)</span> as f_out:
+            f_out.write(data) 
+        
+        print(f<span class="hljs-string">"成功提取 {size_hex} 字节（{size_hex} 字节）到 {output_file}"</span>)
+    
+    except FileNotFoundError:
+        print(f<span class="hljs-string">"错误：文件 {input_file} 不存在！"</span>)
+    except Exception as e:
+        print(f<span class="hljs-string">"发生错误：{e}"</span>)
+ 
+input_filename =</span> <span class="hljs-string">'sw.dat'</span>     
+output_filename = <span class="hljs-string">'dump.dat'</span> 
+<span class="hljs-built_in">extract_saw_dat</span>(input_filename, output_filename)
+</code></pre><p>先跟进v18(filename)分析</p>
+<p><img src="/assets/posts/winos-4.0/images/1763643662570-ea87ede2-5f5f-483a-8253-663024f3e743.png" alt="Winos 4.0" loading="lazy" decoding="async"></p>
+<p>使用了hash api加载技术，数据过多，先进行静态分析，分析刚才dump的数据</p>
+<p><img src="/assets/posts/winos-4.0/images/1763643982341-d249c97b-37f2-4247-9e27-d7d08238d918.png" alt="Winos 4.0" loading="lazy" decoding="async"></p>
+<p>明显的PEB\TEB遍历，API hash</p>
+<p><img src="/assets/posts/winos-4.0/images/1763644241205-3d14cc73-6baa-4f6c-b1c5-b18fbd0427a2.png" alt="Winos 4.0" loading="lazy" decoding="async"></p>
+<p>核心的hash 算法，这个算法是重复的，每个需要调用API都会使用到这个算法，同时hash 种子也不同</p>
+<pre><code class="hljs language-cpp"><span class="hljs-function"><span class="hljs-type">uint32_t</span> <span class="hljs-title">ComputeFunctionHash</span><span class="hljs-params">(<span class="hljs-type">const</span> <span class="hljs-type">char</span>* funcName)</span> </span>{
+    <span class="hljs-type">uint32_t</span> hash = <span class="hljs-number">0xFAF6F3EA</span>; <span class="hljs-comment">// 初始种子值 (-184639718 的补码表示)</span>
+    
+    <span class="hljs-keyword">while</span> (*funcName) {
+        <span class="hljs-type">char</span> c = *funcName;
+        
+        <span class="hljs-comment">// （A-Z转为小写）</span>
+        <span class="hljs-keyword">if</span> ((c &gt;= <span class="hljs-string">'A'</span>) &amp;&amp; (c &lt;= <span class="hljs-string">'Z'</span>)) {
+            c |= <span class="hljs-number">0x20</span>; <span class="hljs-comment">// 等价于 c = tolower(c)</span>
+        }
+        
+        <span class="hljs-comment">// 核心哈希计算：FNV-1a变种 </span>
+        hash = <span class="hljs-number">16777619</span> * (hash ^ c); 
+        
+        funcName++;
+    }
+    
+    <span class="hljs-keyword">return</span> hash;
+}
+</code></pre><p>算法伪代码</p>
+<p>hash对应API：</p>
+<table>
+<thead>
+<tr>
+<th>825981789</th>
+<th>0x3138B27D</th>
+<th>GetModuleFileNameW</th>
+<th>kernel32.dll</th>
+<th>获取当前进程可执行文件的完整路径。</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>297097716</td>
+<td>0x11B428F4</td>
+<td>PathRemoveFileSpecW</td>
+<td>shlwapi.dll</td>
+<td>从文件路径中移除文件名，得到文件所在目录。</td>
+</tr>
+<tr>
+<td>-1421191882</td>
+<td>0xAB494D96</td>
+<td>IsUserAnAdmin</td>
+<td>shell32.dll</td>
+<td>检查当前用户是否为管理员。</td>
+</tr>
+<tr>
+<td>-2061012367</td>
+<td>0x8527F271</td>
+<td>LoadLibraryA</td>
+<td>kernel32.dll</td>
+<td>加载指定的DLL库（这里用于加载Shell32.dll）。</td>
+</tr>
+<tr>
+<td>487451824</td>
+<td>0x1D0F2CB0</td>
+<td>ShellExecuteExW</td>
+<td>shell32.dll</td>
+<td>执行一个操作，通过"runas"动词来请求UAC提权。</td>
+</tr>
+<tr>
+<td>-1160475044</td>
+<td>0xBBCEA65C</td>
+<td>memset</td>
+<td>ntdll.dll</td>
+<td>将内存块（SHELLEXECUTEINFO结构体）清零。</td>
+</tr>
+<tr>
+<td>1017289554</td>
+<td>0x3CA28D52</td>
+<td>ExitProcess</td>
+<td>kernel32.dll</td>
+<td>终止当前（非管理员）进程。</td>
+</tr>
+</tbody></table>
+<table>
+<thead>
+<tr>
+<th>881625753</th>
+<th>0x348A7A99</th>
+<th>CreateFileMappingW</th>
+<th>kernel32.dll</th>
+<th>创建一个文件映射对象，可能用作互斥体或存放载荷。</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>-1411882551</td>
+<td>0xABE8D1A9</td>
+<td>MapViewOfFile</td>
+<td>kernel32.dll</td>
+<td>将文件映射对象映射到当前进程的地址空间。</td>
+</tr>
+<tr>
+<td>-194833316</td>
+<td>0xF4625A9C</td>
+<td>memset</td>
+<td>ntdll.dll</td>
+<td>清理内存。</td>
+</tr>
+<tr>
+<td>-215346181</td>
+<td>0xF3294C5B</td>
+<td>memcpy</td>
+<td>ntdll.dll</td>
+<td>复制内存块（用于移动加密的载荷）。</td>
+</tr>
+<tr>
+<td>-811868201</td>
+<td>0xCFA8F7F7</td>
+<td>CryptDecrypt</td>
+<td>advapi32.dll</td>
+<td><strong>核心功能</strong>：使用Windows加密API解密载荷。</td>
+</tr>
+<tr>
+<td>771461096</td>
+<td>0x2DF7D7E8</td>
+<td>CreateFileW</td>
+<td>kernel32.dll</td>
+<td>创建或打开文件（用于释放恶意DLL和数据文件）。</td>
+</tr>
+<tr>
+<td>50438492</td>
+<td>0x03017B2C</td>
+<td>WriteFile</td>
+<td>kernel32.dll</td>
+<td>将数据写入文件（将解密后的载荷写入磁盘）。</td>
+</tr>
+<tr>
+<td>-976780978</td>
+<td>0xC58AE14E</td>
+<td>CreateServiceW</td>
+<td>advapi32.dll</td>
+<td><strong>持久化</strong>：创建一个新的Windows服务。</td>
+</tr>
+<tr>
+<td>-1189699346</td>
+<td>0xB91540EE</td>
+<td>StartServiceW</td>
+<td>advapi32.dll</td>
+<td>启动一个服务。</td>
+</tr>
+</tbody></table>
+<table>
+<thead>
+<tr>
+<th>513401500</th>
+<th>0x1E99529C</th>
+<th>CreateProcessW</th>
+<th>kernel32.dll</th>
+<th><strong>核心功能</strong>：创建一个新进程来执行主载荷。</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>994584314</td>
+<td>0x3B4958FA</td>
+<td>CloseHandle</td>
+<td>kernel32.dll</td>
+<td>关闭一个打开的对象句柄（用于清理）。</td>
+</tr>
+<tr>
+<td>94407602</td>
+<td>0x05A17D92</td>
+<td>CloseHandle</td>
+<td>kernel32.dll</td>
+<td>关闭另一个句柄（可能是新进程的线程句柄）。</td>
+</tr>
+<tr>
+<td>-1103439570</td>
+<td>0xBE3C712E</td>
+<td>MessageBoxW</td>
+<td>user32.dll</td>
+<td>显示一个消息框（用于在失败时欺骗用户）。</td>
+</tr>
+<tr>
+<td>-332713028</td>
+<td>0xEA2E2BBC</td>
+<td>ExitProcess</td>
+<td>kernel32.dll</td>
+<td>在出错或完成任务后终止进程。</td>
+</tr>
+</tbody></table>
+<p>有了对应表，分析就很简单了</p>
+<p><img src="/assets/posts/winos-4.0/images/1763645593625-a8d2d139-f66a-4fb8-9820-99cb5e874e16.png" alt="Winos 4.0" loading="lazy" decoding="async"></p>
+<p>判断权限，非admin权限就进行UAC弹窗提权</p>
+<p><img src="/assets/posts/winos-4.0/images/1763646649025-b25739f9-db79-42db-a271-d6a646b8927e.png" alt="Winos 4.0" loading="lazy" decoding="async"></p>
+<p>sub_3641疑似网络行为，sub_3C54函数存在疑似反沙箱技术</p>
+<p><img src="/assets/posts/winos-4.0/images/1763646242396-0a3f498f-42cb-4d6f-8904-61817c849bca.png" alt="Winos 4.0" loading="lazy" decoding="async"></p>
+<p>检测系统dll47个预设的、硬编码的内存地址内容是否为WriteData</p>
+<p><img src="/assets/posts/winos-4.0/images/1763646691370-ed4e569a-100e-4973-8f8b-838672240645.png" alt="Winos 4.0" loading="lazy" decoding="async">解密API</p>
+<p><img src="/assets/posts/winos-4.0/images/1763646752186-f39e6023-3211-422e-bf0d-13988f7b23e9.png" alt="Winos 4.0" loading="lazy" decoding="async"></p>
+<p>创建服务</p>
+<p>可能创建的文件：</p>
+<blockquote>
+<p>C:\Windows\System32\BrokerClientCallback.dll</p>
+<p>C:\Windows\System32\TimeBrokerClient.dll</p>
+<p>C:\Windows\System32\msvchost.dat</p>
+<p>C:\Windows\System32\system.dat</p>
+<p>C:\Windows\System32\mswkscli.dll</p>
+<p>C:\Windows\System32\wkscli.dll</p>
+</blockquote>
+<p>动调只需要实现一个大致逻辑的简单loader即可</p>
+<pre><code class="hljs language-cpp"><span class="hljs-meta">#<span class="hljs-keyword">define</span> _CRT_SECURE_NO_WARNINGS </span>
+<span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&lt;windows.h&gt;</span></span>
+<span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&lt;stdio.h&gt;</span></span>
+<span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&lt;string.h&gt;</span></span>
+
+<span class="hljs-type">const</span> <span class="hljs-type">char</span>* PAYLOAD_FILE = <span class="hljs-string">"sw.dat"</span>;
+<span class="hljs-type">const</span> DWORD PAYLOAD_SIZE = <span class="hljs-number">0x33107</span>;
+
+<span class="hljs-function"><span class="hljs-keyword">typedef</span> <span class="hljs-title">void</span> <span class="hljs-params">(*ShellcodeFunc)</span><span class="hljs-params">(<span class="hljs-type">char</span>*)</span></span>;
+
+<span class="hljs-function"><span class="hljs-type">int</span> <span class="hljs-title">main</span><span class="hljs-params">()</span> </span>{
+    <span class="hljs-type">char</span> exeFullPath[MAX_PATH];
+    <span class="hljs-type">char</span> payloadPath[MAX_PATH];
+    <span class="hljs-type">char</span>* lastSlash = <span class="hljs-literal">NULL</span>;
+
+    <span class="hljs-keyword">if</span> (<span class="hljs-built_in">GetModuleFileNameA</span>(<span class="hljs-literal">NULL</span>, exeFullPath, MAX_PATH) == <span class="hljs-number">0</span>) {
+        <span class="hljs-keyword">return</span> <span class="hljs-number">1</span>;
+    }
+    <span class="hljs-built_in">strncpy</span>(payloadPath, exeFullPath, MAX_PATH);
+    lastSlash = <span class="hljs-built_in">strrchr</span>(payloadPath, <span class="hljs-string">'\\'</span>); 
+    <span class="hljs-keyword">if</span> (lastSlash != <span class="hljs-literal">NULL</span>) {
+        *(lastSlash + <span class="hljs-number">1</span>) = <span class="hljs-string">'\0'</span>; 
+        <span class="hljs-built_in">strcat</span>(payloadPath, PAYLOAD_FILE); 
+    }
+    <span class="hljs-keyword">else</span> {
+        <span class="hljs-keyword">return</span> <span class="hljs-number">1</span>;
+    }
+    <span class="hljs-built_in">printf</span>(<span class="hljs-string">" file path: %s\n"</span>, payloadPath);
+
+    FILE* file = <span class="hljs-built_in">fopen</span>(payloadPath, <span class="hljs-string">"rb"</span>); 
+    <span class="hljs-keyword">if</span> (file == <span class="hljs-literal">NULL</span>) {
+        <span class="hljs-keyword">return</span> <span class="hljs-number">1</span>;
+    }
+
+    <span class="hljs-type">void</span>* shellcode_mem = <span class="hljs-built_in">VirtualAlloc</span>(
+        <span class="hljs-literal">NULL</span>,             
+        PAYLOAD_SIZE,   
+        MEM_COMMIT | MEM_RESERVE, 
+        PAGE_EXECUTE_READWRITE 
+    );
+
+    <span class="hljs-keyword">if</span> (shellcode_mem == <span class="hljs-literal">NULL</span>) {
+        <span class="hljs-built_in">fclose</span>(file);
+        <span class="hljs-keyword">return</span> <span class="hljs-number">1</span>;
+    }
+
+    <span class="hljs-type">size_t</span> bytesRead = <span class="hljs-built_in">fread</span>(shellcode_mem, <span class="hljs-number">1</span>, PAYLOAD_SIZE, file);
+    <span class="hljs-keyword">if</span> (bytesRead != PAYLOAD_SIZE) {
+        <span class="hljs-built_in">fclose</span>(file);
+        <span class="hljs-built_in">VirtualFree</span>(shellcode_mem, <span class="hljs-number">0</span>, MEM_RELEASE); 
+        <span class="hljs-keyword">return</span> <span class="hljs-number">1</span>;
+    }
+    <span class="hljs-built_in">fclose</span>(file); 
+    ShellcodeFunc shellcode_entry;
+
+    shellcode_entry = (ShellcodeFunc)shellcode_mem;
+    <span class="hljs-built_in">shellcode_entry</span>(exeFullPath);
+
+
+    <span class="hljs-built_in">VirtualFree</span>(shellcode_mem, <span class="hljs-number">0</span>, MEM_RELEASE);
+
+    <span class="hljs-keyword">return</span> <span class="hljs-number">0</span>;
+}
+</code></pre><h2 id="timebrokerclient.dll">TimeBrokerClient.dll</h2>
+<p>…………</p>
+<p>存在tlscallback</p>
+<p><img src="/assets/posts/winos-4.0/images/1764845391400-11f2899f-5270-405c-9450-6c615a41090a.png" alt="Winos 4.0" loading="lazy" decoding="async"></p>
+<p>动调可以使用x64dbg，也可以选择不动调，直接解密shellcode就行</p>
+<p><img src="/assets/posts/winos-4.0/images/1764845497294-65d6b7e1-37e6-44d4-a432-991cf303dd71.png" alt="Winos 4.0" loading="lazy" decoding="async"></p>
+<p>svchost中存储的是VirtualAlloc 函数的 RVA</p>
+<p><img src="/assets/posts/winos-4.0/images/1764845534371-cdbc0950-ab9a-47df-979c-dfcca69d2ef5.png" alt="Winos 4.0" loading="lazy" decoding="async"></p>
+<p>Vigenère 变种解密脚本</p>
+<pre><code class="hljs language-python"><span class="hljs-keyword">import</span> os
+
+<span class="hljs-keyword">def</span> <span class="hljs-title function_">decrypt_payload</span>():
+    input_file = <span class="hljs-string">"msvchost.dat"</span>
+    output_file = <span class="hljs-string">"decrypted.bin"</span>
+
+    key_string = <span class="hljs-string">"svchost"</span>
+    key_bytes = [<span class="hljs-built_in">ord</span>(c) <span class="hljs-keyword">for</span> c <span class="hljs-keyword">in</span> key_string]
+    key_bytes.append(<span class="hljs-number">0x00</span>)
+    
+    key_len = <span class="hljs-built_in">len</span>(key_bytes) 
+
+    <span class="hljs-keyword">if</span> <span class="hljs-keyword">not</span> os.path.exists(input_file):
+        <span class="hljs-keyword">return</span>
+
+    <span class="hljs-keyword">try</span>:
+        <span class="hljs-keyword">with</span> <span class="hljs-built_in">open</span>(input_file, <span class="hljs-string">"rb"</span>) <span class="hljs-keyword">as</span> f:
+            encrypted_data = <span class="hljs-built_in">bytearray</span>(f.read())
+        
+        decrypted_data = <span class="hljs-built_in">bytearray</span>(<span class="hljs-built_in">len</span>(encrypted_data))
+
+        <span class="hljs-keyword">for</span> i <span class="hljs-keyword">in</span> <span class="hljs-built_in">range</span>(<span class="hljs-built_in">len</span>(encrypted_data)):
+            dec_byte = (encrypted_data[i] - key_bytes[i % key_len]) &amp; <span class="hljs-number">0xFF</span>
+            decrypted_data[i] = dec_byte
+
+        <span class="hljs-keyword">with</span> <span class="hljs-built_in">open</span>(output_file, <span class="hljs-string">"wb"</span>) <span class="hljs-keyword">as</span> f:
+            f.write(decrypted_data)
+
+
+    <span class="hljs-keyword">except</span> Exception <span class="hljs-keyword">as</span> e:
+        <span class="hljs-built_in">print</span>(<span class="hljs-string">f"[!] 发生错误: <span class="hljs-subst">{e}</span>"</span>)
+
+<span class="hljs-keyword">if</span> __name__ == <span class="hljs-string">"__main__"</span>:
+    decrypt_payload()
+</code></pre><p>写一个load进行动调</p>
+<p>（load名称使用svchost.exe，防止存在检查行为）</p>
+<pre><code class="hljs language-c"><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&lt;windows.h&gt;</span></span>
+<span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&lt;iostream&gt;</span></span>
+<span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&lt;fstream&gt;</span></span>
+<span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&lt;vector&gt;</span></span>
+
+<span class="hljs-type">int</span> <span class="hljs-title function_">main</span><span class="hljs-params">()</span>
+{
+    <span class="hljs-type">const</span> <span class="hljs-type">char</span>* filename = <span class="hljs-string">"decrypted.bin"</span>;
+
+
+    <span class="hljs-built_in">std</span>::ifstream <span class="hljs-title function_">file</span><span class="hljs-params">(filename, <span class="hljs-built_in">std</span>::ios::binary | <span class="hljs-built_in">std</span>::ios::ate)</span>;
+    <span class="hljs-keyword">if</span> (!file) {
+        system(<span class="hljs-string">"pause"</span>);
+        <span class="hljs-keyword">return</span> <span class="hljs-number">-1</span>;
+    }
+
+    <span class="hljs-built_in">std</span>::streamsize size = file.tellg();
+    file.seekg(<span class="hljs-number">0</span>, <span class="hljs-built_in">std</span>::ios::beg);
+
+    <span class="hljs-keyword">if</span> (size &lt;= <span class="hljs-number">0</span>) {
+        <span class="hljs-keyword">return</span> <span class="hljs-number">-1</span>;
+    }
+
+    <span class="hljs-built_in">std</span>::<span class="hljs-built_in">vector</span>&lt;<span class="hljs-type">char</span>&gt; <span class="hljs-title function_">buffer</span><span class="hljs-params">(size)</span>;
+    <span class="hljs-keyword">if</span> (!file.read(buffer.data(), size)) {
+        <span class="hljs-keyword">return</span> <span class="hljs-number">-1</span>;
+    }
+
+    <span class="hljs-type">void</span>* exec_mem = VirtualAlloc(<span class="hljs-literal">NULL</span>, size, MEM_COMMIT | MEM_RESERVE, PAGE_EXECUTE_READWRITE);
+
+    <span class="hljs-keyword">if</span> (!exec_mem) {
+        <span class="hljs-keyword">return</span> <span class="hljs-number">-1</span>;
+    }
+
+    <span class="hljs-built_in">memcpy</span>(exec_mem, buffer.data(), size);
+
+    ((<span class="hljs-type">void</span>(*)())exec_mem)();
+
+    <span class="hljs-keyword">return</span> <span class="hljs-number">0</span>;
+}
+</code></pre></div><footer class="article-footer"><div><span>本文链接</span><a href="https://ycr0w.github.io/2026/08/13/winos-4.0/">https://ycr0w.github.io/2026/08/13/winos-4.0/</a></div></footer></article>
+    <aside class="article-aside"><div class="toc"><span>目录</span><a class="toc-level-2" href="#dokan2.dll">dokan2.dll</a><a class="toc-level-2" href="#timebrokerclient.dll">TimeBrokerClient.dll</a></div></aside>
+    <nav class="post-navigation"><a href="/2026/08/13/valleyrat/"><i data-lucide="arrow-left" aria-hidden="true"></i><span><small>上一篇</small>ValleyRAT</span></a><a href="/2026/08/13/%E9%93%B6%E7%8B%90-10%E6%9C%88/"><span><small>下一篇</small>银狐 10月</span><i data-lucide="arrow-right" aria-hidden="true"></i></a></nav>
+  </main>
+  <footer class="site-footer"><span>© 2026 YCr0w</span></footer>
+</body>
+</html>
