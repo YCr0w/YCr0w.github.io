@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#15171a">
-  <meta name="description" content="核心部分的函数存在大量的混淆 ida无法正常分析，也无法正常反编译，但是通过调试就会发现 运行SIMD这些指令时，只有RIP寄存器会变（这个是正常行为），也就是说这些SIMD混淆指令是不会影响正常通用寄存器的运算的，所以可以全部patch，通过进一步调试分析，最终的去混淆ida python如下： import os import ida...">
+  <meta name="description" content="针对恶意样本利用 SIMD/AVX 向量指令做的代码混淆，分析其不影响通用寄存器的特性，给出一份批量 NOP patch 的 IDA Python 自动去混淆脚本。">
   <meta name="author" content="YCr0w">
   <title>SIMD混淆 | YCr0w&#39;blog</title>
   <link rel="icon" type="image/x-icon" href="/assets/site/favicon.ico">
@@ -32,7 +32,7 @@
     </div>
   </header>
   <main class="article-shell">
-    <article class="article"><header class="article-header"><a class="article-category" href="/categories/malware-analysis/" style="--category-color:#d84a5b"><span class="category-dot"></span>恶意软件分析</a><h1>SIMD混淆</h1><p>核心部分的函数存在大量的混淆 ida无法正常分析，也无法正常反编译，但是通过调试就会发现 运行SIMD这些指令时，只有RIP寄存器会变（这个是正常行为），也就是说这些SIMD混淆指令是不会影响正常通用寄存器的运算的，所以可以全部patch，通过进一步调试分析，最终的去混淆ida python如下： import os import ida...</p><div class="article-meta"><span><i data-lucide="calendar-days" aria-hidden="true"></i>2026年8月13日</span><span><i data-lucide="clock-3" aria-hidden="true"></i>16 分钟阅读</span></div><div class="tag-list"></div></header><div class="article-body markdown-body"><p>核心部分的函数存在大量的混淆</p>
+    <article class="article"><header class="article-header"><a class="article-category" href="/categories/malware-analysis/" style="--category-color:#d84a5b"><span class="category-dot"></span>恶意软件分析</a><h1>SIMD混淆</h1><p>针对恶意样本利用 SIMD/AVX 向量指令做的代码混淆，分析其不影响通用寄存器的特性，给出一份批量 NOP patch 的 IDA Python 自动去混淆脚本。</p><div class="article-meta"><span><i data-lucide="calendar-days" aria-hidden="true"></i>2026年8月13日</span><span><i data-lucide="clock-3" aria-hidden="true"></i>16 分钟阅读</span></div><div class="tag-list"><a href="/tags/%E5%8E%BB%E6%B7%B7%E6%B7%86/">#去混淆</a><a href="/tags/simd-%E6%8C%87%E4%BB%A4/">#SIMD 指令</a><a href="/tags/ida-python/">#IDA Python</a><a href="/tags/%E4%BB%A3%E7%A0%81%E6%B7%B7%E6%B7%86/">#代码混淆</a></div></header><div class="article-body markdown-body"><p>核心部分的函数存在大量的混淆</p>
 <p><img src="/assets/posts/simd%E6%B7%B7%E6%B7%86/images/1774176434587-c678389e-5fc8-4d17-83c1-0b4a018c7dff.png" alt="SIMD混淆" loading="lazy" decoding="async"></p>
 <p>ida无法正常分析，也无法正常反编译，但是通过调试就会发现</p>
 <p><img src="/assets/posts/simd%E6%B7%B7%E6%B7%86/images/1774184293205-8f2c15a6-cbdc-473c-aba8-9610d1ce0611.png" alt="SIMD混淆" loading="lazy" decoding="async"></p>

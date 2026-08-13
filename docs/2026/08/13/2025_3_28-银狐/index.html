@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#15171a">
-  <meta name="description" content="Todesk.exe SHA256:e302c001a4855634547e5f0d5739f1e2ab79b77445f5fc5922a268aab8da5cd9 MD5:07da88a8baa27a4e7100e6d6bb46635f SHA1:1f84a9c189cf8b4e828ff69c70946261e6c022c6 运行之后...">
+  <meta name="description" content="逆向 2025 年 3 月银狐木马投放样本：借腾讯游戏管家白文件侧加载伪造签名的 DLL，VMP 虚拟化与改后缀 PNG 分段解密隐藏 shellcode，并以 WDAC 策略与 Add-MpPreference 给主流杀软加白实现免杀。">
   <meta name="author" content="YCr0w">
   <title>2025_3_28 银狐 | YCr0w&#39;blog</title>
   <link rel="icon" type="image/x-icon" href="/assets/site/favicon.ico">
@@ -32,7 +32,7 @@
     </div>
   </header>
   <main class="article-shell">
-    <article class="article"><header class="article-header"><a class="article-category" href="/categories/malware-analysis/" style="--category-color:#d84a5b"><span class="category-dot"></span>恶意软件分析</a><h1>2025_3_28 银狐</h1><p>Todesk.exe SHA256:e302c001a4855634547e5f0d5739f1e2ab79b77445f5fc5922a268aab8da5cd9 MD5:07da88a8baa27a4e7100e6d6bb46635f SHA1:1f84a9c189cf8b4e828ff69c70946261e6c022c6 运行之后...</p><div class="article-meta"><span><i data-lucide="calendar-days" aria-hidden="true"></i>2026年8月13日</span><span><i data-lucide="clock-3" aria-hidden="true"></i>4 分钟阅读</span></div><div class="tag-list"></div></header><div class="article-body markdown-body"><h3 id="todesk.exe">Todesk.exe</h3>
+    <article class="article"><header class="article-header"><a class="article-category" href="/categories/malware-analysis/" style="--category-color:#d84a5b"><span class="category-dot"></span>恶意软件分析</a><h1>2025_3_28 银狐</h1><p>逆向 2025 年 3 月银狐木马投放样本：借腾讯游戏管家白文件侧加载伪造签名的 DLL，VMP 虚拟化与改后缀 PNG 分段解密隐藏 shellcode，并以 WDAC 策略与 Add-MpPreference 给主流杀软加白实现免杀。</p><div class="article-meta"><span><i data-lucide="calendar-days" aria-hidden="true"></i>2026年8月13日</span><span><i data-lucide="clock-3" aria-hidden="true"></i>4 分钟阅读</span></div><div class="tag-list"><a href="/tags/%E9%93%B6%E7%8B%90/">#银狐</a><a href="/tags/dll-%E4%BE%A7%E5%8A%A0%E8%BD%BD/">#DLL 侧加载</a><a href="/tags/vmp-%E8%99%9A%E6%8B%9F%E5%8C%96/">#VMP 虚拟化</a><a href="/tags/wdac-%E5%8A%A0%E7%99%BD/">#WDAC 加白</a></div></header><div class="article-body markdown-body"><h3 id="todesk.exe">Todesk.exe</h3>
 <p>SHA256:e302c001a4855634547e5f0d5739f1e2ab79b77445f5fc5922a268aab8da5cd9</p>
 <p>MD5:07da88a8baa27a4e7100e6d6bb46635f</p>
 <p>SHA1:1f84a9c189cf8b4e828ff69c70946261e6c022c6</p>

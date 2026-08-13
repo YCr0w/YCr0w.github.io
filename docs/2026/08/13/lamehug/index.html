@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#15171a">
-  <meta name="description" content="静态字符串与 Prompt 提取阶段。代码里隐藏了哪些 base64 编码的文本？解码后得到的自然语言描述具体指示了什么攻击目标（比如系统信息收集或文档窃取）？ LLM 调用与动态命令生成阶段。恶意程序如何构造并发送请求到 Hugging Face API？它使用的是哪个模型（Qwen2.5-Coder-32B-Instruct）？认证...">
+  <meta name="description" content="LAMEHUG——滥用大模型生成攻击指令的 Python 恶意软件：伪装 PDF 的 PyInstaller 程序内置数百条 Hugging Face 泄露 token，以提示词驱动 Qwen2.5-Coder 实时生成信息收集与文档窃取命令并执行回传。">
   <meta name="author" content="YCr0w">
   <title>LAMEHUG | YCr0w&#39;blog</title>
   <link rel="icon" type="image/x-icon" href="/assets/site/favicon.ico">
@@ -32,7 +32,7 @@
     </div>
   </header>
   <main class="article-shell">
-    <article class="article"><header class="article-header"><a class="article-category" href="/categories/malware-analysis/" style="--category-color:#d84a5b"><span class="category-dot"></span>恶意软件分析</a><h1>LAMEHUG</h1><p>静态字符串与 Prompt 提取阶段。代码里隐藏了哪些 base64 编码的文本？解码后得到的自然语言描述具体指示了什么攻击目标（比如系统信息收集或文档窃取）？ LLM 调用与动态命令生成阶段。恶意程序如何构造并发送请求到 Hugging Face API？它使用的是哪个模型（Qwen2.5-Coder-32B-Instruct）？认证...</p><div class="article-meta"><span><i data-lucide="calendar-days" aria-hidden="true"></i>2026年8月13日</span><span><i data-lucide="clock-3" aria-hidden="true"></i>580 分钟阅读</span></div><div class="tag-list"></div></header><div class="article-body markdown-body"><ol>
+    <article class="article"><header class="article-header"><a class="article-category" href="/categories/malware-analysis/" style="--category-color:#d84a5b"><span class="category-dot"></span>恶意软件分析</a><h1>LAMEHUG</h1><p>LAMEHUG——滥用大模型生成攻击指令的 Python 恶意软件：伪装 PDF 的 PyInstaller 程序内置数百条 Hugging Face 泄露 token，以提示词驱动 Qwen2.5-Coder 实时生成信息收集与文档窃取命令并执行回传。</p><div class="article-meta"><span><i data-lucide="calendar-days" aria-hidden="true"></i>2026年8月13日</span><span><i data-lucide="clock-3" aria-hidden="true"></i>580 分钟阅读</span></div><div class="tag-list"><a href="/tags/lamehug/">#LAMEHUG</a><a href="/tags/llm-%E6%BB%A5%E7%94%A8/">#LLM 滥用</a><a href="/tags/hugging-face/">#Hugging Face</a><a href="/tags/%E4%BF%A1%E6%81%AF%E7%AA%83%E5%8F%96/">#信息窃取</a></div></header><div class="article-body markdown-body"><ol>
 <li>静态字符串与 Prompt 提取阶段。代码里隐藏了哪些 base64 编码的文本？解码后得到的自然语言描述具体指示了什么攻击目标（比如系统信息收集或文档窃取）？</li>
 <li>LLM 调用与动态命令生成阶段。恶意程序如何构造并发送请求到 Hugging Face API？它使用的是哪个模型（Qwen2.5-Coder-32B-Instruct）？认证 token、请求体格式和返回命令的解析流程是怎样的？</li>
 <li>命令执行与数据采集阶段。LLM 返回的命令是如何被实际执行的？系统信息（硬件、进程、服务、网络、AD 域）和用户文档（Office/PDF/TXT）的收集逻辑是怎样的？数据最终被写入哪个路径？</li>

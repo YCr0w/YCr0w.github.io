@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#15171a">
-  <meta name="description" content="https://reliaquest.com/blog/threat-spotlight-storm-0249-precision-endpoint-exploitation/ Spear.msi HASH SHA256:8113fc3b4f82fb49f8dd853ca8e1275e0dfb06e48f39830708e4437fe8a...">
+  <meta name="description" content="分析疑似 Storm-0249 通过伪装安全软件的 MSI 安装包投放的多阶段载荷链：DLL 劫持、SIMD 混淆的反射式 DLL 加载与 shellcode 注入，直至解密 C2 回连。">
   <meta name="author" content="YCr0w">
   <title>Storm | YCr0w&#39;blog</title>
   <link rel="icon" type="image/x-icon" href="/assets/site/favicon.ico">
@@ -32,7 +32,7 @@
     </div>
   </header>
   <main class="article-shell">
-    <article class="article"><header class="article-header"><a class="article-category" href="/categories/malware-analysis/" style="--category-color:#d84a5b"><span class="category-dot"></span>恶意软件分析</a><h1>Storm</h1><p>https://reliaquest.com/blog/threat-spotlight-storm-0249-precision-endpoint-exploitation/ Spear.msi HASH SHA256:8113fc3b4f82fb49f8dd853ca8e1275e0dfb06e48f39830708e4437fe8a...</p><div class="article-meta"><span><i data-lucide="calendar-days" aria-hidden="true"></i>2026年8月13日</span><span><i data-lucide="clock-3" aria-hidden="true"></i>12 分钟阅读</span></div><div class="tag-list"></div></header><div class="article-body markdown-body"><p><a href="https://reliaquest.com/blog/threat-spotlight-storm-0249-precision-endpoint-exploitation/">https://reliaquest.com/blog/threat-spotlight-storm-0249-precision-endpoint-exploitation/</a></p>
+    <article class="article"><header class="article-header"><a class="article-category" href="/categories/malware-analysis/" style="--category-color:#d84a5b"><span class="category-dot"></span>恶意软件分析</a><h1>Storm</h1><p>分析疑似 Storm-0249 通过伪装安全软件的 MSI 安装包投放的多阶段载荷链：DLL 劫持、SIMD 混淆的反射式 DLL 加载与 shellcode 注入，直至解密 C2 回连。</p><div class="article-meta"><span><i data-lucide="calendar-days" aria-hidden="true"></i>2026年8月13日</span><span><i data-lucide="clock-3" aria-hidden="true"></i>12 分钟阅读</span></div><div class="tag-list"><a href="/tags/storm-0249/">#Storm-0249</a><a href="/tags/%E5%8F%8D%E5%B0%84%E5%BC%8F-dll-%E5%8A%A0%E8%BD%BD/">#反射式 DLL 加载</a><a href="/tags/dll-%E5%8A%AB%E6%8C%81/">#DLL 劫持</a><a href="/tags/%E5%8F%8D%E6%B2%99%E7%AE%B1/">#反沙箱</a></div></header><div class="article-body markdown-body"><p><a href="https://reliaquest.com/blog/threat-spotlight-storm-0249-precision-endpoint-exploitation/">https://reliaquest.com/blog/threat-spotlight-storm-0249-precision-endpoint-exploitation/</a></p>
 <p>Spear.msi</p>
 <p>HASH</p>
 <p>SHA256:<code>8113fc3b4f82fb49f8dd853ca8e1275e0dfb06e48f39830708e4437fe8afbdfb</code></p>

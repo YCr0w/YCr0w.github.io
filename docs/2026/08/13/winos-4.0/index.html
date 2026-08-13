@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#15171a">
-  <meta name="description" content="dokan2.dll 分析sub_7FF8AD1E312E 使用SetWindowPos隐藏运行时的任务栏图标，接着的主要逻辑在sub_7FF8AD1E2141函数中，跟进 前面部分是回文算法，没什么用，疑似用于混淆，直接跳过 检查MZ标志与PE标志，解析PE头找到IAT 上面一大部分是回文算法，还是没用的混淆，直接跳过，IAT HOOK...">
+  <meta name="description" content="分析 Winos 4.0（Gh0st 系变种）木马的加载与执行链：IAT HOOK、反射式 DLL 加载、hash API 解析、Vigenère 变种解密与 TLS 回调下的多阶段 shellcode 执行。">
   <meta name="author" content="YCr0w">
   <title>Winos 4.0 | YCr0w&#39;blog</title>
   <link rel="icon" type="image/x-icon" href="/assets/site/favicon.ico">
@@ -32,7 +32,7 @@
     </div>
   </header>
   <main class="article-shell">
-    <article class="article"><header class="article-header"><a class="article-category" href="/categories/malware-analysis/" style="--category-color:#d84a5b"><span class="category-dot"></span>恶意软件分析</a><h1>Winos 4.0</h1><p>dokan2.dll 分析sub_7FF8AD1E312E 使用SetWindowPos隐藏运行时的任务栏图标，接着的主要逻辑在sub_7FF8AD1E2141函数中，跟进 前面部分是回文算法，没什么用，疑似用于混淆，直接跳过 检查MZ标志与PE标志，解析PE头找到IAT 上面一大部分是回文算法，还是没用的混淆，直接跳过，IAT HOOK...</p><div class="article-meta"><span><i data-lucide="calendar-days" aria-hidden="true"></i>2026年8月13日</span><span><i data-lucide="clock-3" aria-hidden="true"></i>9 分钟阅读</span></div><div class="tag-list"></div></header><div class="article-body markdown-body"><h2 id="dokan2.dll">dokan2.dll</h2>
+    <article class="article"><header class="article-header"><a class="article-category" href="/categories/malware-analysis/" style="--category-color:#d84a5b"><span class="category-dot"></span>恶意软件分析</a><h1>Winos 4.0</h1><p>分析 Winos 4.0（Gh0st 系变种）木马的加载与执行链：IAT HOOK、反射式 DLL 加载、hash API 解析、Vigenère 变种解密与 TLS 回调下的多阶段 shellcode 执行。</p><div class="article-meta"><span><i data-lucide="calendar-days" aria-hidden="true"></i>2026年8月13日</span><span><i data-lucide="clock-3" aria-hidden="true"></i>9 分钟阅读</span></div><div class="tag-list"><a href="/tags/winos-4.0/">#Winos 4.0</a><a href="/tags/iat-hook/">#IAT HOOK</a><a href="/tags/%E5%8F%8D%E5%B0%84%E5%BC%8F-dll-%E5%8A%A0%E8%BD%BD/">#反射式 DLL 加载</a><a href="/tags/hash-api/">#hash API</a></div></header><div class="article-body markdown-body"><h2 id="dokan2.dll">dokan2.dll</h2>
 <p><img src="/assets/posts/winos-4.0/images/1763628631411-5a054089-81f6-41ac-990c-ccc8cb474067.png" alt="Winos 4.0" loading="lazy" decoding="async"></p>
 <p><img src="/assets/posts/winos-4.0/images/1763642688691-1f53305a-1a53-4b7e-ac31-bc4fa3de7e71.png" alt="Winos 4.0" loading="lazy" decoding="async"></p>
 <p>分析sub_7FF8AD1E312E</p>

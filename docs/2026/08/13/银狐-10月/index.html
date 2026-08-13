@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#15171a">
-  <meta name="description" content="（1）BYOVD技术关闭杀软进程实现方式 开源项目，已经被杀，可以再分析一下BdApiUtil64.sys驱动（√ （2）rwdriver.sys 实现的edr致盲方式 直接看开源代码就行（√ （3）对特定API函数HOOK来实现Rootkit技术的技术细节 YiFanyi_setup.exe Inno Setup安装程序，有阿里的无效签...">
+  <meta name="description" content="银狐 10 月多组件套餐的完整逆向：从 Inno Setup 投放、UACME 提权与计划任务持久化，到 BYOVD 关杀软、BlindEdr 致盲 EDR 与内核 rootkit 的 SSDT HOOK 隐藏保护。">
   <meta name="author" content="YCr0w">
   <title>银狐 10月 | YCr0w&#39;blog</title>
   <link rel="icon" type="image/x-icon" href="/assets/site/favicon.ico">
@@ -32,7 +32,7 @@
     </div>
   </header>
   <main class="article-shell">
-    <article class="article"><header class="article-header"><a class="article-category" href="/categories/malware-analysis/" style="--category-color:#d84a5b"><span class="category-dot"></span>恶意软件分析</a><h1>银狐 10月</h1><p>（1）BYOVD技术关闭杀软进程实现方式 开源项目，已经被杀，可以再分析一下BdApiUtil64.sys驱动（√ （2）rwdriver.sys 实现的edr致盲方式 直接看开源代码就行（√ （3）对特定API函数HOOK来实现Rootkit技术的技术细节 YiFanyi_setup.exe Inno Setup安装程序，有阿里的无效签...</p><div class="article-meta"><span><i data-lucide="calendar-days" aria-hidden="true"></i>2026年8月13日</span><span><i data-lucide="clock-3" aria-hidden="true"></i>19 分钟阅读</span></div><div class="tag-list"></div></header><div class="article-body markdown-body"><p>（1）BYOVD技术关闭杀软进程实现方式</p>
+    <article class="article"><header class="article-header"><a class="article-category" href="/categories/malware-analysis/" style="--category-color:#d84a5b"><span class="category-dot"></span>恶意软件分析</a><h1>银狐 10月</h1><p>银狐 10 月多组件套餐的完整逆向：从 Inno Setup 投放、UACME 提权与计划任务持久化，到 BYOVD 关杀软、BlindEdr 致盲 EDR 与内核 rootkit 的 SSDT HOOK 隐藏保护。</p><div class="article-meta"><span><i data-lucide="calendar-days" aria-hidden="true"></i>2026年8月13日</span><span><i data-lucide="clock-3" aria-hidden="true"></i>19 分钟阅读</span></div><div class="tag-list"><a href="/tags/%E9%93%B6%E7%8B%90/">#银狐</a><a href="/tags/byovd/">#BYOVD</a><a href="/tags/edr-%E8%87%B4%E7%9B%B2/">#EDR 致盲</a><a href="/tags/%E5%86%85%E6%A0%B8-rootkit/">#内核 Rootkit</a></div></header><div class="article-body markdown-body"><p>（1）BYOVD技术关闭杀软进程实现方式</p>
 <p>开源项目，已经被杀，可以再分析一下BdApiUtil64.sys驱动（√</p>
 <p>（2）rwdriver.sys 实现的edr致盲方式</p>
 <p>直接看开源代码就行（√</p>

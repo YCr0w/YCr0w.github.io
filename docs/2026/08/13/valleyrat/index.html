@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#15171a">
-  <meta name="description" content="（1） UAC 绕过方法的三种方法以及代码实现 （2）样本终止与对抗杀软的实现方式 （3）反沙箱实现方式 钓鱼部分 钓鱼方式采用的是使用powershell lnk伪装为个人简介pdf Hash： SHA256:ae857addc8eb51dbfa7d0a76b19dae7a6f275f7bf1042d1c982aca4f80ce635e...">
+  <meta name="description" content="分析 ValleyRAT 木马的完整投放与执行链：PowerShell LNK 钓鱼、白加黑 DLL 加载、RC4 解密 shellcode 与天堂之门跨位数切换，以及反沙箱与 UAC 提权手法。">
   <meta name="author" content="YCr0w">
   <title>ValleyRAT | YCr0w&#39;blog</title>
   <link rel="icon" type="image/x-icon" href="/assets/site/favicon.ico">
@@ -32,7 +32,7 @@
     </div>
   </header>
   <main class="article-shell">
-    <article class="article"><header class="article-header"><a class="article-category" href="/categories/malware-analysis/" style="--category-color:#d84a5b"><span class="category-dot"></span>恶意软件分析</a><h1>ValleyRAT</h1><p>（1） UAC 绕过方法的三种方法以及代码实现 （2）样本终止与对抗杀软的实现方式 （3）反沙箱实现方式 钓鱼部分 钓鱼方式采用的是使用powershell lnk伪装为个人简介pdf Hash： SHA256:ae857addc8eb51dbfa7d0a76b19dae7a6f275f7bf1042d1c982aca4f80ce635e...</p><div class="article-meta"><span><i data-lucide="calendar-days" aria-hidden="true"></i>2026年8月13日</span><span><i data-lucide="clock-3" aria-hidden="true"></i>22 分钟阅读</span></div><div class="tag-list"></div></header><div class="article-body markdown-body"><p>（1） UAC 绕过方法的三种方法以及代码实现</p>
+    <article class="article"><header class="article-header"><a class="article-category" href="/categories/malware-analysis/" style="--category-color:#d84a5b"><span class="category-dot"></span>恶意软件分析</a><h1>ValleyRAT</h1><p>分析 ValleyRAT 木马的完整投放与执行链：PowerShell LNK 钓鱼、白加黑 DLL 加载、RC4 解密 shellcode 与天堂之门跨位数切换，以及反沙箱与 UAC 提权手法。</p><div class="article-meta"><span><i data-lucide="calendar-days" aria-hidden="true"></i>2026年8月13日</span><span><i data-lucide="clock-3" aria-hidden="true"></i>22 分钟阅读</span></div><div class="tag-list"><a href="/tags/valleyrat/">#ValleyRAT</a><a href="/tags/%E5%A4%A9%E5%A0%82%E4%B9%8B%E9%97%A8/">#天堂之门</a><a href="/tags/dll-%E4%BE%A7%E5%8A%A0%E8%BD%BD/">#DLL 侧加载</a><a href="/tags/%E5%8F%8D%E6%B2%99%E7%AE%B1/">#反沙箱</a></div></header><div class="article-body markdown-body"><p>（1） UAC 绕过方法的三种方法以及代码实现</p>
 <p>（2）样本终止与对抗杀软的实现方式</p>
 <p>（3）反沙箱实现方式</p>
 <h3 id="钓鱼部分">钓鱼部分</h3>

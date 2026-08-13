@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#15171a">
-  <meta name="description" content="https://github.com/antonioCoco/SspiUacBypass?tab=readme-ov-file https://github.com/hfiref0x/UACME 78（requires current user account password not to be blank. 原理： 通过 SSPI 在...">
+  <meta name="description" content="分析基于 SSPI/NTLM 伪造网络身份验证造成的 token confusion 实现 UAC 绕过（UACME method 78）的原理与 demo 实现流程。">
   <meta name="author" content="YCr0w">
   <title>Bypassing UAC with SSPI Datagram Contexts | YCr0w&#39;blog</title>
   <link rel="icon" type="image/x-icon" href="/assets/site/favicon.ico">
@@ -32,7 +32,7 @@
     </div>
   </header>
   <main class="article-shell">
-    <article class="article"><header class="article-header"><a class="article-category" href="/categories/malware-analysis/" style="--category-color:#d84a5b"><span class="category-dot"></span>恶意软件分析</a><h1>Bypassing UAC with SSPI Datagram Contexts</h1><p>https://github.com/antonioCoco/SspiUacBypass?tab=readme-ov-file https://github.com/hfiref0x/UACME 78（requires current user account password not to be blank. 原理： 通过 SSPI 在...</p><div class="article-meta"><span><i data-lucide="calendar-days" aria-hidden="true"></i>2026年8月13日</span><span><i data-lucide="clock-3" aria-hidden="true"></i>2 分钟阅读</span></div><div class="tag-list"></div></header><div class="article-body markdown-body"><p><a href="https://github.com/antonioCoco/SspiUacBypass?tab=readme-ov-file">https://github.com/antonioCoco/SspiUacBypass?tab=readme-ov-file</a></p>
+    <article class="article"><header class="article-header"><a class="article-category" href="/categories/malware-analysis/" style="--category-color:#d84a5b"><span class="category-dot"></span>恶意软件分析</a><h1>Bypassing UAC with SSPI Datagram Contexts</h1><p>分析基于 SSPI/NTLM 伪造网络身份验证造成的 token confusion 实现 UAC 绕过（UACME method 78）的原理与 demo 实现流程。</p><div class="article-meta"><span><i data-lucide="calendar-days" aria-hidden="true"></i>2026年8月13日</span><span><i data-lucide="clock-3" aria-hidden="true"></i>2 分钟阅读</span></div><div class="tag-list"><a href="/tags/uac-bypass/">#UAC Bypass</a><a href="/tags/sspi/">#SSPI</a><a href="/tags/ntlm/">#NTLM</a><a href="/tags/%E6%8F%90%E6%9D%83/">#提权</a></div></header><div class="article-body markdown-body"><p><a href="https://github.com/antonioCoco/SspiUacBypass?tab=readme-ov-file">https://github.com/antonioCoco/SspiUacBypass?tab=readme-ov-file</a></p>
 <p><a href="https://github.com/hfiref0x/UACME">https://github.com/hfiref0x/UACME</a>  78（requires current user account password not to be blank.</p>
 <p><img src="/assets/posts/bypassing-uac-with-sspi-datagram-contexts/images/1743770899901-8f5e62b1-5e2c-41d8-b422-32461c246fa7.png" alt="Bypassing UAC with SSPI Datagram Contexts" loading="lazy" decoding="async"></p>
 <p><img src="/assets/posts/bypassing-uac-with-sspi-datagram-contexts/images/1743508539480-81e1239d-4b6a-426b-8536-b1ff63f2f0a6.png" alt="Bypassing UAC with SSPI Datagram Contexts" loading="lazy" decoding="async"></p>

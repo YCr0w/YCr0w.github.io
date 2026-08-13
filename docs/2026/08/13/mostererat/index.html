@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#15171a">
-  <meta name="description" content="https://www.fortinet.com/blog/threat-research/mostererat-deployed-anydesk-tightvnc-for-covert-full-access 任务： 该样本通过 “CreateSvcRpc” 技术创建具有系统权限的服务，这一技术在代码层面是如何实现的？ 该样本能够创建一...">
+  <meta name="description" content="深度分析 MostereRAT 多阶段攻击框架：UAC 弹窗提权、直接 RPC 持久化、易语言 EPK 载荷执行，以及 TrustedInstaller 提权、WFP 流量阻断 AV/EDR 与 mTLS 远控部署。">
   <meta name="author" content="YCr0w">
   <title>MostereRAT | YCr0w&#39;blog</title>
   <link rel="icon" type="image/x-icon" href="/assets/site/favicon.ico">
@@ -32,7 +32,7 @@
     </div>
   </header>
   <main class="article-shell">
-    <article class="article"><header class="article-header"><a class="article-category" href="/categories/malware-analysis/" style="--category-color:#d84a5b"><span class="category-dot"></span>恶意软件分析</a><h1>MostereRAT</h1><p>https://www.fortinet.com/blog/threat-research/mostererat-deployed-anydesk-tightvnc-for-covert-full-access 任务： 该样本通过 “CreateSvcRpc” 技术创建具有系统权限的服务，这一技术在代码层面是如何实现的？ 该样本能够创建一...</p><div class="article-meta"><span><i data-lucide="calendar-days" aria-hidden="true"></i>2026年8月13日</span><span><i data-lucide="clock-3" aria-hidden="true"></i>28 分钟阅读</span></div><div class="tag-list"></div></header><div class="article-body markdown-body"><p><a href="https://www.fortinet.com/blog/threat-research/mostererat-deployed-anydesk-tightvnc-for-covert-full-access">https://www.fortinet.com/blog/threat-research/mostererat-deployed-anydesk-tightvnc-for-covert-full-access</a></p>
+    <article class="article"><header class="article-header"><a class="article-category" href="/categories/malware-analysis/" style="--category-color:#d84a5b"><span class="category-dot"></span>恶意软件分析</a><h1>MostereRAT</h1><p>深度分析 MostereRAT 多阶段攻击框架：UAC 弹窗提权、直接 RPC 持久化、易语言 EPK 载荷执行，以及 TrustedInstaller 提权、WFP 流量阻断 AV/EDR 与 mTLS 远控部署。</p><div class="article-meta"><span><i data-lucide="calendar-days" aria-hidden="true"></i>2026年8月13日</span><span><i data-lucide="clock-3" aria-hidden="true"></i>28 分钟阅读</span></div><div class="tag-list"><a href="/tags/mostererat/">#MostereRAT</a><a href="/tags/wfp-%E6%B5%81%E9%87%8F%E9%98%BB%E6%96%AD/">#WFP 流量阻断</a><a href="/tags/trustedinstaller-%E6%8F%90%E6%9D%83/">#TrustedInstaller 提权</a><a href="/tags/%E6%98%93%E8%AF%AD%E8%A8%80/">#易语言</a></div></header><div class="article-body markdown-body"><p><a href="https://www.fortinet.com/blog/threat-research/mostererat-deployed-anydesk-tightvnc-for-covert-full-access">https://www.fortinet.com/blog/threat-research/mostererat-deployed-anydesk-tightvnc-for-covert-full-access</a></p>
 <p>任务：</p>
 <ol>
 <li>该样本通过 “CreateSvcRpc” 技术创建具有系统权限的服务，这一技术在代码层面是如何实现的？</li>
