@@ -398,7 +398,25 @@
       "format": "markdown",
       "status": "published",
       "legacy": false
+    },
+    {
+      "id": "su-lock",
+      "title": "SU_Lock",
+      "category": "ctf",
+      "tags": [
+        "SUCTF2026",
+        "reverse",
+        "writeup"
+      ],
+      "date": "2026-03-16T00:00:00.000Z",
+      "updated": "2026-10-29T02:54:24.393Z",
+      "url": "/2026/03/16/su-lock/",
+      "summary": "",
+      "source": "content/posts/ctf/su-lock/index.md",
+      "format": "markdown",
+      "status": "published",
+      "legacy": false
     }
   ],
-  "updatedAt": "2026-08-13T09:30:07.431Z"
+  "updatedAt": "2026-10-29T02:54:24.393Z"
 }
