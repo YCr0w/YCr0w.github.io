@@ -73,6 +73,39 @@ document.addEventListener("DOMContentLoaded", () => {
       active?.classList.add("active");
     }
   }, { rootMargin: "-20% 0px -70%" });
+
+  // Header stays hidden by default so it never covers the hero artwork;
+  // moving the pointer to the top edge slides it in, leaving hides it.
+  // Touch devices (no hover) keep the header always visible.
+  const header = document.querySelector(".site-header");
+  if (header && matchMedia("(hover: hover)").matches) {
+    let revealed = false;
+    const showHeader = () => header.classList.remove("header-hidden");
+    const hideHeader = () => {
+      if (searchInline?.classList.contains("expanded")) return;
+      if (navigation?.classList.contains("open")) return;
+      if (header.contains(document.activeElement)) return;
+      header.classList.add("header-hidden");
+    };
+    header.style.transition = "none";
+    hideHeader();
+    requestAnimationFrame(() => requestAnimationFrame(() => { header.style.transition = ""; }));
+    document.addEventListener("mousemove", (event) => {
+      if (event.clientY < 72) {
+        revealed = true;
+        showHeader();
+      } else if (revealed) {
+        revealed = false;
+        hideHeader();
+      }
+    });
+    header.addEventListener("mouseleave", () => {
+      if (revealed) {
+        revealed = false;
+        hideHeader();
+      }
+    });
+  }
   document.querySelectorAll(".article-body h2, .article-body h3").forEach((heading) => observer.observe(heading));
 
   const viewer = document.createElement("dialog");

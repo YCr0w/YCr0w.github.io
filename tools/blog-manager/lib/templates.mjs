@@ -118,12 +118,12 @@ export function homePage(manifest, posts) {
 
 export function listingPage({ manifest, title, eyebrow, description, posts, active = "categories" }) {
   const categories = new Map(manifest.categories.map((category) => [category.id, category]));
-  const content = `<main class="page-shell"><header class="page-heading"><p>${escapeHtml(eyebrow)}</p><h1>${escapeHtml(title)}</h1><span>${escapeHtml(description)}</span></header><section class="post-list wide">${posts.map((post) => postRow(post, categories.get(post.category))).join("") || '<p class="empty-state">暂无文章</p>'}</section></main>`;
+  const content = `<main class="page-shell"><header class="page-heading"><p>${escapeHtml(eyebrow)}</p><h1>${escapeHtml(title)}</h1>${description ? `<span>${escapeHtml(description)}</span>` : ""}</header><section class="post-list wide">${posts.map((post) => postRow(post, categories.get(post.category))).join("") || '<p class="empty-state">暂无文章</p>'}</section></main>`;
   return layout({ site: manifest.site, title, description, active, content });
 }
 
 export function categoriesPage(manifest, posts) {
-  const content = `<main class="page-shell"><header class="page-heading"><p>TOPICS</p><h1>分类</h1><span>按研究方向浏览文章</span></header><section class="directory-list">${manifest.categories.map((category) => categoryLink(category, posts.filter((post) => post.category === category.id && post.status === "published").length)).join("")}</section></main>`;
+  const content = `<main class="page-shell"><header class="page-heading"><p>TOPICS</p><h1>分类</h1></header><section class="directory-list">${manifest.categories.map((category) => categoryLink(category, posts.filter((post) => post.category === category.id && post.status === "published").length)).join("")}</section></main>`;
   return layout({ site: manifest.site, title: "分类", active: "categories", content });
 }
 

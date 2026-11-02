@@ -85,7 +85,7 @@ export async function buildSite() {
     manifest,
     title: "归档",
     eyebrow: "CHRONOLOGY",
-    description: `${published.length} 篇研究与学习记录`,
+    description: "",
     posts: published,
     active: "archives",
   }));

@@ -8,7 +8,7 @@
   --border: #d9dcde;
   --accent: #ce3f52;
   --accent-strong: #9e2637;
-  --header-bg: rgba(247, 247, 245, 0.94);
+  --header-bg: rgba(247, 247, 245, 0.45);
   --code-bg: #191d22;
   --code-text: #e8edf2;
   --shadow: 0 14px 45px rgba(18, 22, 28, 0.1);
@@ -24,7 +24,7 @@
   --border: #30353a;
   --accent: #ef6676;
   --accent-strong: #ff8995;
-  --header-bg: rgba(17, 19, 21, 0.94);
+  --header-bg: rgba(17, 19, 21, 0.35);
   --code-bg: #0b0d0f;
   --code-text: #edf2f6;
   --shadow: 0 18px 50px rgba(0, 0, 0, 0.32);
@@ -97,7 +97,8 @@ svg {
   padding: 0 2rem;
   border-bottom: 1px solid var(--border);
   background: var(--header-bg);
-  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(18px) saturate(1.6);
+  backdrop-filter: blur(18px) saturate(1.6);
 }
 
 .header-profile {
@@ -1101,6 +1102,27 @@ svg {
 .site-header, .category-band, .icon-button, .search-dialog,
 .page-shell, .article-shell {
   transition: background-color 0.4s ease, border-color 0.4s ease, color 0.4s ease;
+}
+
+/* ===== Auto-hide header ===== */
+.site-header {
+  transition: transform 0.35s ease, background-color 0.4s ease, border-color 0.4s ease, color 0.4s ease;
+}
+.site-header.header-hidden {
+  transform: translateY(-100%);
+}
+/* On pointer devices the header is hidden by default and floats over the
+   page, so it must not reserve layout space (otherwise a blank strip
+   remains above the hero). Touch devices keep the sticky in-flow header. */
+@media (hover: hover) {
+  .site-header {
+    position: fixed;
+    left: 0;
+    right: 0;
+  }
+  .banner {
+    min-height: 100vh;
+  }
 }
 .post-summary h2 a { transition: color 0.25s ease; }
 .row-action { transition: transform 0.3s ease, border-color 0.3s ease, background-color 0.3s ease, color 0.3s ease; }
